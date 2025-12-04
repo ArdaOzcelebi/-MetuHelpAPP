@@ -8,6 +8,7 @@ import PostNeedScreen from "@/screens/PostNeedScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
 
 export type HomeStackParamList = {
@@ -22,6 +23,7 @@ const Stack = createNativeStackNavigator<HomeStackParamList>();
 
 export default function HomeStackNavigator() {
   const { theme, isDark } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <Stack.Navigator
@@ -40,23 +42,23 @@ export default function HomeStackNavigator() {
       <Stack.Screen
         name="NeedHelp"
         component={NeedHelpScreen}
-        options={{ headerTitle: "Find Help" }}
+        options={{ headerTitle: t.findHelp }}
       />
       <Stack.Screen
         name="OfferHelp"
         component={OfferHelpScreen}
-        options={{ headerTitle: "Campus Q&A" }}
+        options={{ headerTitle: t.campusQA }}
       />
       <Stack.Screen
         name="RequestDetail"
         component={RequestDetailScreen}
-        options={{ headerTitle: "Request Details" }}
+        options={{ headerTitle: t.requestDetails }}
       />
       <Stack.Screen
         name="PostNeed"
         component={PostNeedScreen}
         options={{
-          headerTitle: "Post a Need",
+          headerTitle: t.postNeed,
           presentation: "modal",
         }}
       />

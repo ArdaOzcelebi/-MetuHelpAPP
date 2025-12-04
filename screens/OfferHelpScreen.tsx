@@ -18,6 +18,7 @@ import Animated, {
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Spacing,
   BorderRadius,
@@ -32,57 +33,65 @@ type OfferHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "OfferHelp">;
 };
 
-const TABS = ["Recent", "Unanswered", "Popular"] as const;
-
-const CATEGORIES = ["Classes", "Professors", "Campus Life"] as const;
-
 const MOCK_QUESTIONS = [
   {
     id: "1",
-    title: "Best study spots on campus that are open late?",
-    category: "Campus Life",
+    titleEn: "Best study spots on campus that are open late?",
+    titleTr: "Kampuste gec saatlere kadar acik en iyi calisma yerleri?",
+    categoryEn: "Campus Life",
+    categoryTr: "Kampus Yasami",
     responses: 8,
-    time: "2h ago",
+    time: "2h",
     answered: true,
   },
   {
     id: "2",
-    title: "How is CENG 242 with Prof. Ozyurt?",
-    category: "Professors",
+    titleEn: "How is CENG 242 with Prof. Ozyurt?",
+    titleTr: "Prof. Ozyurt ile CENG 242 nasil?",
+    categoryEn: "Professors",
+    categoryTr: "Hocalar",
     responses: 3,
-    time: "4h ago",
+    time: "4h",
     answered: true,
   },
   {
     id: "3",
-    title: "Where can I find past exams for MATH 119?",
-    category: "Classes",
+    titleEn: "Where can I find past exams for MATH 119?",
+    titleTr: "MATH 119 icin eski sinavlari nerede bulabilirim?",
+    categoryEn: "Classes",
+    categoryTr: "Dersler",
     responses: 0,
-    time: "5h ago",
+    time: "5h",
     answered: false,
   },
   {
     id: "4",
-    title: "Is the gym crowded during lunch hours?",
-    category: "Campus Life",
+    titleEn: "Is the gym crowded during lunch hours?",
+    titleTr: "Ogle saatlerinde spor salonu kalabalik mi?",
+    categoryEn: "Campus Life",
+    categoryTr: "Kampus Yasami",
     responses: 5,
-    time: "6h ago",
+    time: "6h",
     answered: true,
   },
   {
     id: "5",
-    title: "Tips for surviving PHYS 105 labs?",
-    category: "Classes",
+    titleEn: "Tips for surviving PHYS 105 labs?",
+    titleTr: "PHYS 105 laboratuvarlarindan sag cikma ipuclari?",
+    categoryEn: "Classes",
+    categoryTr: "Dersler",
     responses: 12,
-    time: "8h ago",
+    time: "8h",
     answered: true,
   },
   {
     id: "6",
-    title: "Which dormitory has the best wifi?",
-    category: "Campus Life",
+    titleEn: "Which dormitory has the best wifi?",
+    titleTr: "Hangi yurtta en iyi wifi var?",
+    categoryEn: "Campus Life",
+    categoryTr: "Kampus Yasami",
     responses: 0,
-    time: "10h ago",
+    time: "10h",
     answered: false,
   },
 ];
@@ -134,6 +143,8 @@ interface QuestionCardProps {
   responses: number;
   time: string;
   answered: boolean;
+  responseLabel: string;
+  responsesLabel: string;
   onPress: () => void;
 }
 
@@ -143,6 +154,8 @@ function QuestionCard({
   responses,
   time,
   answered,
+  responseLabel,
+  responsesLabel,
   onPress,
 }: QuestionCardProps) {
   const { theme, isDark } = useTheme();
@@ -151,10 +164,13 @@ function QuestionCard({
   const getCategoryColor = () => {
     switch (category) {
       case "Classes":
+      case "Dersler":
         return isDark ? "#60A5FA" : "#3B82F6";
       case "Professors":
+      case "Hocalar":
         return isDark ? "#A78BFA" : "#8B5CF6";
       case "Campus Life":
+      case "Kampus Yasami":
         return isDark ? "#34D399" : "#10B981";
       default:
         return theme.textSecondary;
@@ -208,7 +224,7 @@ function QuestionCard({
               },
             ]}
           >
-            {responses} {responses === 1 ? "response" : "responses"}
+            {responses} {responses === 1 ? responseLabel : responsesLabel}
           </ThemedText>
         </View>
         <ThemedText
@@ -223,7 +239,8 @@ function QuestionCard({
 
 export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
   const { theme, isDark } = useTheme();
-  const [selectedTab, setSelectedTab] = useState<(typeof TABS)[number]>("Recent");
+  const { t, language } = useLanguage();
+  const [selectedTab, setSelectedTab] = useState<"recent" | "unanswered" | "popular">("recent");
   const [searchQuery, setSearchQuery] = useState("");
   const browseNavigation = useNavigation<
     CompositeNavigationProp<
@@ -232,14 +249,19 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
     >
   >();
 
+  const TABS = [
+    { id: "recent", label: t.recent },
+    { id: "unanswered", label: t.unanswered },
+    { id: "popular", label: t.popular },
+  ] as const;
+
   const filteredQuestions = MOCK_QUESTIONS.filter((q) => {
-    const matchesSearch = q.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    if (selectedTab === "Unanswered") {
+    const title = language === "en" ? q.titleEn : q.titleTr;
+    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase());
+    if (selectedTab === "unanswered") {
       return matchesSearch && !q.answered;
     }
-    if (selectedTab === "Popular") {
+    if (selectedTab === "popular") {
       return matchesSearch && q.responses >= 5;
     }
     return matchesSearch;
@@ -256,7 +278,7 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
         <Feather name="search" size={18} color={theme.textSecondary} />
         <TextInput
           style={[styles.searchInput, { color: theme.text }]}
-          placeholder="Search questions..."
+          placeholder={t.searchQuestions}
           placeholderTextColor={theme.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -271,10 +293,10 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
       <View style={styles.tabsContainer}>
         {TABS.map((tab) => (
           <TabButton
-            key={tab}
-            label={tab}
-            isSelected={selectedTab === tab}
-            onPress={() => setSelectedTab(tab)}
+            key={tab.id}
+            label={tab.label}
+            isSelected={selectedTab === tab.id}
+            onPress={() => setSelectedTab(tab.id as typeof selectedTab)}
           />
         ))}
       </View>
@@ -284,11 +306,13 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
           filteredQuestions.map((question) => (
             <QuestionCard
               key={question.id}
-              title={question.title}
-              category={question.category}
+              title={language === "en" ? question.titleEn : question.titleTr}
+              category={language === "en" ? question.categoryEn : question.categoryTr}
               responses={question.responses}
               time={question.time}
               answered={question.answered}
+              responseLabel={t.response}
+              responsesLabel={t.responses}
               onPress={() => {
                 browseNavigation.navigate("BrowseTab", {
                   screen: "QuestionDetail",
@@ -303,12 +327,12 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
             <ThemedText
               style={[styles.emptyTitle, { color: theme.textSecondary }]}
             >
-              No questions found
+              {t.noQuestionsFound}
             </ThemedText>
             <ThemedText
               style={[styles.emptySubtitle, { color: theme.textSecondary }]}
             >
-              Be the first to ask!
+              {t.beFirstToAsk}
             </ThemedText>
           </View>
         )}

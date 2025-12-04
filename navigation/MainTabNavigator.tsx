@@ -7,6 +7,7 @@ import HomeStackNavigator from "@/navigation/HomeStackNavigator";
 import BrowseStackNavigator from "@/navigation/BrowseStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { METUColors } from "@/constants/theme";
 
 export type MainTabParamList = {
@@ -19,6 +20,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainTabNavigator() {
   const { theme, isDark } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <Tab.Navigator
@@ -50,7 +52,7 @@ export default function MainTabNavigator() {
         name="HomeTab"
         component={HomeStackNavigator}
         options={{
-          title: "Home",
+          title: t.home,
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
           ),
@@ -60,7 +62,7 @@ export default function MainTabNavigator() {
         name="BrowseTab"
         component={BrowseStackNavigator}
         options={{
-          title: "Browse",
+          title: t.browse,
           tabBarIcon: ({ color, size }) => (
             <Feather name="search" size={size} color={color} />
           ),
@@ -70,7 +72,7 @@ export default function MainTabNavigator() {
         name="ProfileTab"
         component={ProfileStackNavigator}
         options={{
-          title: "Profile",
+          title: t.profile,
           tabBarIcon: ({ color, size }) => (
             <Feather name="user" size={size} color={color} />
           ),

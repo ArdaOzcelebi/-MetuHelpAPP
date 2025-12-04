@@ -16,6 +16,7 @@ import Animated, {
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Spacing,
   BorderRadius,
@@ -28,31 +29,35 @@ type BrowseScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
 };
 
-const TABS = ["Needs", "Questions"] as const;
-
 const MOCK_NEEDS = [
   {
     id: "1",
-    title: "Need 1 Bandage",
+    titleEn: "Need 1 Bandage",
+    titleTr: "1 Bandaj Lazim",
     category: "medical",
-    location: "Near Library",
-    time: "5 min ago",
+    locationEn: "Near Library",
+    locationTr: "Kutuphane Yakininda",
+    time: "5 min",
     urgent: true,
   },
   {
     id: "2",
-    title: "Need Pain Reliever",
+    titleEn: "Need Pain Reliever",
+    titleTr: "Agri Kesici Lazim",
     category: "medical",
-    location: "Engineering Building",
-    time: "12 min ago",
+    locationEn: "Engineering Building",
+    locationTr: "Muhendislik Binasi",
+    time: "12 min",
     urgent: true,
   },
   {
     id: "3",
-    title: "Need a Phone Charger (USB-C)",
+    titleEn: "Need a Phone Charger (USB-C)",
+    titleTr: "Telefon Sarj Aleti (USB-C) Lazim",
     category: "other",
-    location: "Student Center",
-    time: "18 min ago",
+    locationEn: "Student Center",
+    locationTr: "Ogrenci Merkezi",
+    time: "18 min",
     urgent: false,
   },
 ];
@@ -60,24 +65,30 @@ const MOCK_NEEDS = [
 const MOCK_QUESTIONS = [
   {
     id: "1",
-    title: "Best study spots on campus that are open late?",
-    category: "Campus Life",
+    titleEn: "Best study spots on campus that are open late?",
+    titleTr: "Kampuste gec saatlere kadar acik en iyi calisma yerleri?",
+    categoryEn: "Campus Life",
+    categoryTr: "Kampus Yasami",
     responses: 8,
-    time: "2h ago",
+    time: "2h",
   },
   {
     id: "2",
-    title: "How is CENG 242 with Prof. Ozyurt?",
-    category: "Professors",
+    titleEn: "How is CENG 242 with Prof. Ozyurt?",
+    titleTr: "Prof. Ozyurt ile CENG 242 nasil?",
+    categoryEn: "Professors",
+    categoryTr: "Hocalar",
     responses: 3,
-    time: "4h ago",
+    time: "4h",
   },
   {
     id: "3",
-    title: "Where can I find past exams for MATH 119?",
-    category: "Classes",
+    titleEn: "Where can I find past exams for MATH 119?",
+    titleTr: "MATH 119 icin eski sinavlari nerede bulabilirim?",
+    categoryEn: "Classes",
+    categoryTr: "Dersler",
     responses: 0,
-    time: "5h ago",
+    time: "5h",
   },
 ];
 
@@ -85,8 +96,14 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function BrowseScreen({ navigation }: BrowseScreenProps) {
   const { theme, isDark } = useTheme();
-  const [selectedTab, setSelectedTab] = useState<(typeof TABS)[number]>("Needs");
+  const { t, language } = useLanguage();
+  const [selectedTab, setSelectedTab] = useState<"needs" | "questions">("needs");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const TABS = [
+    { id: "needs", label: t.needs },
+    { id: "questions", label: t.questions },
+  ] as const;
 
   const getCategoryIcon = (category: string): keyof typeof Feather.glyphMap => {
     switch (category) {
@@ -104,23 +121,28 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "Classes":
+      case "Dersler":
         return isDark ? "#60A5FA" : "#3B82F6";
       case "Professors":
+      case "Hocalar":
         return isDark ? "#A78BFA" : "#8B5CF6";
       case "Campus Life":
+      case "Kampus Yasami":
         return isDark ? "#34D399" : "#10B981";
       default:
         return theme.textSecondary;
     }
   };
 
-  const filteredNeeds = MOCK_NEEDS.filter((need) =>
-    need.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredNeeds = MOCK_NEEDS.filter((need) => {
+    const title = language === "en" ? need.titleEn : need.titleTr;
+    return title.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
-  const filteredQuestions = MOCK_QUESTIONS.filter((q) =>
-    q.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredQuestions = MOCK_QUESTIONS.filter((q) => {
+    const title = language === "en" ? q.titleEn : q.titleTr;
+    return title.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <ScreenScrollView>
@@ -133,7 +155,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
         <Feather name="search" size={18} color={theme.textSecondary} />
         <TextInput
           style={[styles.searchInput, { color: theme.text }]}
-          placeholder="Search..."
+          placeholder={t.search}
           placeholderTextColor={theme.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -148,11 +170,11 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
       <View style={styles.tabsContainer}>
         {TABS.map((tab) => (
           <Pressable
-            key={tab}
-            onPress={() => setSelectedTab(tab)}
+            key={tab.id}
+            onPress={() => setSelectedTab(tab.id as "needs" | "questions")}
             style={[
               styles.tab,
-              selectedTab === tab && {
+              selectedTab === tab.id && {
                 borderBottomWidth: 2,
                 borderBottomColor: isDark ? "#FF6B6B" : METUColors.maroon,
               },
@@ -163,22 +185,22 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
                 styles.tabText,
                 {
                   color:
-                    selectedTab === tab
+                    selectedTab === tab.id
                       ? isDark
                         ? "#FF6B6B"
                         : METUColors.maroon
                       : theme.textSecondary,
-                  fontWeight: selectedTab === tab ? "600" : "400",
+                  fontWeight: selectedTab === tab.id ? "600" : "400",
                 },
               ]}
             >
-              {tab}
+              {tab.label}
             </ThemedText>
           </Pressable>
         ))}
       </View>
 
-      {selectedTab === "Needs" ? (
+      {selectedTab === "needs" ? (
         <View style={styles.listContainer}>
           {filteredNeeds.map((need) => {
             const scale = useSharedValue(1);
@@ -229,10 +251,12 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
                   </View>
                   <View style={styles.needInfo}>
                     <View style={styles.needHeader}>
-                      <ThemedText style={styles.needTitle}>{need.title}</ThemedText>
+                      <ThemedText style={styles.needTitle}>
+                        {language === "en" ? need.titleEn : need.titleTr}
+                      </ThemedText>
                       {need.urgent ? (
                         <View style={styles.urgentBadge}>
-                          <ThemedText style={styles.urgentText}>Urgent</ThemedText>
+                          <ThemedText style={styles.urgentText}>{t.urgent}</ThemedText>
                         </View>
                       ) : null}
                     </View>
@@ -248,7 +272,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
                           { color: theme.textSecondary },
                         ]}
                       >
-                        {need.location}
+                        {language === "en" ? need.locationEn : need.locationTr}
                       </ThemedText>
                       <ThemedText
                         style={[styles.needTime, { color: theme.textSecondary }]}
@@ -269,6 +293,8 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
             const animatedStyle = useAnimatedStyle(() => ({
               transform: [{ scale: scale.value }],
             }));
+
+            const category = language === "en" ? question.categoryEn : question.categoryTr;
 
             return (
               <AnimatedPressable
@@ -291,24 +317,24 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
                 ]}
               >
                 <ThemedText style={styles.questionTitle}>
-                  {question.title}
+                  {language === "en" ? question.titleEn : question.titleTr}
                 </ThemedText>
                 <View style={styles.questionMeta}>
                   <View
                     style={[
                       styles.categoryTag,
                       {
-                        backgroundColor: `${getCategoryColor(question.category)}20`,
+                        backgroundColor: `${getCategoryColor(category)}20`,
                       },
                     ]}
                   >
                     <ThemedText
                       style={[
                         styles.categoryTagText,
-                        { color: getCategoryColor(question.category) },
+                        { color: getCategoryColor(category) },
                       ]}
                     >
-                      {question.category}
+                      {category}
                     </ThemedText>
                   </View>
                   <View style={styles.responsesContainer}>

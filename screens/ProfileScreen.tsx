@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Spacing,
   BorderRadius,
@@ -20,17 +21,18 @@ type ProfileScreenProps = {
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { theme, isDark } = useTheme();
+  const { t } = useLanguage();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
 
   const handleLogout = () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t.logOut, t.logOutConfirm, [
+      { text: t.cancel, style: "cancel" },
       {
-        text: "Log Out",
+        text: t.logOut,
         style: "destructive",
         onPress: () => {
-          Alert.alert("Logged Out", "You have been logged out successfully.");
+          Alert.alert(t.loggedOut, t.loggedOutMessage);
         },
       },
     ]);
@@ -68,7 +70,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           <ThemedText
             style={[styles.statLabel, { color: theme.textSecondary }]}
           >
-            Requests Posted
+            {t.requestsPosted}
           </ThemedText>
         </View>
         <View
@@ -79,13 +81,13 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           <ThemedText
             style={[styles.statLabel, { color: theme.textSecondary }]}
           >
-            Help Given
+            {t.helpGiven}
           </ThemedText>
         </View>
       </View>
 
       <View style={styles.section}>
-        <ThemedText style={styles.sectionTitle}>Notifications</ThemedText>
+        <ThemedText style={styles.sectionTitle}>{t.notifications}</ThemedText>
         <View
           style={[
             styles.settingCard,
@@ -96,7 +98,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
             <View style={styles.settingInfo}>
               <Feather name="bell" size={20} color={theme.text} />
               <ThemedText style={styles.settingLabel}>
-                Push Notifications
+                {t.pushNotifications}
               </ThemedText>
             </View>
             <Switch
@@ -113,7 +115,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Feather name="mail" size={20} color={theme.text} />
-              <ThemedText style={styles.settingLabel}>Email Updates</ThemedText>
+              <ThemedText style={styles.settingLabel}>{t.emailUpdates}</ThemedText>
             </View>
             <Switch
               value={emailUpdates}
@@ -129,7 +131,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       </View>
 
       <View style={styles.section}>
-        <ThemedText style={styles.sectionTitle}>About</ThemedText>
+        <ThemedText style={styles.sectionTitle}>{t.about}</ThemedText>
         <View
           style={[
             styles.settingCard,
@@ -144,7 +146,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           >
             <View style={styles.settingInfo}>
               <Feather name="info" size={20} color={theme.text} />
-              <ThemedText style={styles.settingLabel}>About METU Help</ThemedText>
+              <ThemedText style={styles.settingLabel}>{t.aboutApp}</ThemedText>
             </View>
             <Feather name="chevron-right" size={20} color={theme.textSecondary} />
           </Pressable>
@@ -157,7 +159,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           >
             <View style={styles.settingInfo}>
               <Feather name="shield" size={20} color={theme.text} />
-              <ThemedText style={styles.settingLabel}>Privacy Policy</ThemedText>
+              <ThemedText style={styles.settingLabel}>{t.privacyPolicy}</ThemedText>
             </View>
             <Feather name="chevron-right" size={20} color={theme.textSecondary} />
           </Pressable>
@@ -170,7 +172,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           >
             <View style={styles.settingInfo}>
               <Feather name="file-text" size={20} color={theme.text} />
-              <ThemedText style={styles.settingLabel}>Terms of Service</ThemedText>
+              <ThemedText style={styles.settingLabel}>{t.termsOfService}</ThemedText>
             </View>
             <Feather name="chevron-right" size={20} color={theme.textSecondary} />
           </Pressable>
@@ -186,7 +188,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       >
         <Feather name="log-out" size={20} color={METUColors.alertRed} />
         <ThemedText style={[styles.logoutText, { color: METUColors.alertRed }]}>
-          Log Out
+          {t.logOut}
         </ThemedText>
       </Pressable>
 

@@ -16,6 +16,7 @@ import Animated, {
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Spacing,
   BorderRadius,
@@ -28,53 +29,55 @@ type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
 };
 
-const CATEGORIES = [
-  { id: "all", label: "All", icon: "grid" },
-  { id: "medical", label: "Medical", icon: "activity" },
-  { id: "academic", label: "Academic", icon: "book" },
-  { id: "transport", label: "Transport", icon: "navigation" },
-  { id: "other", label: "Other", icon: "help-circle" },
-] as const;
-
 const MOCK_REQUESTS = [
   {
     id: "1",
-    title: "Need 1 Bandage",
+    titleEn: "Need 1 Bandage",
+    titleTr: "1 Bandaj Lazim",
     category: "medical",
-    location: "Near Library",
-    time: "5 min ago",
+    locationEn: "Near Library",
+    locationTr: "Kutuphane Yakininda",
+    time: "5 min",
     urgent: true,
   },
   {
     id: "2",
-    title: "Need Pain Reliever",
+    titleEn: "Need Pain Reliever",
+    titleTr: "Agri Kesici Lazim",
     category: "medical",
-    location: "Engineering Building",
-    time: "12 min ago",
+    locationEn: "Engineering Building",
+    locationTr: "Muhendislik Binasi",
+    time: "12 min",
     urgent: true,
   },
   {
     id: "3",
-    title: "Need a Phone Charger (USB-C)",
+    titleEn: "Need a Phone Charger (USB-C)",
+    titleTr: "Telefon Sarj Aleti (USB-C) Lazim",
     category: "other",
-    location: "Student Center",
-    time: "18 min ago",
+    locationEn: "Student Center",
+    locationTr: "Ogrenci Merkezi",
+    time: "18 min",
     urgent: false,
   },
   {
     id: "4",
-    title: "Looking for Ride to Kizilay",
+    titleEn: "Looking for Ride to Kizilay",
+    titleTr: "Kizilay'a Arac Ariyorum",
     category: "transport",
-    location: "Main Gate",
-    time: "25 min ago",
+    locationEn: "Main Gate",
+    locationTr: "Ana Kapi",
+    time: "25 min",
     urgent: false,
   },
   {
     id: "5",
-    title: "Need Calculator for Exam",
+    titleEn: "Need Calculator for Exam",
+    titleTr: "Sinav icin Hesap Makinesi Lazim",
     category: "academic",
-    location: "Physics Building",
-    time: "32 min ago",
+    locationEn: "Physics Building",
+    locationTr: "Fizik Binasi",
+    time: "32 min",
     urgent: true,
   },
 ];
@@ -141,6 +144,8 @@ interface RequestCardProps {
   location: string;
   time: string;
   urgent: boolean;
+  urgentLabel: string;
+  helpButtonLabel: string;
   onPress: () => void;
   onHelp: () => void;
 }
@@ -151,6 +156,8 @@ function RequestCard({
   location,
   time,
   urgent,
+  urgentLabel,
+  helpButtonLabel,
   onPress,
   onHelp,
 }: RequestCardProps) {
@@ -211,7 +218,7 @@ function RequestCard({
             <ThemedText style={styles.requestTitle}>{title}</ThemedText>
             {urgent ? (
               <View style={styles.urgentBadge}>
-                <ThemedText style={styles.urgentText}>Urgent</ThemedText>
+                <ThemedText style={styles.urgentText}>{urgentLabel}</ThemedText>
               </View>
             ) : null}
           </View>
@@ -237,7 +244,7 @@ function RequestCard({
           { opacity: pressed ? 0.8 : 1 },
         ]}
       >
-        <ThemedText style={styles.helpButtonText}>I Can Help</ThemedText>
+        <ThemedText style={styles.helpButtonText}>{helpButtonLabel}</ThemedText>
       </Pressable>
     </AnimatedPressable>
   );
@@ -245,7 +252,16 @@ function RequestCard({
 
 export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { theme, isDark } = useTheme();
+  const { t, language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState("all");
+
+  const CATEGORIES = [
+    { id: "all", label: t.all, icon: "grid" },
+    { id: "medical", label: t.medical, icon: "activity" },
+    { id: "academic", label: t.academic, icon: "book" },
+    { id: "transport", label: t.transport, icon: "navigation" },
+    { id: "other", label: t.other, icon: "help-circle" },
+  ] as const;
 
   const filteredRequests =
     selectedCategory === "all"
@@ -276,11 +292,13 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
         {filteredRequests.map((request) => (
           <RequestCard
             key={request.id}
-            title={request.title}
+            title={language === "en" ? request.titleEn : request.titleTr}
             category={request.category}
-            location={request.location}
+            location={language === "en" ? request.locationEn : request.locationTr}
             time={request.time}
             urgent={request.urgent}
+            urgentLabel={t.urgent}
+            helpButtonLabel={t.iCanHelp}
             onPress={() =>
               navigation.navigate("RequestDetail", { requestId: request.id })
             }

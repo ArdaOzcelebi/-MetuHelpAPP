@@ -5,6 +5,7 @@ import RequestDetailScreen from "@/screens/RequestDetailScreen";
 import QuestionDetailScreen from "@/screens/QuestionDetailScreen";
 import AskQuestionScreen from "@/screens/AskQuestionScreen";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
 
 export type BrowseStackParamList = {
@@ -18,6 +19,7 @@ const Stack = createNativeStackNavigator<BrowseStackParamList>();
 
 export default function BrowseStackNavigator() {
   const { theme, isDark } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <Stack.Navigator screenOptions={getCommonScreenOptions({ theme, isDark })}>
@@ -25,24 +27,24 @@ export default function BrowseStackNavigator() {
         name="Browse"
         component={BrowseScreen}
         options={{
-          title: "Browse All",
+          title: t.browse,
         }}
       />
       <Stack.Screen
         name="RequestDetail"
         component={RequestDetailScreen}
-        options={{ headerTitle: "Request Details" }}
+        options={{ headerTitle: t.requestDetails }}
       />
       <Stack.Screen
         name="QuestionDetail"
         component={QuestionDetailScreen}
-        options={{ headerTitle: "Question" }}
+        options={{ headerTitle: t.questionDetails }}
       />
       <Stack.Screen
         name="AskQuestion"
         component={AskQuestionScreen}
         options={{
-          headerTitle: "Ask a Question",
+          headerTitle: t.askQuestion,
           presentation: "modal",
         }}
       />
