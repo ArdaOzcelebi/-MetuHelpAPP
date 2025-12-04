@@ -8,21 +8,24 @@ import { StatusBar } from "expo-status-bar";
 
 import MainTabNavigator from "@/navigation/MainTabNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 export default function App() {
   return (
-  <ErrorBoundary>
-    <SafeAreaProvider>
-        <GestureHandlerRootView style={styles.root}>
-          <KeyboardProvider>
-            <NavigationContainer>
-              <MainTabNavigator />
-            </NavigationContainer>
-            <StatusBar style="auto" />
-          </KeyboardProvider>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
-  </ErrorBoundary>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <SafeAreaProvider>
+          <GestureHandlerRootView style={styles.root}>
+            <KeyboardProvider>
+              <NavigationContainer>
+                <MainTabNavigator />
+              </NavigationContainer>
+              <StatusBar style="auto" />
+            </KeyboardProvider>
+          </GestureHandlerRootView>
+        </SafeAreaProvider>
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }
 

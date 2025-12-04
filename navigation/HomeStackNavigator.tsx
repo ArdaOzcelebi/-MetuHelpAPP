@@ -6,6 +6,7 @@ import OfferHelpScreen from "@/screens/OfferHelpScreen";
 import RequestDetailScreen from "@/screens/RequestDetailScreen";
 import PostNeedScreen from "@/screens/PostNeedScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useTheme } from "@/hooks/useTheme";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
 
@@ -33,6 +34,7 @@ export default function HomeStackNavigator() {
         component={HomeScreen}
         options={{
           headerTitle: () => <HeaderTitle title="METU Help" />,
+          headerRight: () => <LanguageToggle />,
         }}
       />
       <Stack.Screen

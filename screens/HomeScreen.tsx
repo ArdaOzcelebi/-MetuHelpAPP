@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, Pressable, Image } from "react-native";
+import { StyleSheet, View, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -14,6 +14,7 @@ import Animated, {
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Spacing,
   BorderRadius,
@@ -30,7 +31,6 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface HeroButtonProps {
   title: string;
-  subtitle: string;
   icon: keyof typeof Feather.glyphMap;
   backgroundColor: string;
   onPress: () => void;
@@ -38,7 +38,6 @@ interface HeroButtonProps {
 
 function HeroButton({
   title,
-  subtitle,
   icon,
   backgroundColor,
   onPress,
@@ -70,7 +69,6 @@ function HeroButton({
         </View>
         <View style={styles.heroButtonText}>
           <ThemedText style={styles.heroButtonTitle}>{title}</ThemedText>
-          <ThemedText style={styles.heroButtonSubtitle}>{subtitle}</ThemedText>
         </View>
         <Feather name="chevron-right" size={24} color="#FFFFFF" />
       </View>
@@ -80,7 +78,7 @@ function HeroButton({
 
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { theme, isDark } = useTheme();
-  const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
 
@@ -96,28 +94,26 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     >
       <View style={styles.header}>
         <ThemedText type="h2" style={styles.greeting}>
-          Welcome to METU Help
+          {t.welcome}
         </ThemedText>
         <ThemedText
           type="body"
           style={[styles.tagline, { color: theme.textSecondary }]}
         >
-          Connect with fellow students for instant campus support
+          {t.tagline}
         </ThemedText>
       </View>
 
       <View style={styles.buttonsContainer}>
         <HeroButton
-          title="NEED HELP"
-          subtitle="Yardim Istiyorum"
+          title={t.needHelp}
           icon="heart"
           backgroundColor={METUColors.actionGreen}
           onPress={() => navigation.navigate("NeedHelp")}
         />
 
         <HeroButton
-          title="OFFER HELP"
-          subtitle="Yardim Ediyorum"
+          title={t.offerHelp}
           icon="users"
           backgroundColor={isDark ? "#CC3333" : METUColors.maroon}
           onPress={() => navigation.navigate("OfferHelp")}
@@ -138,7 +134,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             type="small"
             style={[styles.statLabel, { color: theme.textSecondary }]}
           >
-            Active Requests
+            {t.activeRequests}
           </ThemedText>
         </View>
         <View
@@ -150,7 +146,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             type="small"
             style={[styles.statLabel, { color: theme.textSecondary }]}
           >
-            Helped Today
+            {t.helpedToday}
           </ThemedText>
         </View>
       </View>
@@ -202,11 +198,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.h3.fontSize,
     fontWeight: "700",
     color: "#FFFFFF",
-    marginBottom: Spacing.xs,
-  },
-  heroButtonSubtitle: {
-    fontSize: Typography.body.fontSize,
-    color: "rgba(255, 255, 255, 0.8)",
   },
   statsContainer: {
     flexDirection: "row",
