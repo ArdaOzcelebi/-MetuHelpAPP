@@ -1,13 +1,17 @@
-import { useState } from "react";
-import { StyleSheet, View, TextInput } from "react-native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React, { useState } from "react";
+import { StyleSheet, View, Pressable, Switch, Alert } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
+import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
-import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Typography } from "@/constants/theme";
-import Spacer from "@/components/Spacer";
+import {
+  Spacing,
+  BorderRadius,
+  METUColors,
+  Typography,
+} from "@/constants/theme";
 import type { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
 
 type ProfileScreenProps = {
@@ -16,179 +20,278 @@ type ProfileScreenProps = {
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { theme, isDark } = useTheme();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [emailUpdates, setEmailUpdates] = useState(false);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSubmit = () => {
-    console.log("Form submitted:", { name, email, password });
+  const handleLogout = () => {
+    Alert.alert("Log Out", "Are you sure you want to log out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Log Out",
+        style: "destructive",
+        onPress: () => {
+          Alert.alert("Logged Out", "You have been logged out successfully.");
+        },
+      },
+    ]);
   };
 
-  const inputStyle = [
-    styles.input,
-    {
-      backgroundColor: theme.backgroundDefault,
-      color: theme.text,
-    },
-  ];
-
   return (
-    <ScreenKeyboardAwareScrollView>
-      <View style={styles.section}>
-        <ThemedText type="h1">Heading 1</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          32px • Bold
+    <ScreenScrollView>
+      <View style={styles.profileHeader}>
+        <View
+          style={[
+            styles.avatar,
+            { backgroundColor: isDark ? "#CC3333" : METUColors.maroon },
+          ]}
+        >
+          <ThemedText style={styles.avatarText}>ME</ThemedText>
+        </View>
+        <ThemedText type="h3" style={styles.userName}>
+          METU Student
         </ThemedText>
+        <ThemedText style={[styles.userEmail, { color: theme.textSecondary }]}>
+          student@metu.edu.tr
+        </ThemedText>
+      </View>
+
+      <View style={styles.statsRow}>
+        <View
+          style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
+        >
+          <Feather
+            name="heart"
+            size={20}
+            color={isDark ? "#FF6B6B" : METUColors.maroon}
+          />
+          <ThemedText style={styles.statNumber}>12</ThemedText>
+          <ThemedText
+            style={[styles.statLabel, { color: theme.textSecondary }]}
+          >
+            Requests Posted
+          </ThemedText>
+        </View>
+        <View
+          style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
+        >
+          <Feather name="users" size={20} color={METUColors.actionGreen} />
+          <ThemedText style={styles.statNumber}>28</ThemedText>
+          <ThemedText
+            style={[styles.statLabel, { color: theme.textSecondary }]}
+          >
+            Help Given
+          </ThemedText>
+        </View>
       </View>
 
       <View style={styles.section}>
-        <ThemedText type="h2">Heading 2</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          28px • Bold
-        </ThemedText>
+        <ThemedText style={styles.sectionTitle}>Notifications</ThemedText>
+        <View
+          style={[
+            styles.settingCard,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
+        >
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Feather name="bell" size={20} color={theme.text} />
+              <ThemedText style={styles.settingLabel}>
+                Push Notifications
+              </ThemedText>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={setNotificationsEnabled}
+              trackColor={{
+                false: theme.backgroundSecondary,
+                true: METUColors.actionGreen,
+              }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Feather name="mail" size={20} color={theme.text} />
+              <ThemedText style={styles.settingLabel}>Email Updates</ThemedText>
+            </View>
+            <Switch
+              value={emailUpdates}
+              onValueChange={setEmailUpdates}
+              trackColor={{
+                false: theme.backgroundSecondary,
+                true: METUColors.actionGreen,
+              }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+        </View>
       </View>
 
       <View style={styles.section}>
-        <ThemedText type="h3">Heading 3</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          24px • Semi-Bold
-        </ThemedText>
+        <ThemedText style={styles.sectionTitle}>About</ThemedText>
+        <View
+          style={[
+            styles.settingCard,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
+        >
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingRow,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <View style={styles.settingInfo}>
+              <Feather name="info" size={20} color={theme.text} />
+              <ThemedText style={styles.settingLabel}>About METU Help</ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingRow,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <View style={styles.settingInfo}>
+              <Feather name="shield" size={20} color={theme.text} />
+              <ThemedText style={styles.settingLabel}>Privacy Policy</ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingRow,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <View style={styles.settingInfo}>
+              <Feather name="file-text" size={20} color={theme.text} />
+              <ThemedText style={styles.settingLabel}>Terms of Service</ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+          </Pressable>
+        </View>
       </View>
 
-      <View style={styles.section}>
-        <ThemedText type="h4">Heading 4</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          20px • Semi-Bold
-        </ThemedText>
-      </View>
-
-      <View style={styles.section}>
-        <ThemedText type="body">
-          Body text - This is the default text style for paragraphs and general
-          content.
-        </ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          16px • Regular
-        </ThemedText>
-      </View>
-
-      <View style={styles.section}>
-        <ThemedText type="small">
-          Small text - Used for captions, labels, and secondary information.
-        </ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          14px • Regular
-        </ThemedText>
-      </View>
-
-      <View style={styles.section}>
-        <ThemedText type="link">Link text - Interactive elements</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          16px • Regular • Colored
-        </ThemedText>
-      </View>
-
-      <Spacer height={Spacing["4xl"]} />
-
-      <View style={styles.fieldContainer}>
-        <ThemedText type="small" style={styles.label}>
-          Name
-        </ThemedText>
-        <TextInput
-          style={inputStyle}
-          value={name}
-          onChangeText={setName}
-          placeholder="Enter your name"
-          placeholderTextColor={isDark ? "#9BA1A6" : "#687076"}
-          autoCapitalize="words"
-          returnKeyType="next"
-        />
-      </View>
-
-      <Spacer height={Spacing.lg} />
-
-      <View style={styles.fieldContainer}>
-        <ThemedText type="small" style={styles.label}>
-          Email
-        </ThemedText>
-        <TextInput
-          style={inputStyle}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="your.email@example.com"
-          placeholderTextColor={isDark ? "#9BA1A6" : "#687076"}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          returnKeyType="next"
-        />
-      </View>
-
-      <Spacer height={Spacing.lg} />
-
-      <View style={styles.fieldContainer}>
-        <ThemedText type="small" style={styles.label}>
-          Password
-        </ThemedText>
-        <TextInput
-          style={inputStyle}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Enter a password"
-          placeholderTextColor={isDark ? "#9BA1A6" : "#687076"}
-          secureTextEntry
-          autoCapitalize="none"
-          returnKeyType="next"
-        />
-      </View>
-
-      <Spacer height={Spacing.lg} />
-
-      <Button onPress={handleSubmit}>Submit Form</Button>
-
-      <Spacer height={Spacing["2xl"]} />
-
-      <ThemedText type="h3" style={styles.sectionTitle}>
-        Testing
-      </ThemedText>
-      <Spacer height={Spacing.md} />
-      <Button
-        onPress={() => navigation.navigate("Crash")}
-        style={styles.crashButton}
+      <Pressable
+        onPress={handleLogout}
+        style={({ pressed }) => [
+          styles.logoutButton,
+          { backgroundColor: theme.backgroundDefault, opacity: pressed ? 0.8 : 1 },
+        ]}
       >
-        Crash App
-      </Button>
-    </ScreenKeyboardAwareScrollView>
+        <Feather name="log-out" size={20} color={METUColors.alertRed} />
+        <ThemedText style={[styles.logoutText, { color: METUColors.alertRed }]}>
+          Log Out
+        </ThemedText>
+      </Pressable>
+
+      <ThemedText style={[styles.versionText, { color: theme.textSecondary }]}>
+        METU Help v1.0.0
+      </ThemedText>
+    </ScreenScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: Spacing["3xl"],
+  profileHeader: {
+    alignItems: "center",
+    marginBottom: Spacing["2xl"],
   },
-  meta: {
-    opacity: 0.5,
-    marginTop: Spacing.sm,
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.md,
   },
-  fieldContainer: {
-    width: "100%",
+  avatarText: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "700",
   },
-  label: {
-    marginBottom: Spacing.sm,
-    fontWeight: "600",
-    opacity: 0.8,
+  userName: {
+    marginBottom: Spacing.xs,
   },
-  input: {
-    height: Spacing.inputHeight,
-    borderWidth: 0,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.lg,
+  userEmail: {
     fontSize: Typography.body.fontSize,
   },
-  sectionTitle: {
-    marginTop: Spacing.xl,
+  statsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginBottom: Spacing["2xl"],
   },
-  crashButton: {
-    backgroundColor: "#FF3B30",
+  statCard: {
+    flex: 1,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginTop: Spacing.sm,
+  },
+  statLabel: {
+    fontSize: Typography.caption.fontSize,
+    marginTop: Spacing.xs,
+    textAlign: "center",
+  },
+  section: {
+    marginBottom: Spacing["2xl"],
+  },
+  sectionTitle: {
+    fontSize: Typography.small.fontSize,
+    fontWeight: "600",
+    marginBottom: Spacing.sm,
+    opacity: 0.7,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  settingCard: {
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+  },
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.lg,
+  },
+  settingInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  settingLabel: {
+    fontSize: Typography.body.fontSize,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(128, 128, 128, 0.2)",
+    marginHorizontal: Spacing.lg,
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  logoutText: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "600",
+  },
+  versionText: {
+    fontSize: Typography.caption.fontSize,
+    textAlign: "center",
+    marginBottom: Spacing.xl,
   },
 });
