@@ -123,10 +123,10 @@ function DecorativeCircle({
   delay = 0,
 }: {
   size: number;
-  top?: number | string;
-  left?: number | string;
-  right?: number | string;
-  bottom?: number | string;
+  top?: number;
+  left?: number;
+  right?: number;
+  bottom?: number;
   color: string;
   delay?: number;
 }) {
@@ -142,7 +142,7 @@ function DecorativeCircle({
       delay,
       withSpring(1, { damping: 20, stiffness: 90 }),
     );
-  }, []);
+  }, [delay]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -159,10 +159,10 @@ function DecorativeCircle({
           height: size,
           borderRadius: size / 2,
           backgroundColor: color,
-          top: top as any,
-          left: left as any,
-          right: right as any,
-          bottom: bottom as any,
+          top,
+          left,
+          right,
+          bottom,
         },
       ]}
     />
@@ -216,7 +216,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       500,
       withSpring(0, { damping: 20, stiffness: 90 }),
     );
-  }, []);
+  }, [
+    headerOpacity,
+    headerTranslateY,
+    button1Opacity,
+    button1TranslateY,
+    button2Opacity,
+    button2TranslateY,
+    statsOpacity,
+    statsTranslateY,
+  ]);
 
   const headerStyle = useAnimatedStyle(() => ({
     opacity: headerOpacity.value,
@@ -260,7 +269,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       <DecorativeCircle size={150} bottom={-40} left={-50} color={circleColor} delay={200} />
       <DecorativeCircle
         size={100}
-        top="30%"
+        top={150}
         left={-30}
         color={isDark ? "#10B981" : METUColors.actionGreen}
         delay={400}
