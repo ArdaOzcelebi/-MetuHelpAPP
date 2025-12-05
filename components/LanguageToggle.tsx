@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -16,7 +16,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function LanguageToggle() {
   const { language, toggleLanguage } = useLanguage();
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
