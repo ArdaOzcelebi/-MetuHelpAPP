@@ -4,6 +4,7 @@ import {
   View,
   Pressable,
   TextInput,
+  Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -356,6 +357,19 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
   );
 }
 
+const FAB_SHADOW = Platform.select({
+  web: {
+    boxShadow: "0px 12px 24px rgba(0, 0, 0, 0.2)",
+  },
+  default: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+});
+
 const styles = StyleSheet.create({
   contentContainer: {
     paddingBottom: Spacing["6xl"] + 60,
@@ -448,10 +462,6 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    ...(FAB_SHADOW ?? {}),
   },
 });

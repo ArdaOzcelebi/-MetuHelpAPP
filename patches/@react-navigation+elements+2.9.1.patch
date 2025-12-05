@@ -1,3 +1,85 @@
+diff --git a/node_modules/@react-navigation/elements/lib/module/Header/Header.js b/node_modules/@react-navigation/elements/lib/module/Header/Header.js
+index db27170..4a0e9a4 100644
+--- a/node_modules/@react-navigation/elements/lib/module/Header/Header.js
++++ b/node_modules/@react-navigation/elements/lib/module/Header/Header.js
+@@ -243,9 +243,9 @@ export function Header(props) {
+   const headerTitle = typeof customTitle !== 'function' ? props => /*#__PURE__*/_jsx(HeaderTitle, {
+     ...props
+   }) : customTitle;
++  const disableHeaderBackgroundPointerEvents = headerTransparent && (backgroundStyle.backgroundColor === 'transparent' || Color(backgroundStyle.backgroundColor).alpha() === 0);
+   return /*#__PURE__*/_jsxs(Animated.View, {
+-    pointerEvents: "box-none",
+-    style: [{
++    style: [styles.pointerBoxNone, {
+       height,
+       minHeight,
+       maxHeight,
+@@ -253,34 +253,26 @@ export function Header(props) {
+       transform
+     }],
+     children: [/*#__PURE__*/_jsx(Animated.View, {
+-      pointerEvents: "box-none",
+-      style: [StyleSheet.absoluteFill, backgroundContainerStyle],
++      style: [styles.pointerBoxNone, StyleSheet.absoluteFill, backgroundContainerStyle],
+       children: headerBackground ? headerBackground({
+         style: backgroundStyle
+       }) : /*#__PURE__*/_jsx(HeaderBackground, {
+-        pointerEvents:
+-        // Allow touch through the header when background color is transparent
+-        headerTransparent && (backgroundStyle.backgroundColor === 'transparent' || Color(backgroundStyle.backgroundColor).alpha() === 0) ? 'none' : 'auto',
+-        style: backgroundStyle
++        style: [backgroundStyle, disableHeaderBackgroundPointerEvents ? styles.pointerNone : null]
+       })
+     }), /*#__PURE__*/_jsx(View, {
+-      pointerEvents: "none",
+-      style: {
++      style: [styles.pointerNone, {
+         height: headerStatusBarHeight
+-      }
++      }]
+     }), /*#__PURE__*/_jsxs(View, {
+-      pointerEvents: "box-none",
+-      style: [styles.content, Platform.OS === 'ios' && frame.width >= IPAD_MINI_MEDIUM_WIDTH ? styles.large : null],
++      style: [styles.pointerBoxNone, styles.content, Platform.OS === 'ios' && frame.width >= IPAD_MINI_MEDIUM_WIDTH ? styles.large : null],
+       children: [/*#__PURE__*/_jsx(Animated.View, {
+-        pointerEvents: "box-none",
+-        style: [styles.start, !searchBarVisible && headerTitleAlign === 'center' && styles.expand, {
++        style: [styles.pointerBoxNone, styles.start, !searchBarVisible && headerTitleAlign === 'center' && styles.expand, {
+           marginStart: insets.left
+         }, leftContainerStyle],
+         children: leftButton
+       }), Platform.OS === 'ios' || !searchBarVisible ? /*#__PURE__*/_jsxs(_Fragment, {
+         children: [/*#__PURE__*/_jsx(Animated.View, {
+-          pointerEvents: "box-none",
+-          style: [styles.title, {
++          style: [styles.pointerBoxNone, styles.title, {
+             // Avoid the title from going offscreen or overlapping buttons
+             maxWidth: headerTitleAlign === 'center' ? layout.width - ((leftButton ? headerBackButtonDisplayMode !== 'minimal' ? 80 : 32 : 16) + (rightButton || headerSearchBarOptions ? 16 : 0) + Math.max(insets.left, insets.right)) * 2 : layout.width - ((leftButton ? 52 : 16) + (rightButton || headerSearchBarOptions ? 52 : 16) + insets.left - insets.right)
+           }, headerTitleAlign === 'left' && leftButton ? {
+@@ -296,8 +288,7 @@ export function Header(props) {
+             style: titleStyle
+           })
+         }), /*#__PURE__*/_jsxs(Animated.View, {
+-          pointerEvents: "box-none",
+-          style: [styles.end, styles.expand, {
++          style: [styles.pointerBoxNone, styles.end, styles.expand, {
+             marginEnd: insets.right
+           }, rightContainerStyle],
+           children: [rightButton, headerSearchBarOptions ? /*#__PURE__*/_jsx(HeaderButton, {
+@@ -358,6 +349,12 @@ const styles = StyleSheet.create({
+   expand: {
+     flexGrow: 1,
+     flexBasis: 0
++  },
++  pointerBoxNone: {
++    pointerEvents: 'box-none'
++  },
++  pointerNone: {
++    pointerEvents: 'none'
+   }
+ });
+ //# sourceMappingURL=Header.js.map
+\ No newline at end of file
 diff --git a/node_modules/@react-navigation/elements/lib/module/Screen.js b/node_modules/@react-navigation/elements/lib/module/Screen.js
 index 8689e62..697e405 100644
 --- a/node_modules/@react-navigation/elements/lib/module/Screen.js

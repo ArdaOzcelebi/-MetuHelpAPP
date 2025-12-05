@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import * as SQLite from "expo-sqlite";
 
 export type RequestCategory = "medical" | "academic" | "transport" | "other";
@@ -60,11 +61,32 @@ const DEFAULT_POSTER = {
   tr: { name: "Topluluk Uyesi", initials: "TU" },
 };
 
-const database = SQLite.openDatabaseSync("metuhelp.db");
+const isWeb = Platform.OS === "web";
+const STORAGE_KEY = "metuhelp.requests";
+const canUseSQLite = !isWeb && typeof SQLite.openDatabaseSync === "function";
+
+type WebStorage = {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+};
+
+const database: SQLite.SQLiteDatabase | null = canUseSQLite
+  ? openDatabaseSafe()
+  : null;
+let webCache: RequestRecord[] = [];
 let isInitialized = false;
 
 export function getAllRequests(): RequestRecord[] {
   ensureDatabase();
+  if (isWeb) {
+    return [...webCache].sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  if (!database) {
+    return [];
+  }
+
   const rows = database.getAllSync<RequestRow>(
     "SELECT * FROM requests ORDER BY createdAt DESC"
   );
@@ -73,6 +95,14 @@ export function getAllRequests(): RequestRecord[] {
 
 export function getRequestById(id: string): RequestRecord | undefined {
   ensureDatabase();
+  if (isWeb) {
+    return webCache.find((request) => request.id === id);
+  }
+
+  if (!database) {
+    return undefined;
+  }
+
   const row = database.getFirstSync<RequestRow>(
     "SELECT * FROM requests WHERE id = ?",
     id
@@ -100,6 +130,16 @@ export function createRequest(payload: NewRequestPayload): RequestRecord {
     urgent: payload.urgent,
     createdAt: Date.now(),
   };
+
+  if (isWeb) {
+    webCache = [record, ...webCache];
+    persistWebCache();
+    return record;
+  }
+
+  if (!database) {
+    throw new Error("SQLite database is not available on this platform.");
+  }
 
   database.withTransactionSync((tx) => {
     tx.runSync(
@@ -130,6 +170,16 @@ function ensureDatabase() {
     return;
   }
 
+  if (!database || typeof database.execSync !== "function") {
+    if (isWeb) {
+      webCache = loadWebCache();
+      isInitialized = true;
+      return;
+    }
+
+    throw new Error("SQLite database is not available on this platform.");
+  }
+
   database.execSync(`
     CREATE TABLE IF NOT EXISTS requests (
       id TEXT PRIMARY KEY NOT NULL,
@@ -152,15 +202,46 @@ function ensureDatabase() {
   );
 
   if (!countRow || countRow.count === 0) {
-    seedRequests();
+    seedDatabase();
   }
 
   isInitialized = true;
 }
 
-function seedRequests() {
+function seedDatabase() {
+  if (!database) {
+    return;
+  }
+
+  const seedData = buildSeedData();
+
+  database.withTransactionSync((tx) => {
+    seedData.forEach((request) => {
+      tx.runSync(
+        `INSERT INTO requests (id, titleEn, titleTr, category, locationEn, locationTr, descriptionEn, descriptionTr, posterName, posterInitials, urgent, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          request.id,
+          request.titleEn,
+          request.titleTr,
+          request.category,
+          request.locationEn,
+          request.locationTr,
+          request.descriptionEn,
+          request.descriptionTr,
+          request.posterName,
+          request.posterInitials,
+          request.urgent ? 1 : 0,
+          request.createdAt,
+        ]
+      );
+    });
+  });
+}
+
+function buildSeedData(): RequestRecord[] {
   const now = Date.now();
-  const seedData: RequestRecord[] = [
+  return [
     {
       id: "1",
       titleEn: "Need 1 Bandage",
@@ -242,29 +323,48 @@ function seedRequests() {
       createdAt: now - 32 * 60 * 1000,
     },
   ];
+}
 
-  database.withTransactionSync((tx) => {
-    seedData.forEach((request) => {
-      tx.runSync(
-        `INSERT INTO requests (id, titleEn, titleTr, category, locationEn, locationTr, descriptionEn, descriptionTr, posterName, posterInitials, urgent, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          request.id,
-          request.titleEn,
-          request.titleTr,
-          request.category,
-          request.locationEn,
-          request.locationTr,
-          request.descriptionEn,
-          request.descriptionTr,
-          request.posterName,
-          request.posterInitials,
-          request.urgent ? 1 : 0,
-          request.createdAt,
-        ]
-      );
-    });
-  });
+function loadWebCache(): RequestRecord[] {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return buildSeedData();
+  }
+
+  const storedValue = storage.getItem(STORAGE_KEY);
+  if (storedValue) {
+    try {
+      const parsed = JSON.parse(storedValue) as RequestRecord[];
+      if (Array.isArray(parsed)) {
+        return parsed.sort((a, b) => b.createdAt - a.createdAt);
+      }
+    } catch {
+      storage.removeItem(STORAGE_KEY);
+    }
+  }
+
+  const seedData = buildSeedData();
+  storage.setItem(STORAGE_KEY, JSON.stringify(seedData));
+  return seedData;
+}
+
+function persistWebCache() {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return;
+  }
+  storage.setItem(STORAGE_KEY, JSON.stringify(webCache));
+}
+
+function getLocalStorage(): WebStorage | undefined {
+  try {
+    if (typeof globalThis !== "undefined" && "localStorage" in globalThis) {
+      return (globalThis as { localStorage?: WebStorage }).localStorage;
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
 }
 
 function mapRow(row: RequestRow): RequestRecord {
@@ -274,4 +374,15 @@ function mapRow(row: RequestRow): RequestRecord {
 function generateId() {
   const random = Math.random().toString(36).slice(2, 7);
   return `${Date.now()}-${random}`;
+}
+
+function openDatabaseSafe(): SQLite.SQLiteDatabase | null {
+  try {
+    return SQLite.openDatabaseSync("metuhelp.db");
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Failed to open SQLite database", error);
+    }
+    return null;
+  }
 }
