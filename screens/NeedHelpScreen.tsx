@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   StyleSheet,
   View,
   Pressable,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -18,6 +20,12 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
+  getAllRequests,
+  type RequestCategory,
+  type RequestRecord,
+} from "@/services/requestsStore";
+import { formatRelativeTime } from "@/utils/formatRelativeTime";
+import {
   Spacing,
   BorderRadius,
   METUColors,
@@ -28,59 +36,6 @@ import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
 };
-
-const MOCK_REQUESTS = [
-  {
-    id: "1",
-    titleEn: "Need 1 Bandage",
-    titleTr: "1 Bandaj Lazim",
-    category: "medical",
-    locationEn: "Near Library",
-    locationTr: "Kutuphane Yakininda",
-    time: "5 min",
-    urgent: true,
-  },
-  {
-    id: "2",
-    titleEn: "Need Pain Reliever",
-    titleTr: "Agri Kesici Lazim",
-    category: "medical",
-    locationEn: "Engineering Building",
-    locationTr: "Muhendislik Binasi",
-    time: "12 min",
-    urgent: true,
-  },
-  {
-    id: "3",
-    titleEn: "Need a Phone Charger (USB-C)",
-    titleTr: "Telefon Sarj Aleti (USB-C) Lazim",
-    category: "other",
-    locationEn: "Student Center",
-    locationTr: "Ogrenci Merkezi",
-    time: "18 min",
-    urgent: false,
-  },
-  {
-    id: "4",
-    titleEn: "Looking for Ride to Kizilay",
-    titleTr: "Kizilay'a Arac Ariyorum",
-    category: "transport",
-    locationEn: "Main Gate",
-    locationTr: "Ana Kapi",
-    time: "25 min",
-    urgent: false,
-  },
-  {
-    id: "5",
-    titleEn: "Need Calculator for Exam",
-    titleTr: "Sinav icin Hesap Makinesi Lazim",
-    category: "academic",
-    locationEn: "Physics Building",
-    locationTr: "Fizik Binasi",
-    time: "32 min",
-    urgent: true,
-  },
-];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -253,7 +208,28 @@ function RequestCard({
 export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState<
+    RequestCategory | "all"
+  >("all");
+  const [requests, setRequests] = useState<RequestRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadRequests = useCallback(() => {
+    try {
+      const data = getAllRequests();
+      setRequests(data);
+    } catch (error) {
+      console.error("Failed to load requests", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadRequests();
+    }, [loadRequests])
+  );
 
   const CATEGORIES = [
     { id: "all", label: t.all, icon: "grid" },
@@ -263,10 +239,12 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
     { id: "other", label: t.other, icon: "help-circle" },
   ] as const;
 
-  const filteredRequests =
-    selectedCategory === "all"
-      ? MOCK_REQUESTS
-      : MOCK_REQUESTS.filter((req) => req.category === selectedCategory);
+  const filteredRequests = useMemo(() => {
+    if (selectedCategory === "all") {
+      return requests;
+    }
+    return requests.filter((req) => req.category === selectedCategory);
+  }, [requests, selectedCategory]);
 
   return (
     <ScreenScrollView>
@@ -289,24 +267,41 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       </View>
 
       <View style={styles.requestsList}>
-        {filteredRequests.map((request) => (
-          <RequestCard
-            key={request.id}
-            title={language === "en" ? request.titleEn : request.titleTr}
-            category={request.category}
-            location={language === "en" ? request.locationEn : request.locationTr}
-            time={request.time}
-            urgent={request.urgent}
-            urgentLabel={t.urgent}
-            helpButtonLabel={t.iCanHelp}
-            onPress={() =>
-              navigation.navigate("RequestDetail", { requestId: request.id })
-            }
-            onHelp={() => {
-              navigation.navigate("RequestDetail", { requestId: request.id });
-            }}
-          />
-        ))}
+        {!isLoading && filteredRequests.length === 0 ? (
+          <View style={styles.emptyState}>
+            <ThemedText style={styles.emptyStateTitle}>
+              {language === "en" ? "No requests yet" : "Henuz bir istek yok"}
+            </ThemedText>
+            <ThemedText
+              style={[styles.emptyStateDescription, { color: theme.textSecondary }]}
+            >
+              {language === "en"
+                ? "Be the first to ask for help using the red button."
+                : "Sag alt kosadaki kirmizi butondan ilk istegi paylas."}
+            </ThemedText>
+          </View>
+        ) : (
+          filteredRequests.map((request) => (
+            <RequestCard
+              key={request.id}
+              title={language === "en" ? request.titleEn : request.titleTr}
+              category={request.category}
+              location={
+                language === "en" ? request.locationEn : request.locationTr
+              }
+              time={formatRelativeTime(request.createdAt, language, "short")}
+              urgent={request.urgent}
+              urgentLabel={t.urgent}
+              helpButtonLabel={t.iCanHelp}
+              onPress={() =>
+                navigation.navigate("RequestDetail", { requestId: request.id })
+              }
+              onHelp={() => {
+                navigation.navigate("RequestDetail", { requestId: request.id });
+              }}
+            />
+          ))
+        )}
       </View>
 
       <Pressable
@@ -348,6 +343,25 @@ const styles = StyleSheet.create({
   },
   requestsList: {
     gap: Spacing.md,
+  },
+  emptyState: {
+    padding: Spacing["2xl"],
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.08)",
+  },
+  emptyStateTitle: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "600",
+    marginBottom: Spacing.sm,
+    textAlign: "center",
+  },
+  emptyStateDescription: {
+    fontSize: Typography.small.fontSize,
+    textAlign: "center",
+    lineHeight: 20,
   },
   requestCard: {
     borderRadius: BorderRadius.lg,
@@ -423,10 +437,14 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 8px 16px rgba(0, 0, 0, 0.25)" }
+      : {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 4,
+          elevation: 5,
+        }),
   },
 });

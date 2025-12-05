@@ -1,0 +1,31 @@
+diff --git a/node_modules/@react-navigation/elements/lib/module/Screen.js b/node_modules/@react-navigation/elements/lib/module/Screen.js
+index 8689e62..697e405 100644
+--- a/node_modules/@react-navigation/elements/lib/module/Screen.js
++++ b/node_modules/@react-navigation/elements/lib/module/Screen.js
+@@ -47,14 +47,13 @@ export function Screen(props) {
+         value: route,
+         children: /*#__PURE__*/_jsx(View, {
+           ref: headerRef,
+-          pointerEvents: "box-none",
+           onLayout: e => {
+             const {
+               height
+             } = e.nativeEvent.layout;
+             setHeaderHeight(height);
+           },
+-          style: [styles.header, headerTransparent ? styles.absolute : null],
++          style: [styles.header, headerTransparent ? styles.absolute : null, styles.headerPointerEvents],
+           children: header
+         })
+       })
+@@ -85,6 +84,9 @@ const styles = StyleSheet.create({
+     top: 0,
+     start: 0,
+     end: 0
++  },
++  headerPointerEvents: {
++    pointerEvents: 'box-none'
+   }
+ });
+ //# sourceMappingURL=Screen.js.map
+\ No newline at end of file

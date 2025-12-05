@@ -12,6 +12,13 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  createRequest,
+  LOCATION_OPTIONS,
+  type LocationId,
+  type RequestCategory,
+} from "@/services/requestsStore";
 import {
   Spacing,
   BorderRadius,
@@ -25,52 +32,77 @@ type PostNeedScreenProps = {
 };
 
 const CATEGORIES = [
-  { id: "medical", label: "Medical", icon: "activity" },
-  { id: "academic", label: "Academic", icon: "book" },
-  { id: "transport", label: "Transport", icon: "navigation" },
-  { id: "other", label: "Other", icon: "help-circle" },
-] as const;
-
-const LOCATIONS = [
-  "Library",
-  "Student Center",
-  "Engineering Building",
-  "Physics Building",
-  "Main Gate",
-  "Cafeteria",
-  "Dormitory Area",
-  "Sports Complex",
-  "Other",
+  { id: "medical", translationKey: "medical", icon: "activity" },
+  { id: "academic", translationKey: "academic", icon: "book" },
+  { id: "transport", translationKey: "transport", icon: "navigation" },
+  { id: "other", translationKey: "other", icon: "help-circle" },
 ] as const;
 
 export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
   const { theme, isDark } = useTheme();
+  const { language, t } = useLanguage();
   const [title, setTitle] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<RequestCategory | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<LocationId | null>(
+    null
+  );
   const [details, setDetails] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
 
-  const isValid = title.length > 0 && selectedCategory && selectedLocation;
+  const trimmedTitle = title.trim();
+  const isValid =
+    trimmedTitle.length > 0 && selectedCategory !== null && selectedLocation !== null;
 
   const handlePost = () => {
-    if (!isValid) return;
+    if (!isValid || !selectedCategory || !selectedLocation) {
+      return;
+    }
 
-    Alert.alert(
-      "Request Posted!",
-      "Your request has been posted. Fellow students will be notified.",
-      [
-        {
-          text: "OK",
-          onPress: () => navigation.goBack(),
-        },
-      ]
-    );
+    try {
+      createRequest({
+        title: trimmedTitle,
+        category: selectedCategory,
+        locationId: selectedLocation,
+        details,
+        urgent: isUrgent,
+        language,
+      });
+
+      Alert.alert(
+        language === "en" ? "Request Posted!" : "Istek paylasildi!",
+        language === "en"
+          ? "Your request has been posted. Fellow students will be notified."
+          : "Ihtiyacin paylasildi. Diger ogrenciler bilgilendirilecek.",
+        [
+          {
+            text: language === "en" ? "OK" : "Tamam",
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+
+      setTitle("");
+      setSelectedCategory(null);
+      setSelectedLocation(null);
+      setDetails("");
+      setIsUrgent(false);
+    } catch (error) {
+      Alert.alert(
+        language === "en" ? "Something went wrong" : "Bir sorun olustu",
+        language === "en"
+          ? "Please try again in a few seconds."
+          : "Lutfen birkaç saniye sonra tekrar dene.",
+        [{ text: language === "en" ? "OK" : "Tamam" }]
+      );
+    }
   };
 
   return (
     <ScreenKeyboardAwareScrollView>
-      <ThemedText style={styles.sectionLabel}>What do you need?</ThemedText>
+      <ThemedText style={styles.sectionLabel}>
+        {language === "en" ? "What do you need?" : "Neye ihtiyacin var?"}
+      </ThemedText>
       <TextInput
         style={[
           styles.titleInput,
@@ -89,7 +121,9 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
         {title.length}/60
       </ThemedText>
 
-      <ThemedText style={styles.sectionLabel}>Category</ThemedText>
+      <ThemedText style={styles.sectionLabel}>
+        {language === "en" ? "Category" : "Kategori"}
+      </ThemedText>
       <View style={styles.categoriesGrid}>
         {CATEGORIES.map((cat) => (
           <Pressable
@@ -120,23 +154,25 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
                 },
               ]}
             >
-              {cat.label}
+              {t[cat.translationKey]}
             </ThemedText>
           </Pressable>
         ))}
       </View>
 
-      <ThemedText style={styles.sectionLabel}>Location</ThemedText>
+      <ThemedText style={styles.sectionLabel}>
+        {language === "en" ? "Location" : "Konum"}
+      </ThemedText>
       <View style={styles.locationsGrid}>
-        {LOCATIONS.map((loc) => (
+        {LOCATION_OPTIONS.map((loc) => (
           <Pressable
-            key={loc}
-            onPress={() => setSelectedLocation(loc)}
+            key={loc.id}
+            onPress={() => setSelectedLocation(loc.id)}
             style={[
               styles.locationChip,
               {
                 backgroundColor:
-                  selectedLocation === loc
+                  selectedLocation === loc.id
                     ? isDark
                       ? "#CC3333"
                       : METUColors.maroon
@@ -148,18 +184,21 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
               style={[
                 styles.locationText,
                 {
-                  color: selectedLocation === loc ? "#FFFFFF" : theme.text,
+                  color:
+                    selectedLocation === loc.id ? "#FFFFFF" : theme.text,
                 },
               ]}
             >
-              {loc}
+              {language === "en" ? loc.labelEn : loc.labelTr}
             </ThemedText>
           </Pressable>
         ))}
       </View>
 
       <ThemedText style={styles.sectionLabel}>
-        Additional Details (Optional)
+        {language === "en"
+          ? "Additional Details (Optional)"
+          : "Ek Bilgiler (Opsiyonel)"}
       </ThemedText>
       <TextInput
         style={[
@@ -203,12 +242,14 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
                 { color: isUrgent ? METUColors.alertRed : theme.text },
               ]}
             >
-              Mark as Urgent
+              {language === "en" ? "Mark as Urgent" : "Acil olarak isaretle"}
             </ThemedText>
             <ThemedText
               style={[styles.urgentHint, { color: theme.textSecondary }]}
             >
-              Use only for time-sensitive requests
+              {language === "en"
+                ? "Use only for time-sensitive requests"
+                : "Sadece zaman hassas ihtiyaçlar icin kullan"}
             </ThemedText>
           </View>
         </View>
@@ -248,7 +289,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
             { color: isValid ? "#FFFFFF" : theme.textSecondary },
           ]}
         >
-          Post Request
+          {language === "en" ? "Post Request" : "Istek Paylas"}
         </ThemedText>
       </Pressable>
     </ScreenKeyboardAwareScrollView>

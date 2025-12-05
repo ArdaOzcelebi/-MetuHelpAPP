@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { StyleSheet, View, Pressable, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -7,6 +7,9 @@ import { RouteProp } from "@react-navigation/native";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getRequestById } from "@/services/requestsStore";
+import { formatRelativeTime } from "@/utils/formatRelativeTime";
 import {
   Spacing,
   BorderRadius,
@@ -20,88 +23,26 @@ type RequestDetailScreenProps = {
   route: RouteProp<HomeStackParamList, "RequestDetail">;
 };
 
-const REQUEST_DATA: Record<string, {
-  id: string;
-  title: string;
-  category: string;
-  location: string;
-  time: string;
-  urgent: boolean;
-  description: string;
-  posterName: string;
-  posterInitials: string;
-}> = {
-  "1": {
-    id: "1",
-    title: "Need 1 Bandage",
-    category: "medical",
-    location: "Near Library",
-    time: "5 min ago",
-    urgent: true,
-    description:
-      "Cut my finger while studying. Nothing serious but I need a bandage to stop the bleeding. Will be at the library entrance.",
-    posterName: "Ahmet Y.",
-    posterInitials: "AY",
-  },
-  "2": {
-    id: "2",
-    title: "Need Pain Reliever",
-    category: "medical",
-    location: "Engineering Building",
-    time: "12 min ago",
-    urgent: true,
-    description:
-      "Having a bad headache before my exam. Would appreciate any pain reliever. I'm in room B-104.",
-    posterName: "Zeynep K.",
-    posterInitials: "ZK",
-  },
-  "3": {
-    id: "3",
-    title: "Need a Phone Charger (USB-C)",
-    category: "other",
-    location: "Student Center",
-    time: "18 min ago",
-    urgent: false,
-    description:
-      "My phone is at 2% and I need to call my family. Looking for a USB-C charger I can borrow for 30 minutes.",
-    posterName: "Mehmet A.",
-    posterInitials: "MA",
-  },
-  "4": {
-    id: "4",
-    title: "Looking for Ride to Kizilay",
-    category: "transport",
-    location: "Main Gate",
-    time: "25 min ago",
-    urgent: false,
-    description:
-      "Need to get to Kizilay for a doctor appointment at 4 PM. Can share gas costs. Will be at the main gate.",
-    posterName: "Elif S.",
-    posterInitials: "ES",
-  },
-  "5": {
-    id: "5",
-    title: "Need Calculator for Exam",
-    category: "academic",
-    location: "Physics Building",
-    time: "32 min ago",
-    urgent: true,
-    description:
-      "Forgot my calculator and have a physics exam in 30 minutes! Need a scientific calculator urgently.",
-    posterName: "Can B.",
-    posterInitials: "CB",
-  },
-};
-
 export default function RequestDetailScreen({
   navigation,
   route,
 }: RequestDetailScreenProps) {
   const { theme, isDark } = useTheme();
+  const { t, language } = useLanguage();
   const { requestId } = route.params;
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
 
-  const request = REQUEST_DATA[requestId] || REQUEST_DATA["1"];
+  const request = useMemo(() => getRequestById(requestId), [requestId]);
+
+  if (!request) {
+    return (
+      <ScreenScrollView>
+        <ThemedText style={styles.missingRequest}>
+          {language === "en" ? "Request not found." : "Istek bulunamadi."}
+        </ThemedText>
+      </ScreenScrollView>
+    );
+  }
 
   const getCategoryIcon = (): keyof typeof Feather.glyphMap => {
     switch (request.category) {
@@ -119,30 +60,53 @@ export default function RequestDetailScreen({
   const getCategoryLabel = () => {
     switch (request.category) {
       case "medical":
-        return "Medical";
+        return t.medical;
       case "academic":
-        return "Academic";
+        return t.academic;
       case "transport":
-        return "Transport";
+        return t.transport;
       default:
-        return "Other";
+        return t.other;
     }
   };
+
+  const postedTimeLabel = formatRelativeTime(request.createdAt, language, "long");
+  const localizedTitle = language === "en" ? request.titleEn : request.titleTr;
+  const localizedLocation =
+    language === "en" ? request.locationEn : request.locationTr;
+  const localizedDescription =
+    language === "en" ? request.descriptionEn : request.descriptionTr;
+
+  const alertMessages = language === "en"
+    ? {
+        alreadyTitle: "Already Offered",
+        alreadyBody: "You've already offered to help with this request.",
+        successTitle: "Help Offered!",
+        successBody: `Thank you for offering to help ${request.posterName}! They will be notified.`,
+        ok: "OK",
+      }
+    : {
+        alreadyTitle: "Zaten Bildirdin",
+        alreadyBody: "Bu istege zaten yardim teklif ettin.",
+        successTitle: "Yardim Gonderildi!",
+        successBody: `${request.posterName} icin yardim teklifin gonderildi. Haberdar olacaklar.`,
+        ok: "Tamam",
+      };
 
   const handleOfferHelp = () => {
     if (hasOfferedHelp) {
       Alert.alert(
-        "Already Offered",
-        "You've already offered to help with this request.",
-        [{ text: "OK" }]
+        alertMessages.alreadyTitle,
+        alertMessages.alreadyBody,
+        [{ text: alertMessages.ok }]
       );
       return;
     }
     setHasOfferedHelp(true);
     Alert.alert(
-      "Help Offered!",
-      `Thank you for offering to help ${request.posterName}! They will be notified.`,
-      [{ text: "OK" }]
+      alertMessages.successTitle,
+      alertMessages.successBody,
+      [{ text: alertMessages.ok }]
     );
   };
 
@@ -165,20 +129,22 @@ export default function RequestDetailScreen({
             <ThemedText
               style={[styles.postTime, { color: theme.textSecondary }]}
             >
-              Posted {request.time}
+              {language === "en"
+                ? `Posted ${postedTimeLabel}`
+                : `${postedTimeLabel} once paylasildi`}
             </ThemedText>
           </View>
         </View>
         {request.urgent ? (
           <View style={styles.urgentBadge}>
             <Feather name="alert-circle" size={14} color="#FFFFFF" />
-            <ThemedText style={styles.urgentText}>Urgent</ThemedText>
+            <ThemedText style={styles.urgentText}>{t.urgent}</ThemedText>
           </View>
         ) : null}
       </View>
 
       <ThemedText type="h3" style={styles.title}>
-        {request.title}
+        {localizedTitle}
       </ThemedText>
 
       <View style={styles.metaRow}>
@@ -201,7 +167,7 @@ export default function RequestDetailScreen({
           <ThemedText
             style={[styles.locationText, { color: theme.textSecondary }]}
           >
-            {request.location}
+            {localizedLocation}
           </ThemedText>
         </View>
       </View>
@@ -209,9 +175,11 @@ export default function RequestDetailScreen({
       <View
         style={[styles.descriptionCard, { backgroundColor: theme.cardBackground }]}
       >
-        <ThemedText style={styles.descriptionLabel}>Details</ThemedText>
+        <ThemedText style={styles.descriptionLabel}>
+          {language === "en" ? "Details" : "Detaylar"}
+        </ThemedText>
         <ThemedText style={styles.descriptionText}>
-          {request.description}
+          {localizedDescription}
         </ThemedText>
       </View>
 
@@ -238,7 +206,11 @@ export default function RequestDetailScreen({
             { color: hasOfferedHelp ? theme.text : "#FFFFFF" },
           ]}
         >
-          {hasOfferedHelp ? "Help Offered" : "I Can Help"}
+          {hasOfferedHelp
+            ? language === "en"
+              ? "Help Offered"
+              : "Yardim bildirildi"
+            : t.iCanHelp}
         </ThemedText>
       </Pressable>
 
@@ -247,8 +219,9 @@ export default function RequestDetailScreen({
         <ThemedText
           style={[styles.contactNoteText, { color: theme.textSecondary }]}
         >
-          When you offer help, the poster will be notified and can contact you
-          directly.
+          {language === "en"
+            ? "When you offer help, the poster will be notified and can contact you directly."
+            : "Yardim teklif ettiginde paylasan kisi bilgilendirilir ve seninle dogrudan iletisime gecebilir."}
         </ThemedText>
       </View>
     </ScreenScrollView>
@@ -368,5 +341,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.small.fontSize,
     lineHeight: 20,
+  },
+  missingRequest: {
+    marginTop: Spacing.xl,
+    fontSize: Typography.body.fontSize,
+    textAlign: "center",
   },
 });
