@@ -1,64 +1,103 @@
-import React from "react";
-import { StyleSheet, Pressable, Platform, Text, View } from "react-native";
+import React, { ReactNode } from "react";
+import { StyleSheet, Pressable, ViewStyle, StyleProp } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  WithSpringConfig,
 } from "react-native-reanimated";
 
-// NOTE: I removed all your custom imports (@/components, @/hooks) 
-// to ensure nothing else is breaking the button.
+import { ThemedText } from "@/components/ThemedText";
+import { useTheme } from "@/hooks/useTheme";
+import { BorderRadius, Spacing } from "@/constants/theme";
 
-export function Button({ onPress, children, disabled }: any) {
-  // 1. Hardcoded red box. No themes.
+interface ButtonProps {
+  onPress?: () => void;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  disabled?: boolean;
+}
+
+const springConfig: WithSpringConfig = {
+  damping: 15,
+  mass: 0.3,
+  stiffness: 150,
+  overshootClamping: true,
+  energyThreshold: 0.001,
+};
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export function Button({
+  onPress,
+  children,
+  style,
+  disabled = false,
+}: ButtonProps) {
+  const { theme } = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
+  const handlePressIn = () => {
+    if (!disabled) {
+      scale.value = withSpring(0.98, springConfig);
+    }
+  };
+
+  const handlePressOut = () => {
+    if (!disabled) {
+      scale.value = withSpring(1, springConfig);
+    }
+  };
   const handleHoverIn = () => {
-    // This MUST show up if the mouse touches the box
-    console.log("SANITY CHECK: HOVER IN"); 
-    scale.value = withSpring(1.2); // Grow BIG (20%)
+    if (!disabled) {
+      scale.value = withSpring(1.05, springConfig);
+    }
   };
-
   const handleHoverOut = () => {
-    console.log("SANITY CHECK: HOVER OUT");
-    scale.value = withSpring(1);
-  };
-
+    if (!disabled) {
+      scale.value = withSpring(1, springConfig);
+    }
+  };  
   return (
-    <Pressable
-      onPress={onPress}
+    <AnimatedPressable
+      onPress={disabled ? undefined : onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       onHoverIn={handleHoverIn}
       onHoverOut={handleHoverOut}
-      // 2. Huge zIndex, massive red box. Impossible to miss.
-      style={{
-        zIndex: 9999,
-        justifyContent: 'center',
-        alignItems: 'center',
-        margin: 20,
-        cursor: 'pointer', // Web only
-      }}
+      disabled={disabled}
+      style={[
+        styles.button,
+        {
+          backgroundColor: theme.link,
+          opacity: disabled ? 0.5 : 1,
+        },
+        style,
+        animatedStyle,
+      ]}
     >
-      <Animated.View
-        style={[
-          {
-            width: 200,   // HARDCODED WIDTH
-            height: 100,  // HARDCODED HEIGHT
-            backgroundColor: 'red', // BRIGHT RED COLOR
-            borderRadius: 20,
-            justifyContent: 'center',
-            alignItems: 'center',
-          },
-          animatedStyle,
-        ]}
+      <ThemedText
+        type="body"
+        style={[styles.buttonText, { color: theme.buttonText }]}
       >
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>
-           TEST BUTTON
-        </Text>
-      </Animated.View>
-    </Pressable>
+        {children}
+      </ThemedText>
+    </AnimatedPressable>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    fontWeight: "600",
+  },
+});
