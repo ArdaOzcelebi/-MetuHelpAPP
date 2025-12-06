@@ -18,14 +18,6 @@ export function HeaderTitle({ title }: HeaderTitleProps) {
         style={styles.icon}
         resizeMode="contain"
       />
-      <ThemedText
-        style={[
-          styles.title,
-          { color: isDark ? "#FFFFFF" : METUColors.maroon },
-        ]}
-      >
-        {title}
-      </ThemedText>
     </View>
   );
 }
@@ -37,10 +29,10 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   icon: {
-    width: 28,
-    height: 28,
+    width: 100,
+    height: 100,
     marginRight: Spacing.sm,
-    borderRadius: 6,
+    borderRadius: 0,
   },
   title: {
     fontSize: 18,
