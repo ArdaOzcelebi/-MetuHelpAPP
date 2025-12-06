@@ -73,7 +73,7 @@ interface Translations {
 const translations: Record<Language, Translations> = {
   en: {
     // Home Screen
-    welcome: "Welcome to METU Help",
+    welcome: "Welcome to METU Help!",
     tagline: "Connect with fellow students for instant campus support",
     needHelp: "NEED HELP",
     offerHelp: "OFFER HELP",
@@ -140,18 +140,18 @@ const translations: Record<Language, Translations> = {
   },
   tr: {
     // Home Screen
-    welcome: "ODTÜ Yardım'a Hoş geldiniz",
-    tagline: "Anında kampüs desteği icin diğer öğrencilerle bağlantıya geçin",
-    needHelp: "YARDIM İSTİYORUM",
-    offerHelp: "YARDIM EDIYORUM",
+    welcome: "ODTÜ Yardım'a Hoş geldiniz!",
+    tagline: "Anında kampüs desteği için diğer öğrencilerle bağlantıya geçin",
+    needHelp: "YARDIM İSTE",
+    offerHelp: "YARDIM ET",
     activeRequests: "Aktif İstekler",
     helpedToday: "Bugün Yardım Edilen",
 
     // Categories
     all: "Tümü",
-    medical: "Sağlik",
+    medical: "Sağlık",
     academic: "Akademik",
-    transport: "Ulaşim",
+    transport: "Ulaşım",
     other: "Diğer",
 
     // Request Screen
@@ -183,7 +183,7 @@ const translations: Record<Language, Translations> = {
     pushNotifications: "Anlık Bildirimler",
     emailUpdates: "E-posta Bildirimleri",
     about: "Hakkında",
-    aboutApp: "ODTÜ Help Hakkında",
+    aboutApp: "METU Help Hakkında",
     privacyPolicy: "Gizlilik Politikasi",
     termsOfService: "Kullanım Şartları",
     logOut: "Çıkış Yap",
