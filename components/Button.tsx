@@ -26,7 +26,6 @@ const springConfig: WithSpringConfig = {
   energyThreshold: 0.001,
 };
 
-
 export function Button({
   onPress,
   children,
@@ -41,30 +40,29 @@ export function Button({
   }));
 
   const handlePressIn = () => {
-    if (!disabled) {
-      scale.value = withSpring(0.98, springConfig);
-    }
+    if (!disabled) scale.value = withSpring(0.98, springConfig);
   };
 
   const handlePressOut = () => {
-    if (!disabled) {
-      scale.value = withSpring(1, springConfig);
-    }
+    if (!disabled) scale.value = withSpring(1, springConfig);
   };
+
   const handleHoverIn = () => {
+    // VISUAL DEBUG: This forces the browser to scream at you if it works
+    if (Platform.OS === 'web') {
+        console.log("HOVER WORKING");
+    }
     if (!disabled) {
       scale.value = withSpring(1.05, springConfig);
     }
-    if (Platform.OS === 'web') {
-        alert("HOVER DETECTED!"); 
-    }
   };
+
   const handleHoverOut = () => {
     if (!disabled) {
       scale.value = withSpring(1, springConfig);
-      
     }
-  };  
+  };
+
   return (
     <Pressable
       onPress={disabled ? undefined : onPress}
@@ -73,41 +71,50 @@ export function Button({
       onHoverIn={handleHoverIn}
       onHoverOut={handleHoverOut}
       disabled={disabled}
-style={[
-        style, 
+      // FIX 1: Apply the Layout (Height/Shape) to the Pressable
+      // This ensures the Hit Box is real and exists.
+      style={[
+        styles.buttonLayout, 
+        style,
         { 
-            zIndex: 9999,      // Force button to top layer
-            cursor: 'pointer'  // Turn mouse into Hand icon (Web only)
-        } 
+            cursor: 'pointer', // Web: Hand cursor
+            zIndex: 9999       // Web: Force on top
+        }
       ]}
     >
-  <Animated.View
+      <Animated.View
         style={[
-          styles.button,
+          // FIX 2: Inner view fills the outer Pressable completely
           {
+            flex: 1, 
+            width: '100%',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: BorderRadius.full, // Ensure background matches shape
             backgroundColor: theme.link,
             opacity: disabled ? 0.5 : 1,
           },
-          animatedStyle, 
+          animatedStyle,
         ]}
-    >
-      <ThemedText
-        type="body"
-        style={[styles.buttonText, { color: theme.buttonText }]}
       >
-        {children}
-      </ThemedText>
-    </Animated.View>
+        <ThemedText
+          type="body"
+          style={[styles.buttonText, { color: theme.buttonText }]}
+        >
+          {children}
+        </ThemedText>
+      </Animated.View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
+  // Only Layout props here (Height, Width, Margins)
+  buttonLayout: {
     height: Spacing.buttonHeight,
     borderRadius: BorderRadius.full,
-    alignItems: "center",
-    justifyContent: "center",
+    // Ensure it doesn't collapse to 0 width
+    minWidth: 40, 
   },
   buttonText: {
     fontWeight: "600",
