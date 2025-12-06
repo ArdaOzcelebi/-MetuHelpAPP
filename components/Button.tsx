@@ -54,12 +54,12 @@ export function Button({
   };
   const handleHoverIn = () => {
     if (!disabled) {
-      scale.value = withSpring(1.05, springConfig):
+      scale.value = withSpring(1.05, springConfig);
     }
   };
   const handleHoverOut = () => {
     if (!disabled) {
-      scale.value = withSpring(1, springConfig):
+      scale.value = withSpring(1, springConfig);
     }
   };  
   return (
