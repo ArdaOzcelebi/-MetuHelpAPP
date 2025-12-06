@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, Pressable, ViewStyle, StyleProp } from "react-native";
+import { StyleSheet, Pressable, ViewStyle, StyleProp, Platform } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -55,10 +55,14 @@ export function Button({
     if (!disabled) {
       scale.value = withSpring(1.05, springConfig);
     }
+    if (Platform.OS === 'web') {
+        alert("HOVER DETECTED!"); 
+    }
   };
   const handleHoverOut = () => {
     if (!disabled) {
       scale.value = withSpring(1, springConfig);
+      
     }
   };  
   return (
@@ -69,7 +73,13 @@ export function Button({
       onHoverIn={handleHoverIn}
       onHoverOut={handleHoverOut}
       disabled={disabled}
-      style={style} 
+style={[
+        style, 
+        { 
+            zIndex: 9999,      // Force button to top layer
+            cursor: 'pointer'  // Turn mouse into Hand icon (Web only)
+        } 
+      ]}
     >
   <Animated.View
         style={[
