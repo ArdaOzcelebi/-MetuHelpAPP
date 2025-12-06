@@ -81,6 +81,13 @@ function HeroButton({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     onPress();
   };
+  const handleHoverIn = () => {
+    scale.value = withSpring(1.05, { damping: 15, stiffness: 200 });
+  };
+  const handleHoverOut = () => {
+    scale.value = withSpring(1.00, { damping: 15, stiffness: 200 });
+  };  
+  
 
   return (
     <View style={styles.heroButtonWrapper}>
@@ -96,6 +103,8 @@ function HeroButton({
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
+        onHoverIn={handleHoverIn}
+        onHoverOut={hangleHoverOut}
         style={[styles.heroButton, { backgroundColor }, animatedStyle]}
       >
         <View style={styles.heroButtonContent}>
