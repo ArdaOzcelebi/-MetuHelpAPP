@@ -29,8 +29,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   icon: {
-    width: 96,
-    height: 96,
+    width: 100,
+    height: 100,
     marginRight: Spacing.sm,
     borderRadius: 0,
   },
