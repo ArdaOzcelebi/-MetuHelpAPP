@@ -52,12 +52,23 @@ export function Button({
       scale.value = withSpring(1, springConfig);
     }
   };
-
+  const handleHoverIn = () => {
+    if (!disabled) {
+      scale.value = withSpring(1.05, springConfig);
+    }
+  };
+  const handleHoverOut = () => {
+    if (!disabled) {
+      scale.value = withSpring(1, springConfig);
+    }
+  };  
   return (
     <AnimatedPressable
       onPress={disabled ? undefined : onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      onHoverIn={handleHoverIn}
+      onHoverOut={handleHoverOut}
       disabled={disabled}
       style={[
         styles.button,
