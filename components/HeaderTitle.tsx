@@ -14,7 +14,7 @@ export function HeaderTitle({ title }: HeaderTitleProps) {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../assets/images/icon.png")}
+        source={{ uri: "https://github.com/user-attachments/assets/e28f60a6-6719-49f6-8c71-9277f8ee9765" }}
         style={styles.icon}
         resizeMode="contain"
       />
