@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { StyleSheet, View, Pressable } from "react-native";
+// FIXED: Added 'Platform' to imports
+import { StyleSheet, View, Pressable, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -33,8 +34,6 @@ type HomeScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "Home">;
 };
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 interface HeroButtonProps {
   title: string;
   icon: keyof typeof Feather.glyphMap;
@@ -42,6 +41,7 @@ interface HeroButtonProps {
   onPress: () => void;
 }
 
+// UPGRADED HERO BUTTON
 function HeroButton({
   title,
   icon,
@@ -61,10 +61,16 @@ function HeroButton({
     opacity: glowOpacity.value,
   }));
 
+  // --- INTERACTION HANDLERS ---
+
   const handlePressIn = () => {
     scale.value = withSpring(0.96, { damping: 15, stiffness: 200 });
     glowOpacity.value = withTiming(0.6, { duration: 150 });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    // SAFE HAPTICS: Only run on mobile
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
   };
 
   const handlePressOut = () => {
@@ -73,18 +79,34 @@ function HeroButton({
   };
 
   const handlePress = () => {
-    // Pulse animation on press
     scale.value = withSequence(
       withTiming(0.94, { duration: 100 }),
-      withSpring(1, { damping: 15, stiffness: 200 }),
+      withSpring(1, { damping: 15, stiffness: 200 })
     );
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    
+    // SAFE HAPTICS: Only run on mobile
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
     onPress();
+  };
+
+  // WEB HOVER HANDLERS
+  const handleHoverIn = () => {
+    if (Platform.OS === 'web') {
+      scale.value = withSpring(1.02, { damping: 15, stiffness: 200 });
+    }
+  };
+
+  const handleHoverOut = () => {
+    if (Platform.OS === 'web') {
+      scale.value = withSpring(1, { damping: 15, stiffness: 200 });
+    }
   };
 
   return (
     <View style={styles.heroButtonWrapper}>
-      {/* Glow effect behind button */}
+      {/* Glow effect stays behind */}
       <Animated.View
         style={[
           styles.heroButtonGlow,
@@ -92,22 +114,31 @@ function HeroButton({
           glowStyle,
         ]}
       />
-      <AnimatedPressable
+      
+      {/* Outer Shell: Handles Clicks & Hover */}
+      <Pressable
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={[styles.heroButton, { backgroundColor }, animatedStyle]}
+        onHoverIn={handleHoverIn}
+        onHoverOut={handleHoverOut}
+        style={{ cursor: 'pointer' }} // Hand cursor for web
       >
-        <View style={styles.heroButtonContent}>
-          <View style={styles.heroButtonIcon}>
-            <Feather name={icon} size={32} color="#FFFFFF" />
-          </View>
-          <View style={styles.heroButtonText}>
-            <ThemedText style={styles.heroButtonTitle}>{title}</ThemedText>
-          </View>
-          <Feather name="chevron-right" size={24} color="#FFFFFF" />
-        </View>
-      </AnimatedPressable>
+        {/* Inner Visuals: Handles Animation & Style */}
+        <Animated.View 
+            style={[styles.heroButton, { backgroundColor }, animatedStyle]}
+        >
+            <View style={styles.heroButtonContent}>
+                <View style={styles.heroButtonIcon}>
+                    <Feather name={icon} size={32} color="#FFFFFF" />
+                </View>
+                <View style={styles.heroButtonText}>
+                    <ThemedText style={styles.heroButtonTitle}>{title}</ThemedText>
+                </View>
+                <Feather name="chevron-right" size={24} color="#FFFFFF" />
+            </View>
+        </Animated.View>
+      </Pressable>
     </View>
   );
 }
@@ -136,11 +167,11 @@ function DecorativeCircle({
   useEffect(() => {
     opacity.value = withDelay(
       delay,
-      withTiming(0.15, { duration: 800, easing: Easing.out(Easing.quad) }),
+      withTiming(0.15, { duration: 800, easing: Easing.out(Easing.quad) })
     );
     scale.value = withDelay(
       delay,
-      withSpring(1, { damping: 20, stiffness: 90 }),
+      withSpring(1, { damping: 20, stiffness: 90 })
     );
   }, [delay]);
 
@@ -192,40 +223,31 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
     button1Opacity.value = withDelay(
       200,
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
+      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) })
     );
     button1TranslateY.value = withDelay(
       200,
-      withSpring(0, { damping: 18, stiffness: 90 }),
+      withSpring(0, { damping: 18, stiffness: 90 })
     );
 
     button2Opacity.value = withDelay(
       350,
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
+      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) })
     );
     button2TranslateY.value = withDelay(
       350,
-      withSpring(0, { damping: 18, stiffness: 90 }),
+      withSpring(0, { damping: 18, stiffness: 90 })
     );
 
     statsOpacity.value = withDelay(
       500,
-      withTiming(1, { duration: 600, easing: Easing.out(Easing.quad) }),
+      withTiming(1, { duration: 600, easing: Easing.out(Easing.quad) })
     );
     statsTranslateY.value = withDelay(
       500,
-      withSpring(0, { damping: 20, stiffness: 90 }),
+      withSpring(0, { damping: 20, stiffness: 90 })
     );
-  }, [
-    headerOpacity,
-    headerTranslateY,
-    button1Opacity,
-    button1TranslateY,
-    button2Opacity,
-    button2TranslateY,
-    statsOpacity,
-    statsTranslateY,
-  ]);
+  }, []);
 
   const headerStyle = useAnimatedStyle(() => ({
     opacity: headerOpacity.value,
