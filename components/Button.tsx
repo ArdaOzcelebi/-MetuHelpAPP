@@ -1,122 +1,64 @@
-import React, { ReactNode } from "react";
-import { StyleSheet, Pressable, ViewStyle, StyleProp, Platform } from "react-native";
+import React from "react";
+import { StyleSheet, Pressable, Platform, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  WithSpringConfig,
 } from "react-native-reanimated";
 
-import { ThemedText } from "@/components/ThemedText";
-import { useTheme } from "@/hooks/useTheme";
-import { BorderRadius, Spacing } from "@/constants/theme";
+// NOTE: I removed all your custom imports (@/components, @/hooks) 
+// to ensure nothing else is breaking the button.
 
-interface ButtonProps {
-  onPress?: () => void;
-  children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-  disabled?: boolean;
-}
-
-const springConfig: WithSpringConfig = {
-  damping: 15,
-  mass: 0.3,
-  stiffness: 150,
-  overshootClamping: true,
-  energyThreshold: 0.001,
-};
-
-export function Button({
-  onPress,
-  children,
-  style,
-  disabled = false,
-}: ButtonProps) {
-  const { theme } = useTheme();
+export function Button({ onPress, children, disabled }: any) {
+  // 1. Hardcoded red box. No themes.
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  const handlePressIn = () => {
-    if (!disabled) scale.value = withSpring(0.98, springConfig);
-  };
-
-  const handlePressOut = () => {
-    if (!disabled) scale.value = withSpring(1, springConfig);
-  };
-
   const handleHoverIn = () => {
-    // VISUAL DEBUG: This forces the browser to scream at you if it works
-    if (Platform.OS === 'web') {
-        console.log("HOVER WORKING");
-    }
-    if (!disabled) {
-      scale.value = withSpring(1.05, springConfig);
-    }
+    // This MUST show up if the mouse touches the box
+    console.log("SANITY CHECK: HOVER IN"); 
+    scale.value = withSpring(1.2); // Grow BIG (20%)
   };
 
   const handleHoverOut = () => {
-    if (!disabled) {
-      scale.value = withSpring(1, springConfig);
-    }
+    console.log("SANITY CHECK: HOVER OUT");
+    scale.value = withSpring(1);
   };
 
   return (
     <Pressable
-      onPress={disabled ? undefined : onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      onPress={onPress}
       onHoverIn={handleHoverIn}
       onHoverOut={handleHoverOut}
-      disabled={disabled}
-      // FIX 1: Apply the Layout (Height/Shape) to the Pressable
-      // This ensures the Hit Box is real and exists.
-      style={[
-        styles.buttonLayout, 
-        style,
-        { 
-            cursor: 'pointer', // Web: Hand cursor
-            zIndex: 9999       // Web: Force on top
-        }
-      ]}
+      // 2. Huge zIndex, massive red box. Impossible to miss.
+      style={{
+        zIndex: 9999,
+        justifyContent: 'center',
+        alignItems: 'center',
+        margin: 20,
+        cursor: 'pointer', // Web only
+      }}
     >
       <Animated.View
         style={[
-          // FIX 2: Inner view fills the outer Pressable completely
           {
-            flex: 1, 
-            width: '100%',
-            alignItems: 'center',
+            width: 200,   // HARDCODED WIDTH
+            height: 100,  // HARDCODED HEIGHT
+            backgroundColor: 'red', // BRIGHT RED COLOR
+            borderRadius: 20,
             justifyContent: 'center',
-            borderRadius: BorderRadius.full, // Ensure background matches shape
-            backgroundColor: theme.link,
-            opacity: disabled ? 0.5 : 1,
+            alignItems: 'center',
           },
           animatedStyle,
         ]}
       >
-        <ThemedText
-          type="body"
-          style={[styles.buttonText, { color: theme.buttonText }]}
-        >
-          {children}
-        </ThemedText>
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>
+           TEST BUTTON
+        </Text>
       </Animated.View>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  // Only Layout props here (Height, Width, Margins)
-  buttonLayout: {
-    height: Spacing.buttonHeight,
-    borderRadius: BorderRadius.full,
-    // Ensure it doesn't collapse to 0 width
-    minWidth: 40, 
-  },
-  buttonText: {
-    fontWeight: "600",
-  },
-});
