@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -7,14 +7,22 @@ import {
   sendEmailVerification as firebaseSendEmailVerification,
   updateProfile as firebaseUpdateProfile,
   User,
-} from 'firebase/auth';
-import { getAuthInstance } from '../firebase/firebaseConfig';
+} from "firebase/auth";
+import { getAuthInstance } from "../firebase/firebaseConfig";
 
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    rememberMe?: boolean,
+  ) => Promise<void>;
+  signIn: (
+    email: string,
+    password: string,
+    rememberMe?: boolean,
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   sendEmailVerification: () => Promise<void>;
   resendVerificationEmail: () => Promise<void>;
@@ -28,48 +36,50 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
  */
 function parseFirebaseError(error: unknown): string {
   // Check if error has a code property (Firebase auth errors)
-  if (error && typeof error === 'object' && 'code' in error) {
+  if (error && typeof error === "object" && "code" in error) {
     const code = (error as { code: string }).code;
     switch (code) {
-      case 'auth/email-already-in-use':
-        return 'This email address is already registered. Please sign in or use a different email.';
-      case 'auth/invalid-email':
-        return 'Invalid email address format.';
-      case 'auth/operation-not-allowed':
-        return 'Email/password sign-in is not enabled. Please contact support.';
-      case 'auth/weak-password':
-        return 'Password is too weak. Please use a stronger password with at least 8 characters.';
-      case 'auth/user-disabled':
-        return 'This account has been disabled. Please contact support.';
-      case 'auth/user-not-found':
-        return 'No account found with this email address.';
-      case 'auth/wrong-password':
-        return 'Incorrect password. Please try again.';
-      case 'auth/invalid-credential':
-        return 'Invalid email or password. Please check your credentials and try again.';
-      case 'auth/too-many-requests':
-        return 'Too many failed login attempts. Please try again later or reset your password.';
-      case 'auth/network-request-failed':
-        return 'Network error. Please check your internet connection and try again.';
-      case 'auth/requires-recent-login':
-        return 'This action requires recent authentication. Please sign in again.';
+      case "auth/email-already-in-use":
+        return "This email address is already registered. Please sign in or use a different email.";
+      case "auth/invalid-email":
+        return "Invalid email address format.";
+      case "auth/operation-not-allowed":
+        return "Email/password sign-in is not enabled. Please contact support.";
+      case "auth/weak-password":
+        return "Password is too weak. Please use a stronger password with at least 8 characters.";
+      case "auth/user-disabled":
+        return "This account has been disabled. Please contact support.";
+      case "auth/user-not-found":
+        return "No account found with this email address.";
+      case "auth/wrong-password":
+        return "Incorrect password. Please try again.";
+      case "auth/invalid-credential":
+        return "Invalid email or password. Please check your credentials and try again.";
+      case "auth/too-many-requests":
+        return "Too many failed login attempts. Please try again later or reset your password.";
+      case "auth/network-request-failed":
+        return "Network error. Please check your internet connection and try again.";
+      case "auth/requires-recent-login":
+        return "This action requires recent authentication. Please sign in again.";
       default:
         // Return the message if available
-        if ('message' in error && typeof error.message === 'string') {
+        if ("message" in error && typeof error.message === "string") {
           return error.message;
         }
-        return 'An authentication error occurred. Please try again.';
+        return "An authentication error occurred. Please try again.";
     }
   }
-  
+
   if (error instanceof Error) {
     return error.message;
   }
-  
-  return 'An unexpected error occurred. Please try again.';
+
+  return "An unexpected error occurred. Please try again.";
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -84,8 +94,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (err) {
       // Firebase not configured or other error — do not throw during module import
-      // eslint-disable-next-line no-console
-      console.warn('[AuthProvider] Firebase not configured or failed to initialize:', err);
+
+      console.warn(
+        "[AuthProvider] Firebase not configured or failed to initialize:",
+        err,
+      );
       setLoading(false);
     }
 
@@ -97,19 +110,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   async function signUp(email: string, password: string, rememberMe?: boolean) {
     try {
       const auth = getAuthInstance();
-      const credential = await createUserWithEmailAndPassword(auth, email, password);
-      
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+
       // Immediately send verification email (critical requirement)
       try {
         await firebaseSendEmailVerification(credential.user);
       } catch (verificationError) {
         // Log but don't fail the registration if email sending fails
-        // eslint-disable-next-line no-console
-        console.warn('[signUp] sendEmailVerification failed:', verificationError);
+
+        console.warn(
+          "[signUp] sendEmailVerification failed:",
+          verificationError,
+        );
         // Still throw an error to inform the user
-        throw new Error('Account created but failed to send verification email. Please try resending it from the login screen.');
+        throw new Error(
+          "Account created but failed to send verification email. Please try resending it from the login screen.",
+        );
       }
-      
+
       // Sign out the user immediately - they should not be logged in until verified
       await firebaseSignOut(auth);
     } catch (err) {
@@ -121,22 +143,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   async function signIn(email: string, password: string, rememberMe?: boolean) {
     try {
       const auth = getAuthInstance();
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+
       // Critical: Check if email is verified
       if (!credential.user.emailVerified) {
         // Sign out immediately if email is not verified
         await firebaseSignOut(auth);
         // Throw a specific error that the UI can catch
-        throw new Error('EMAIL_NOT_VERIFIED');
+        throw new Error("EMAIL_NOT_VERIFIED");
       }
-      
+
       // If we reach here, user is verified and can proceed
       // Note: rememberMe functionality would typically be handled by persistence settings
       // For now, Firebase Auth handles persistence automatically
     } catch (err) {
       // If it's our custom EMAIL_NOT_VERIFIED error, throw it as-is
-      if (err instanceof Error && err.message === 'EMAIL_NOT_VERIFIED') {
+      if (err instanceof Error && err.message === "EMAIL_NOT_VERIFIED") {
         throw err;
       }
       // Otherwise, parse Firebase errors
@@ -152,8 +178,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
     } catch (err) {
       const errorMessage = parseFirebaseError(err);
-      // eslint-disable-next-line no-console
-      console.warn('[signOut] failed:', errorMessage);
+
+      console.warn("[signOut] failed:", errorMessage);
       throw new Error(errorMessage);
     }
   }
@@ -162,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const auth = getAuthInstance();
       if (!auth.currentUser) {
-        throw new Error('No authenticated user');
+        throw new Error("No authenticated user");
       }
       await firebaseSendEmailVerification(auth.currentUser);
     } catch (err) {
@@ -175,7 +201,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const auth = getAuthInstance();
       if (!auth.currentUser) {
-        throw new Error('No authenticated user. Please sign in again to resend verification email.');
+        throw new Error(
+          "No authenticated user. Please sign in again to resend verification email.",
+        );
       }
       await firebaseSendEmailVerification(auth.currentUser);
     } catch (err) {
@@ -188,7 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const auth = getAuthInstance();
       if (!auth.currentUser) {
-        throw new Error('No authenticated user');
+        throw new Error("No authenticated user");
       }
       await firebaseUpdateProfile(auth.currentUser, { displayName });
       setUser({ ...auth.currentUser } as User);
@@ -218,6 +246,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
