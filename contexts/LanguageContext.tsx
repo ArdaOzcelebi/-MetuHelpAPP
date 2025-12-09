@@ -58,6 +58,41 @@ interface Translations {
   requestsPosted: string;
   helpGiven: string;
 
+  // Auth
+  welcomeBack: string;
+  signInToContinue: string;
+  createAccount: string;
+  joinMetuCommunity: string;
+  email: string;
+  metuEmail: string;
+  password: string;
+  confirmPassword: string;
+  rememberMe: string;
+  signIn: string;
+  signUp: string;
+  dontHaveAccount: string;
+  alreadyHaveAccount: string;
+  emailPlaceholder: string;
+  passwordPlaceholder: string;
+  confirmPasswordPlaceholder: string;
+  onlyMetuEmailsAllowed: string;
+  passwordRequirements: string;
+  passwordsDontMatch: string;
+  loginFailed: string;
+  registrationFailed: string;
+  registrationSuccessful: string;
+  verificationEmailSent: string;
+  verificationEmailSentMessage: string;
+  emailNotVerified: string;
+  emailNotVerifiedMessage: string;
+  resendVerification: string;
+  success: string;
+  error: string;
+  failedToSendVerification: string;
+  ok: string;
+  logoutFailed: string;
+  emailVerified: string;
+
   // Navigation
   home: string;
   browse: string;
@@ -127,6 +162,43 @@ const translations: Record<Language, Translations> = {
     requestsPosted: "Requests Posted",
     helpGiven: "Help Given",
 
+    // Auth
+    welcomeBack: "Welcome Back",
+    signInToContinue: "Sign in to continue helping the METU community",
+    createAccount: "Create Account",
+    joinMetuCommunity: "Join the METU Help community",
+    email: "Email",
+    metuEmail: "METU Email",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    rememberMe: "Remember Me",
+    signIn: "Sign In",
+    signUp: "Sign Up",
+    dontHaveAccount: "Don't have an account?",
+    alreadyHaveAccount: "Already have an account?",
+    emailPlaceholder: "your.email@metu.edu.tr",
+    passwordPlaceholder: "Enter your password",
+    confirmPasswordPlaceholder: "Confirm your password",
+    onlyMetuEmailsAllowed: "Only @metu.edu.tr email addresses are allowed",
+    passwordRequirements: "At least 8 characters with 1 digit",
+    passwordsDontMatch: "Passwords don't match",
+    loginFailed: "Failed to sign in",
+    registrationFailed: "Failed to create account",
+    registrationSuccessful: "Registration Successful!",
+    verificationEmailSent: "Verification Email Sent",
+    verificationEmailSentMessage:
+      "Please check your email and click the verification link to complete your registration.",
+    emailNotVerified: "Email Not Verified",
+    emailNotVerifiedMessage:
+      "Please verify your email address before signing in. Check your inbox for the verification link.",
+    resendVerification: "Resend Verification Email",
+    success: "Success",
+    error: "Error",
+    failedToSendVerification: "Failed to send verification email",
+    ok: "OK",
+    logoutFailed: "Failed to log out",
+    emailVerified: "Verified",
+
     // Navigation
     home: "Home",
     browse: "Browse",
@@ -193,6 +265,43 @@ const translations: Record<Language, Translations> = {
     loggedOutMessage: "Başarıyla çıkış yaptınız.",
     requestsPosted: "Gönderilen İstekler",
     helpGiven: "Verilen Yardım",
+
+    // Auth
+    welcomeBack: "Tekrar Hoş Geldiniz",
+    signInToContinue: "ODTÜ topluluğuna yardım etmeye devam edin",
+    createAccount: "Hesap Oluştur",
+    joinMetuCommunity: "ODTÜ Yardım topluluğuna katılın",
+    email: "E-posta",
+    metuEmail: "ODTÜ E-posta",
+    password: "Şifre",
+    confirmPassword: "Şifre Onayı",
+    rememberMe: "Beni Hatırla",
+    signIn: "Giriş Yap",
+    signUp: "Kayıt Ol",
+    dontHaveAccount: "Hesabınız yok mu?",
+    alreadyHaveAccount: "Zaten hesabınız var mı?",
+    emailPlaceholder: "e.posta@metu.edu.tr",
+    passwordPlaceholder: "Şifrenizi girin",
+    confirmPasswordPlaceholder: "Şifrenizi onaylayın",
+    onlyMetuEmailsAllowed: "Sadece @metu.edu.tr e-posta adresleri kabul edilir",
+    passwordRequirements: "En az 8 karakter ve 1 rakam içermeli",
+    passwordsDontMatch: "Şifreler eşleşmiyor",
+    loginFailed: "Giriş başarısız",
+    registrationFailed: "Kayıt başarısız",
+    registrationSuccessful: "Kayıt Başarılı!",
+    verificationEmailSent: "Doğrulama E-postası Gönderildi",
+    verificationEmailSentMessage:
+      "Lütfen e-postanızı kontrol edin ve kaydınızı tamamlamak için doğrulama bağlantısına tıklayın.",
+    emailNotVerified: "E-posta Doğrulanmadı",
+    emailNotVerifiedMessage:
+      "Giriş yapmadan önce lütfen e-posta adresinizi doğrulayın. Gelen kutunuzda doğrulama bağlantısını kontrol edin.",
+    resendVerification: "Doğrulama E-postasını Tekrar Gönder",
+    success: "Başarılı",
+    error: "Hata",
+    failedToSendVerification: "Doğrulama e-postası gönderilemedi",
+    ok: "Tamam",
+    logoutFailed: "Çıkış yapılamadı",
+    emailVerified: "Doğrulandı",
 
     // Navigation
     home: "Ana Sayfa",
