@@ -8,7 +8,7 @@
     "android": "npx expo start --android",
     "ios": "npx expo start --ios",
     "web": "npx expo start --web",
-    "lint": "npx expo lint",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "check:format": "prettier --check \"**/*.{js,ts,tsx,css,json}\"",
     "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\""
   },
