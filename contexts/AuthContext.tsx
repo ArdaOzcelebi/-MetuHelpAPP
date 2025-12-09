@@ -236,9 +236,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       await firebaseUpdateProfile(user, { displayName });
-      // Refresh user state
+      // Refresh user state - the onAuthStateChanged listener will update the state
       await user.reload();
-      setUser(auth.currentUser);
     } catch (error: any) {
       throw new Error(error.message || "Failed to update profile");
     }
