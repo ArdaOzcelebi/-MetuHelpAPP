@@ -80,7 +80,11 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
         </ThemedText>
         {user?.emailVerified && (
           <View style={styles.verifiedBadge}>
-            <Feather name="check-circle" size={16} color={METUColors.actionGreen} />
+            <Feather
+              name="check-circle"
+              size={16}
+              color={METUColors.actionGreen}
+            />
             <ThemedText
               style={[styles.verifiedText, { color: METUColors.actionGreen }]}
             >
