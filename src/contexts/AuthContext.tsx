@@ -101,20 +101,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user had "remember me" enabled
-    const checkRememberMe = async () => {
-      const rememberMe = await storage.getItem(REMEMBER_ME_KEY);
-      if (!rememberMe) {
-        // If remember me is not set, clear any existing session
-        await firebaseSignOut(auth);
-      }
-    };
-
-    checkRememberMe();
-
     // Listen for authentication state changes
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in, check if remember me was enabled
+        const rememberMe = await storage.getItem(REMEMBER_ME_KEY);
+        if (!rememberMe) {
+          // If remember me is not set, sign out the user
+          await firebaseSignOut(auth);
+          setUser(null);
+        } else {
+          setUser(user);
+        }
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
@@ -216,12 +217,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Map Firebase error codes to user-friendly messages
       let errorMessage = "Failed to sign in";
 
-      if (error.code === "auth/invalid-credential") {
+      if (
+        error.code === "auth/invalid-credential" ||
+        error.code === "auth/user-not-found" ||
+        error.code === "auth/wrong-password"
+      ) {
         errorMessage = "Invalid email or password";
-      } else if (error.code === "auth/user-not-found") {
-        errorMessage = "No account found with this email";
-      } else if (error.code === "auth/wrong-password") {
-        errorMessage = "Incorrect password";
       } else if (error.code === "auth/too-many-requests") {
         errorMessage = "Too many failed attempts. Please try again later";
       } else if (error.code === "auth/network-request-failed") {
@@ -277,7 +278,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await firebaseUpdateProfile(user, { displayName });
       // Refresh user data
       await user.reload();
-      setUser({ ...user });
+      setUser(auth.currentUser);
     } catch (error) {
       throw new Error("Failed to update profile");
     }

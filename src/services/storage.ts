@@ -41,7 +41,17 @@ export const storage = {
         return await SecureStore.getItemAsync(key);
       }
     } catch (error) {
+      // Log error for debugging but return null for not-found cases
       console.error(`Error retrieving item with key "${key}":`, error);
+
+      // Re-throw critical errors
+      if (
+        (error instanceof Error && error.message.includes("permission")) ||
+        error.message.includes("denied")
+      ) {
+        throw error;
+      }
+
       return null;
     }
   },

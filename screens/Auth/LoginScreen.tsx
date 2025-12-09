@@ -49,8 +49,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       await signIn(email, password, rememberMe);
       // Navigation will be handled by App.tsx based on auth state
     } catch (err: any) {
-      setLoading(false);
-
       if (err.message === "EMAIL_NOT_VERIFIED") {
         // Show alert with option to resend verification email
         Alert.alert(
@@ -71,6 +69,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       } else {
         setError(err.message || t.loginFailed);
       }
+    } finally {
+      setLoading(false);
     }
   };
 

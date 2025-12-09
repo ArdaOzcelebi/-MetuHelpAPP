@@ -56,7 +56,6 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
 
     try {
       await signUp(email, password, rememberMe);
-      setLoading(false);
 
       // Show success message
       Alert.alert(
@@ -71,8 +70,9 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
         { cancelable: false },
       );
     } catch (err: any) {
-      setLoading(false);
       setError(err.message || t.registrationFailed);
+    } finally {
+      setLoading(false);
     }
   };
 
