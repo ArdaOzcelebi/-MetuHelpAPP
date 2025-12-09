@@ -7,6 +7,7 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Spacing,
   BorderRadius,
@@ -22,6 +23,7 @@ type ProfileScreenProps = {
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { theme, isDark } = useTheme();
   const { t } = useLanguage();
+  const { user, signOut } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
 
@@ -31,8 +33,13 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       {
         text: t.logOut,
         style: "destructive",
-        onPress: () => {
-          Alert.alert(t.loggedOut, t.loggedOutMessage);
+        onPress: async () => {
+          try {
+            await signOut();
+            Alert.alert(t.loggedOut, t.loggedOutMessage);
+          } catch (error: any) {
+            Alert.alert("Error", error.message || "Failed to log out");
+          }
         },
       },
     ]);
@@ -47,14 +54,26 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
             { backgroundColor: isDark ? "#CC3333" : METUColors.maroon },
           ]}
         >
-          <ThemedText style={styles.avatarText}>ME</ThemedText>
+          <ThemedText style={styles.avatarText}>
+            {user?.displayName
+              ? user.displayName.substring(0, 2).toUpperCase()
+              : "ME"}
+          </ThemedText>
         </View>
         <ThemedText type="h3" style={styles.userName}>
-          METU Student
+          {user?.displayName || "METU Student"}
         </ThemedText>
         <ThemedText style={[styles.userEmail, { color: theme.textSecondary }]}>
-          student@metu.edu.tr
+          {user?.email || "student@metu.edu.tr"}
         </ThemedText>
+        {user?.emailVerified && (
+          <View style={styles.verifiedBadge}>
+            <Feather name="check-circle" size={16} color={METUColors.actionGreen} />
+            <ThemedText style={[styles.verifiedText, { color: METUColors.actionGreen }]}>
+              {t.verified || "Verified"}
+            </ThemedText>
+          </View>
+        )}
       </View>
 
       <View style={styles.statsRow}>
@@ -249,6 +268,16 @@ const styles = StyleSheet.create({
   },
   userEmail: {
     fontSize: Typography.body.fontSize,
+  },
+  verifiedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+  },
+  verifiedText: {
+    fontSize: Typography.small.fontSize,
+    fontWeight: "600",
   },
   statsRow: {
     flexDirection: "row",

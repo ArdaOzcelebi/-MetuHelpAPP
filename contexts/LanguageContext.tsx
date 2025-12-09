@@ -57,6 +57,33 @@ interface Translations {
   loggedOutMessage: string;
   requestsPosted: string;
   helpGiven: string;
+  verified: string;
+
+  // Auth Screens
+  email: string;
+  password: string;
+  confirmPassword: string;
+  rememberMe: string;
+  signIn: string;
+  signUp: string;
+  welcomeBack: string;
+  signInToContinue: string;
+  createAccount: string;
+  joinMetuHelp: string;
+  dontHaveAccount: string;
+  alreadyHaveAccount: string;
+  onlyMetuEmail: string;
+  passwordRequirements: string;
+  registrationSuccess: string;
+  checkEmailVerification: string;
+  ok: string;
+  verifyEmail: string;
+  verificationEmailSent: string;
+  resendVerification: string;
+  backToLogin: string;
+  emailNotVerified: string;
+  emailSent: string;
+  verificationEmailResent: string;
 
   // Navigation
   home: string;
@@ -126,6 +153,33 @@ const translations: Record<Language, Translations> = {
     loggedOutMessage: "You have been logged out successfully.",
     requestsPosted: "Requests Posted",
     helpGiven: "Help Given",
+    verified: "Verified",
+
+    // Auth Screens
+    email: "Email",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    rememberMe: "Remember Me",
+    signIn: "Sign In",
+    signUp: "Sign Up",
+    welcomeBack: "Welcome Back",
+    signInToContinue: "Sign in to continue",
+    createAccount: "Create Account",
+    joinMetuHelp: "Join METU Help community",
+    dontHaveAccount: "Don't have an account?",
+    alreadyHaveAccount: "Already have an account?",
+    onlyMetuEmail: "Only @metu.edu.tr emails are allowed",
+    passwordRequirements: "At least 8 characters with 1 digit",
+    registrationSuccess: "Registration Successful",
+    checkEmailVerification: "A verification email has been sent to your email address. Please verify your email before logging in.",
+    ok: "OK",
+    verifyEmail: "Verify Your Email",
+    verificationEmailSent: "We've sent a verification email to your address. Please check your inbox and click the verification link.",
+    resendVerification: "Resend Verification Email",
+    backToLogin: "Back to Login",
+    emailNotVerified: "Email Not Verified",
+    emailSent: "Email Sent",
+    verificationEmailResent: "Verification email has been resent. Please check your inbox.",
 
     // Navigation
     home: "Home",
@@ -193,6 +247,33 @@ const translations: Record<Language, Translations> = {
     loggedOutMessage: "Başarıyla çıkış yaptınız.",
     requestsPosted: "Gönderilen İstekler",
     helpGiven: "Verilen Yardım",
+    verified: "Doğrulandı",
+
+    // Auth Screens
+    email: "E-posta",
+    password: "Şifre",
+    confirmPassword: "Şifreyi Onayla",
+    rememberMe: "Beni Hatırla",
+    signIn: "Giriş Yap",
+    signUp: "Kayıt Ol",
+    welcomeBack: "Tekrar Hoş Geldiniz",
+    signInToContinue: "Devam etmek için giriş yapın",
+    createAccount: "Hesap Oluştur",
+    joinMetuHelp: "METU Help topluluğuna katıl",
+    dontHaveAccount: "Hesabınız yok mu?",
+    alreadyHaveAccount: "Zaten hesabınız var mı?",
+    onlyMetuEmail: "Sadece @metu.edu.tr e-postaları kabul edilir",
+    passwordRequirements: "En az 8 karakter ve 1 rakam",
+    registrationSuccess: "Kayıt Başarılı",
+    checkEmailVerification: "E-posta adresinize bir doğrulama e-postası gönderildi. Giriş yapmadan önce lütfen e-postanızı doğrulayın.",
+    ok: "Tamam",
+    verifyEmail: "E-postanızı Doğrulayın",
+    verificationEmailSent: "Adresinize bir doğrulama e-postası gönderdik. Lütfen gelen kutunuzu kontrol edin ve doğrulama bağlantısına tıklayın.",
+    resendVerification: "Doğrulama E-postası Tekrar Gönder",
+    backToLogin: "Giriş Sayfasına Dön",
+    emailNotVerified: "E-posta Doğrulanmadı",
+    emailSent: "E-posta Gönderildi",
+    verificationEmailResent: "Doğrulama e-postası yeniden gönderildi. Lütfen gelen kutunuzu kontrol edin.",
 
     // Navigation
     home: "Ana Sayfa",
