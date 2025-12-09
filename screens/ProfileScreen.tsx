@@ -38,7 +38,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
             await signOut();
             Alert.alert(t.loggedOut, t.loggedOutMessage);
           } catch (error: any) {
-            Alert.alert("Error", error.message || "Failed to log out");
+            Alert.alert(t.error || "Error", error.message || t.failedToLogOut || "Failed to log out");
           }
         },
       },

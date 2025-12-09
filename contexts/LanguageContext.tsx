@@ -84,6 +84,11 @@ interface Translations {
   emailNotVerified: string;
   emailSent: string;
   verificationEmailResent: string;
+  pleaseFieldAll: string;
+  passwordsDoNotMatch: string;
+  enterEmailAndPassword: string;
+  error: string;
+  failedToLogOut: string;
 
   // Navigation
   home: string;
@@ -180,6 +185,11 @@ const translations: Record<Language, Translations> = {
     emailNotVerified: "Email Not Verified",
     emailSent: "Email Sent",
     verificationEmailResent: "Verification email has been resent. Please check your inbox.",
+    pleaseFieldAll: "Please fill in all fields",
+    passwordsDoNotMatch: "Passwords do not match",
+    enterEmailAndPassword: "Please enter both email and password",
+    error: "Error",
+    failedToLogOut: "Failed to log out",
 
     // Navigation
     home: "Home",
@@ -274,6 +284,11 @@ const translations: Record<Language, Translations> = {
     emailNotVerified: "E-posta Doğrulanmadı",
     emailSent: "E-posta Gönderildi",
     verificationEmailResent: "Doğrulama e-postası yeniden gönderildi. Lütfen gelen kutunuzu kontrol edin.",
+    pleaseFieldAll: "Lütfen tüm alanları doldurun",
+    passwordsDoNotMatch: "Şifreler eşleşmiyor",
+    enterEmailAndPassword: "Lütfen e-posta ve şifrenizi girin",
+    error: "Hata",
+    failedToLogOut: "Çıkış yapılamadı",
 
     // Navigation
     home: "Ana Sayfa",

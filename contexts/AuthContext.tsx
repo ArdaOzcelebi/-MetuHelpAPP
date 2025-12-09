@@ -108,8 +108,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await storage.removeItem(REMEMBER_ME_KEY);
       }
     } catch (error: any) {
-      // Re-throw validation errors
-      if (error.message.includes("@metu.edu.tr") || error.message.includes("Password")) {
+      // Check if it's a validation error from our functions
+      if (
+        error.message &&
+        (error.message.includes("@metu.edu.tr") ||
+          error.message.includes("8 characters") ||
+          error.message.includes("digit"))
+      ) {
         throw error;
       }
 

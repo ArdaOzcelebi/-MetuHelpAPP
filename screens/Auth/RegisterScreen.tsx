@@ -46,12 +46,12 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
 
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword) {
-      setError("Please fill in all fields");
+      setError(t.pleaseFieldAll || "Please fill in all fields");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t.passwordsDoNotMatch || "Passwords do not match");
       return;
     }
 
