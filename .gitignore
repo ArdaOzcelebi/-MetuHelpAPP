@@ -46,3 +46,8 @@ app-example
 # Replit agent state
 .local/
 
+
+.env.local
+
+# local firebase config (do not commit)
+src/firebase/firebaseConfig.local.ts

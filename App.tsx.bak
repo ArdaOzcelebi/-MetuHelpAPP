@@ -1,0 +1,55 @@
+﻿import React from "react";
+import { View, Text, Button } from "react-native";
+import Constants from "expo-constants";
+
+let AuthProvider: any = null;
+let authError: any = null;
+
+try {
+  // require at runtime so import-time errors don't break the whole bundle
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mod = require('./src/contexts/AuthContext');
+  AuthProvider = mod?.AuthProvider ?? mod?.default ?? null;
+} catch (err) {
+  authError = err;
+  // eslint-disable-next-line no-console
+  console.error('[App] require AuthContext failed:', err);
+}
+
+export default function App(): JSX.Element {
+  console.log("expoConfig.extra ->", Constants.expoConfig?.extra);
+
+  if (authError) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 8 }}>AuthProvider failed to load</Text>
+        <Text style={{ color: "#666", marginBottom: 12, textAlign: "center" }}>
+          We attempted to load AuthProvider but it threw an error. Check the console for details.
+        </Text>
+        <Button title="Reload page" onPress={() => { if (typeof window !== 'undefined') window.location.reload(); }} />
+      </View>
+    );
+  }
+
+  if (!AuthProvider) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <Text style={{ fontSize: 18, fontWeight: "600" }}>AuthProvider not found</Text>
+        <Text style={{ color: "#666", marginTop: 8 }}>
+          The module was found but did not export AuthProvider as a named or default export.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <AuthProvider>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <Text style={{ fontSize: 18, fontWeight: "600" }}>AuthProvider loaded — placeholder UI</Text>
+        <Text style={{ color: "#666", marginTop: 8 }}>
+          If this shows, AuthProvider import is correct. We'll continue from here.
+        </Text>
+      </View>
+    </AuthProvider>
+  );
+}

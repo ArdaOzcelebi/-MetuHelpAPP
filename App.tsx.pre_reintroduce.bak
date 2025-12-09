@@ -1,0 +1,83 @@
+﻿import React, { Component, ErrorInfo } from "react";
+import { View, Text, Button, ScrollView } from "react-native";
+import Constants from "expo-constants";
+
+// Static import of your original app entry (we'll create AppOriginal.tsx from your backup)
+import AppOriginal from "./AppOriginal";
+
+// Try to import AuthProvider statically; if it fails, we fall back to null
+let AuthProvider: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mod = require("./src/contexts/AuthContext");
+  AuthProvider = mod?.AuthProvider ?? mod?.default ?? null;
+  // eslint-disable-next-line no-console
+  console.log("[App] AuthContext module keys:", Object.keys(mod || {}));
+} catch (e) {
+  // eslint-disable-next-line no-console
+  console.warn("[App] failed to load AuthContext:", e && e.message ? e.message : e);
+}
+
+// Error boundary to catch render-time errors from the original app
+class AppErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error; info?: ErrorInfo }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    // eslint-disable-next-line no-console
+    console.error("[AppErrorBoundary] Caught error:", error);
+    // eslint-disable-next-line no-console
+    console.error(info.componentStack);
+    this.setState({ error, info });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
+          <View style={{ alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+            <Text style={{ fontSize: 20, fontWeight: "700", marginBottom: 8 }}>App render error</Text>
+            <Text style={{ color: "#666", textAlign: "center", marginBottom: 12 }}>
+              The original app attempted to render but threw an error. The stack is printed to the console.
+            </Text>
+            <Button title="Reload" onPress={() => { if (typeof window !== "undefined") window.location.reload(); }} />
+          </View>
+          <View style={{ padding: 8, backgroundColor: "#fff", borderRadius: 6, borderWidth: 1, borderColor: "#eee" }}>
+            <Text style={{ fontWeight: "600", marginBottom: 6 }}>Error:</Text>
+            <Text style={{ color: "#a00" }}>{String(this.state.error)}</Text>
+            <Text style={{ marginTop: 8, fontWeight: "600" }}>Component stack:</Text>
+            <Text style={{ color: "#444" }}>{this.state.info?.componentStack}</Text>
+          </View>
+        </ScrollView>
+      );
+    }
+
+    return this.props.children as any;
+  }
+}
+
+export default function App(): JSX.Element {
+  // debug expo extras
+  // eslint-disable-next-line no-console
+  console.log("expoConfig.extra ->", Constants.expoConfig?.extra);
+
+  const Root = (
+    <AppErrorBoundary>
+      <AppOriginal />
+    </AppErrorBoundary>
+  );
+
+  if (AuthProvider) {
+    return <AuthProvider>{Root}</AuthProvider>;
+  }
+  return Root;
+}
