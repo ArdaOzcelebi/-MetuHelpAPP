@@ -59,7 +59,10 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
 
       <View style={styles.statsRow}>
         <View
-          style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
+          style={[
+            styles.statCard,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
         >
           <Feather
             name="heart"
@@ -74,7 +77,10 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           </ThemedText>
         </View>
         <View
-          style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
+          style={[
+            styles.statCard,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
         >
           <Feather name="users" size={20} color={METUColors.actionGreen} />
           <ThemedText style={styles.statNumber}>28</ThemedText>
@@ -115,7 +121,9 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Feather name="mail" size={20} color={theme.text} />
-              <ThemedText style={styles.settingLabel}>{t.emailUpdates}</ThemedText>
+              <ThemedText style={styles.settingLabel}>
+                {t.emailUpdates}
+              </ThemedText>
             </View>
             <Switch
               value={emailUpdates}
@@ -148,7 +156,11 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
               <Feather name="info" size={20} color={theme.text} />
               <ThemedText style={styles.settingLabel}>{t.aboutApp}</ThemedText>
             </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={theme.textSecondary}
+            />
           </Pressable>
           <View style={styles.divider} />
           <Pressable
@@ -159,9 +171,15 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           >
             <View style={styles.settingInfo}>
               <Feather name="shield" size={20} color={theme.text} />
-              <ThemedText style={styles.settingLabel}>{t.privacyPolicy}</ThemedText>
+              <ThemedText style={styles.settingLabel}>
+                {t.privacyPolicy}
+              </ThemedText>
             </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={theme.textSecondary}
+            />
           </Pressable>
           <View style={styles.divider} />
           <Pressable
@@ -172,9 +190,15 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           >
             <View style={styles.settingInfo}>
               <Feather name="file-text" size={20} color={theme.text} />
-              <ThemedText style={styles.settingLabel}>{t.termsOfService}</ThemedText>
+              <ThemedText style={styles.settingLabel}>
+                {t.termsOfService}
+              </ThemedText>
             </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={theme.textSecondary}
+            />
           </Pressable>
         </View>
       </View>
@@ -183,7 +207,10 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
         onPress={handleLogout}
         style={({ pressed }) => [
           styles.logoutButton,
-          { backgroundColor: theme.backgroundDefault, opacity: pressed ? 0.8 : 1 },
+          {
+            backgroundColor: theme.backgroundDefault,
+            opacity: pressed ? 0.8 : 1,
+          },
         ]}
       >
         <Feather name="log-out" size={20} color={METUColors.alertRed} />

@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  TextInput,
-  Pressable,
-  FlatList,
-} from "react-native";
+import { StyleSheet, View, TextInput, Pressable, FlatList } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
@@ -37,14 +31,14 @@ const QUESTIONS_DATA: Record<
     posterName: string;
     posterInitials: string;
     content: string;
-    responses: Array<{
+    responses: {
       id: string;
       authorName: string;
       authorInitials: string;
       content: string;
       time: string;
       upvotes: number;
-    }>;
+    }[];
   }
 > = {
   "1": {
@@ -138,7 +132,7 @@ export default function QuestionDetailScreen({
   const { questionId } = route.params;
   const [newResponse, setNewResponse] = useState("");
   const [responses, setResponses] = useState(
-    QUESTIONS_DATA[questionId]?.responses || []
+    QUESTIONS_DATA[questionId]?.responses || [],
   );
 
   const question = QUESTIONS_DATA[questionId] || QUESTIONS_DATA["1"];
@@ -172,13 +166,12 @@ export default function QuestionDetailScreen({
     setNewResponse("");
   };
 
-  const renderResponse = ({
-    item,
-  }: {
-    item: (typeof responses)[0];
-  }) => (
+  const renderResponse = ({ item }: { item: (typeof responses)[0] }) => (
     <View
-      style={[styles.responseCard, { backgroundColor: theme.backgroundDefault }]}
+      style={[
+        styles.responseCard,
+        { backgroundColor: theme.backgroundDefault },
+      ]}
     >
       <View style={styles.responseHeader}>
         <View
@@ -187,7 +180,9 @@ export default function QuestionDetailScreen({
             { backgroundColor: isDark ? "#CC3333" : METUColors.maroon },
           ]}
         >
-          <ThemedText style={styles.avatarText}>{item.authorInitials}</ThemedText>
+          <ThemedText style={styles.avatarText}>
+            {item.authorInitials}
+          </ThemedText>
         </View>
         <View style={styles.responseAuthorInfo}>
           <ThemedText style={styles.authorName}>{item.authorName}</ThemedText>
@@ -225,7 +220,9 @@ export default function QuestionDetailScreen({
             </ThemedText>
           </View>
           <View>
-            <ThemedText style={styles.posterName}>{question.posterName}</ThemedText>
+            <ThemedText style={styles.posterName}>
+              {question.posterName}
+            </ThemedText>
             <ThemedText
               style={[styles.postTime, { color: theme.textSecondary }]}
             >
@@ -239,7 +236,9 @@ export default function QuestionDetailScreen({
             { backgroundColor: `${getCategoryColor()}20` },
           ]}
         >
-          <ThemedText style={[styles.categoryTagText, { color: getCategoryColor() }]}>
+          <ThemedText
+            style={[styles.categoryTagText, { color: getCategoryColor() }]}
+          >
             {question.category}
           </ThemedText>
         </View>
@@ -289,7 +288,10 @@ export default function QuestionDetailScreen({
       <View
         style={[
           styles.inputContainer,
-          { backgroundColor: theme.backgroundRoot, borderTopColor: theme.border },
+          {
+            backgroundColor: theme.backgroundRoot,
+            borderTopColor: theme.border,
+          },
         ]}
       >
         <TextInput
