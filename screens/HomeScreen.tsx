@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 // FIXED: Added 'Platform' to imports
 import { StyleSheet, View, Pressable, Platform } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
@@ -66,9 +65,9 @@ function HeroButton({
   const handlePressIn = () => {
     scale.value = withSpring(0.96, { damping: 15, stiffness: 200 });
     glowOpacity.value = withTiming(0.6, { duration: 150 });
-    
+
     // SAFE HAPTICS: Only run on mobile
-    if (Platform.OS !== 'web') {
+    if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
   };
@@ -81,11 +80,11 @@ function HeroButton({
   const handlePress = () => {
     scale.value = withSequence(
       withTiming(0.94, { duration: 100 }),
-      withSpring(1, { damping: 15, stiffness: 200 })
+      withSpring(1, { damping: 15, stiffness: 200 }),
     );
-    
+
     // SAFE HAPTICS: Only run on mobile
-    if (Platform.OS !== 'web') {
+    if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
     onPress();
@@ -93,13 +92,13 @@ function HeroButton({
 
   // WEB HOVER HANDLERS
   const handleHoverIn = () => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === "web") {
       scale.value = withSpring(1.01, { damping: 15, stiffness: 200 });
     }
   };
 
   const handleHoverOut = () => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === "web") {
       scale.value = withSpring(1, { damping: 15, stiffness: 200 });
     }
   };
@@ -108,13 +107,9 @@ function HeroButton({
     <View style={styles.heroButtonWrapper}>
       {/* Glow effect stays behind */}
       <Animated.View
-        style={[
-          styles.heroButtonGlow,
-          { backgroundColor },
-          glowStyle,
-        ]}
+        style={[styles.heroButtonGlow, { backgroundColor }, glowStyle]}
       />
-      
+
       {/* Outer Shell: Handles Clicks & Hover */}
       <Pressable
         onPress={handlePress}
@@ -122,21 +117,21 @@ function HeroButton({
         onPressOut={handlePressOut}
         onHoverIn={handleHoverIn}
         onHoverOut={handleHoverOut}
-        style={{ cursor: 'pointer' }} // Hand cursor for web
+        style={{ cursor: "pointer" }} // Hand cursor for web
       >
         {/* Inner Visuals: Handles Animation & Style */}
-        <Animated.View 
-            style={[styles.heroButton, { backgroundColor }, animatedStyle]}
+        <Animated.View
+          style={[styles.heroButton, { backgroundColor }, animatedStyle]}
         >
-            <View style={styles.heroButtonContent}>
-                <View style={styles.heroButtonIcon}>
-                    <Feather name={icon} size={32} color="#FFFFFF" />
-                </View>
-                <View style={styles.heroButtonText}>
-                    <ThemedText style={styles.heroButtonTitle}>{title}</ThemedText>
-                </View>
-                <Feather name="chevron-right" size={24} color="#FFFFFF" />
+          <View style={styles.heroButtonContent}>
+            <View style={styles.heroButtonIcon}>
+              <Feather name={icon} size={32} color="#FFFFFF" />
             </View>
+            <View style={styles.heroButtonText}>
+              <ThemedText style={styles.heroButtonTitle}>{title}</ThemedText>
+            </View>
+            <Feather name="chevron-right" size={24} color="#FFFFFF" />
+          </View>
         </Animated.View>
       </Pressable>
     </View>
@@ -167,13 +162,13 @@ function DecorativeCircle({
   useEffect(() => {
     opacity.value = withDelay(
       delay,
-      withTiming(0.15, { duration: 800, easing: Easing.out(Easing.quad) })
+      withTiming(0.15, { duration: 800, easing: Easing.out(Easing.quad) }),
     );
     scale.value = withDelay(
       delay,
-      withSpring(1, { damping: 20, stiffness: 90 })
+      withSpring(1, { damping: 20, stiffness: 90 }),
     );
-  }, [delay]);
+  }, [delay, opacity, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -218,36 +213,48 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   useEffect(() => {
     // Staggered entrance animations
-    headerOpacity.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.quad) });
+    headerOpacity.value = withTiming(1, {
+      duration: 600,
+      easing: Easing.out(Easing.quad),
+    });
     headerTranslateY.value = withSpring(0, { damping: 20, stiffness: 90 });
 
     button1Opacity.value = withDelay(
       200,
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) })
+      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
     );
     button1TranslateY.value = withDelay(
       200,
-      withSpring(0, { damping: 18, stiffness: 90 })
+      withSpring(0, { damping: 18, stiffness: 90 }),
     );
 
     button2Opacity.value = withDelay(
       350,
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) })
+      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
     );
     button2TranslateY.value = withDelay(
       350,
-      withSpring(0, { damping: 18, stiffness: 90 })
+      withSpring(0, { damping: 18, stiffness: 90 }),
     );
 
     statsOpacity.value = withDelay(
       500,
-      withTiming(1, { duration: 600, easing: Easing.out(Easing.quad) })
+      withTiming(1, { duration: 600, easing: Easing.out(Easing.quad) }),
     );
     statsTranslateY.value = withDelay(
       500,
-      withSpring(0, { damping: 20, stiffness: 90 })
+      withSpring(0, { damping: 20, stiffness: 90 }),
     );
-  }, []);
+  }, [
+    headerOpacity,
+    headerTranslateY,
+    button1Opacity,
+    button1TranslateY,
+    button2Opacity,
+    button2TranslateY,
+    statsOpacity,
+    statsTranslateY,
+  ]);
 
   const headerStyle = useAnimatedStyle(() => ({
     opacity: headerOpacity.value,
@@ -287,8 +294,20 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       />
 
       {/* Decorative circles */}
-      <DecorativeCircle size={200} top={-50} right={-70} color={circleColor} delay={0} />
-      <DecorativeCircle size={150} bottom={-40} left={-50} color={circleColor} delay={200} />
+      <DecorativeCircle
+        size={200}
+        top={-50}
+        right={-70}
+        color={circleColor}
+        delay={0}
+      />
+      <DecorativeCircle
+        size={150}
+        bottom={-40}
+        left={-50}
+        color={circleColor}
+        delay={200}
+      />
       <DecorativeCircle
         size={100}
         top={150}

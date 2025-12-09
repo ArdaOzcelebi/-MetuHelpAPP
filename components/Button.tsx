@@ -61,7 +61,7 @@ export function Button({
     if (!disabled) {
       scale.value = withSpring(1, springConfig);
     }
-  };  
+  };
   return (
     <AnimatedPressable
       onPress={disabled ? undefined : onPress}

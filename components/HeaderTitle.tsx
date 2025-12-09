@@ -1,16 +1,12 @@
 import React from "react";
 import { View, StyleSheet, Image } from "react-native";
-import { ThemedText } from "@/components/ThemedText";
-import { Spacing, METUColors } from "@/constants/theme";
-import { useTheme } from "@/hooks/useTheme";
+import { Spacing } from "@/constants/theme";
 
 interface HeaderTitleProps {
   title: string;
 }
 
 export function HeaderTitle({ title }: HeaderTitleProps) {
-  const { isDark } = useTheme();
-
   return (
     <View style={styles.container}>
       <Image

@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Pressable,
-  ScrollView,
-} from "react-native";
+import { StyleSheet, View, Pressable, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, {
@@ -210,7 +205,13 @@ function RequestCard({
           <Feather
             name={getCategoryIcon()}
             size={20}
-            color={urgent ? METUColors.alertRed : isDark ? "#FF6B6B" : METUColors.maroon}
+            color={
+              urgent
+                ? METUColors.alertRed
+                : isDark
+                  ? "#FF6B6B"
+                  : METUColors.maroon
+            }
           />
         </View>
         <View style={styles.requestInfo}>
@@ -251,7 +252,7 @@ function RequestCard({
 }
 
 export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { t, language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -294,7 +295,9 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
             key={request.id}
             title={language === "en" ? request.titleEn : request.titleTr}
             category={request.category}
-            location={language === "en" ? request.locationEn : request.locationTr}
+            location={
+              language === "en" ? request.locationEn : request.locationTr
+            }
             time={request.time}
             urgent={request.urgent}
             urgentLabel={t.urgent}
