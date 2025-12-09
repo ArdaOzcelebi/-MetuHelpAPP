@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  TextInput,
-  Pressable,
-  Alert,
-} from "react-native";
+import { StyleSheet, View, TextInput, Pressable, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -64,7 +58,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           text: "OK",
           onPress: () => navigation.goBack(),
         },
-      ]
+      ],
     );
   };
 
@@ -216,16 +210,12 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           style={[
             styles.checkbox,
             {
-              backgroundColor: isUrgent
-                ? METUColors.alertRed
-                : "transparent",
+              backgroundColor: isUrgent ? METUColors.alertRed : "transparent",
               borderColor: isUrgent ? METUColors.alertRed : theme.textSecondary,
             },
           ]}
         >
-          {isUrgent ? (
-            <Feather name="check" size={14} color="#FFFFFF" />
-          ) : null}
+          {isUrgent ? <Feather name="check" size={14} color="#FFFFFF" /> : null}
         </View>
       </Pressable>
 

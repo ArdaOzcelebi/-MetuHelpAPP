@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  TextInput,
-  Pressable,
-  Alert,
-} from "react-native";
+import { StyleSheet, View, TextInput, Pressable, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -51,7 +45,7 @@ export default function AskQuestionScreen({
           text: "OK",
           onPress: () => navigation.goBack(),
         },
-      ]
+      ],
     );
   };
 
@@ -153,7 +147,9 @@ export default function AskQuestionScreen({
             size={18}
             color={isDark ? "#FF6B6B" : METUColors.maroon}
           />
-          <ThemedText style={styles.tipsTitle}>Tips for good questions</ThemedText>
+          <ThemedText style={styles.tipsTitle}>
+            Tips for good questions
+          </ThemedText>
         </View>
         <View style={styles.tipsList}>
           <View style={styles.tipItem}>

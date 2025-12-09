@@ -1,0 +1,26 @@
+
+> my-app@1.0.0 lint
+> eslint . --ext .js,.jsx,.ts,.tsx
+
+
+C:\Users\ARDA\Desktop\metuhelp\components\HeaderTitle.tsx
+   3:10  warning  'ThemedText' is defined but never used       @typescript-eslint/no-unused-vars
+   4:19  warning  'METUColors' is defined but never used       @typescript-eslint/no-unused-vars
+  12:11  warning  'isDark' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ARDA\Desktop\metuhelp\screens\BrowseScreen.tsx
+  203:27  error  React Hook "useSharedValue" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  204:35  error  React Hook "useAnimatedStyle" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  297:27  error  React Hook "useSharedValue" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  298:35  error  React Hook "useAnimatedStyle" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+
+C:\Users\ARDA\Desktop\metuhelp\screens\HomeScreen.tsx
+    4:10  warning  'useSafeAreaInsets' is defined but never used                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  172:6   warning  React Hook useEffect has missing dependencies: 'opacity' and 'scale'. Either include them or remove the dependency array                                                                                                                                     react-hooks/exhaustive-deps
+  249:6   warning  React Hook useEffect has missing dependencies: 'button1Opacity', 'button1TranslateY', 'button2Opacity', 'button2TranslateY', 'headerOpacity', 'headerTranslateY', 'statsOpacity', and 'statsTranslateY'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ARDA\Desktop\metuhelp\screens\NeedHelpScreen.tsx
+  255:11  warning  'theme' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 11 problems (4 errors, 7 warnings)
+

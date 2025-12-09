@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Pressable,
-  TextInput,
-} from "react-native";
+import { StyleSheet, View, Pressable, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useNavigation, CompositeNavigationProp } from "@react-navigation/native";
+import {
+  useNavigation,
+  CompositeNavigationProp,
+} from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import Animated, {
   useAnimatedStyle,
@@ -227,9 +225,7 @@ function QuestionCard({
             {responses} {responses === 1 ? responseLabel : responsesLabel}
           </ThemedText>
         </View>
-        <ThemedText
-          style={[styles.timeText, { color: theme.textSecondary }]}
-        >
+        <ThemedText style={[styles.timeText, { color: theme.textSecondary }]}>
           {time}
         </ThemedText>
       </View>
@@ -240,14 +236,17 @@ function QuestionCard({
 export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
-  const [selectedTab, setSelectedTab] = useState<"recent" | "unanswered" | "popular">("recent");
+  const [selectedTab, setSelectedTab] = useState<
+    "recent" | "unanswered" | "popular"
+  >("recent");
   const [searchQuery, setSearchQuery] = useState("");
-  const browseNavigation = useNavigation<
-    CompositeNavigationProp<
-      BottomTabNavigationProp<MainTabParamList>,
-      NativeStackNavigationProp<BrowseStackParamList>
-    >
-  >();
+  const browseNavigation =
+    useNavigation<
+      CompositeNavigationProp<
+        BottomTabNavigationProp<MainTabParamList>,
+        NativeStackNavigationProp<BrowseStackParamList>
+      >
+    >();
 
   const TABS = [
     { id: "recent", label: t.recent },
@@ -257,7 +256,9 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
 
   const filteredQuestions = MOCK_QUESTIONS.filter((q) => {
     const title = language === "en" ? q.titleEn : q.titleTr;
-    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     if (selectedTab === "unanswered") {
       return matchesSearch && !q.answered;
     }
@@ -307,7 +308,9 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
             <QuestionCard
               key={question.id}
               title={language === "en" ? question.titleEn : question.titleTr}
-              category={language === "en" ? question.categoryEn : question.categoryTr}
+              category={
+                language === "en" ? question.categoryEn : question.categoryTr
+              }
               responses={question.responses}
               time={question.time}
               answered={question.answered}
@@ -323,7 +326,11 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
           ))
         ) : (
           <View style={styles.emptyState}>
-            <Feather name="message-circle" size={48} color={theme.textSecondary} />
+            <Feather
+              name="message-circle"
+              size={48}
+              color={theme.textSecondary}
+            />
             <ThemedText
               style={[styles.emptyTitle, { color: theme.textSecondary }]}
             >

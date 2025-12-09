@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Pressable,
-  TextInput,
-} from "react-native";
+import { StyleSheet, View, Pressable, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, {
@@ -97,7 +92,9 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export default function BrowseScreen({ navigation }: BrowseScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
-  const [selectedTab, setSelectedTab] = useState<"needs" | "questions">("needs");
+  const [selectedTab, setSelectedTab] = useState<"needs" | "questions">(
+    "needs",
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   const TABS = [
@@ -215,7 +212,10 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
                   navigation.navigate("RequestDetail", { requestId: need.id })
                 }
                 onPressIn={() => {
-                  scale.value = withSpring(0.98, { damping: 15, stiffness: 150 });
+                  scale.value = withSpring(0.98, {
+                    damping: 15,
+                    stiffness: 150,
+                  });
                 }}
                 onPressOut={() => {
                   scale.value = withSpring(1, { damping: 15, stiffness: 150 });
@@ -244,8 +244,8 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
                         need.urgent
                           ? METUColors.alertRed
                           : isDark
-                          ? "#FF6B6B"
-                          : METUColors.maroon
+                            ? "#FF6B6B"
+                            : METUColors.maroon
                       }
                     />
                   </View>
@@ -256,7 +256,9 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
                       </ThemedText>
                       {need.urgent ? (
                         <View style={styles.urgentBadge}>
-                          <ThemedText style={styles.urgentText}>{t.urgent}</ThemedText>
+                          <ThemedText style={styles.urgentText}>
+                            {t.urgent}
+                          </ThemedText>
                         </View>
                       ) : null}
                     </View>
@@ -275,7 +277,10 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
                         {language === "en" ? need.locationEn : need.locationTr}
                       </ThemedText>
                       <ThemedText
-                        style={[styles.needTime, { color: theme.textSecondary }]}
+                        style={[
+                          styles.needTime,
+                          { color: theme.textSecondary },
+                        ]}
                       >
                         {need.time}
                       </ThemedText>
@@ -294,7 +299,8 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
               transform: [{ scale: scale.value }],
             }));
 
-            const category = language === "en" ? question.categoryEn : question.categoryTr;
+            const category =
+              language === "en" ? question.categoryEn : question.categoryTr;
 
             return (
               <AnimatedPressable
@@ -305,7 +311,10 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
                   })
                 }
                 onPressIn={() => {
-                  scale.value = withSpring(0.98, { damping: 15, stiffness: 150 });
+                  scale.value = withSpring(0.98, {
+                    damping: 15,
+                    stiffness: 150,
+                  });
                 }}
                 onPressOut={() => {
                   scale.value = withSpring(1, { damping: 15, stiffness: 150 });

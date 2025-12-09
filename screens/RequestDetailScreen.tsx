@@ -20,17 +20,20 @@ type RequestDetailScreenProps = {
   route: RouteProp<HomeStackParamList, "RequestDetail">;
 };
 
-const REQUEST_DATA: Record<string, {
-  id: string;
-  title: string;
-  category: string;
-  location: string;
-  time: string;
-  urgent: boolean;
-  description: string;
-  posterName: string;
-  posterInitials: string;
-}> = {
+const REQUEST_DATA: Record<
+  string,
+  {
+    id: string;
+    title: string;
+    category: string;
+    location: string;
+    time: string;
+    urgent: boolean;
+    description: string;
+    posterName: string;
+    posterInitials: string;
+  }
+> = {
   "1": {
     id: "1",
     title: "Need 1 Bandage",
@@ -134,7 +137,7 @@ export default function RequestDetailScreen({
       Alert.alert(
         "Already Offered",
         "You've already offered to help with this request.",
-        [{ text: "OK" }]
+        [{ text: "OK" }],
       );
       return;
     }
@@ -142,7 +145,7 @@ export default function RequestDetailScreen({
     Alert.alert(
       "Help Offered!",
       `Thank you for offering to help ${request.posterName}! They will be notified.`,
-      [{ text: "OK" }]
+      [{ text: "OK" }],
     );
   };
 
@@ -161,7 +164,9 @@ export default function RequestDetailScreen({
             </ThemedText>
           </View>
           <View>
-            <ThemedText style={styles.posterName}>{request.posterName}</ThemedText>
+            <ThemedText style={styles.posterName}>
+              {request.posterName}
+            </ThemedText>
             <ThemedText
               style={[styles.postTime, { color: theme.textSecondary }]}
             >
@@ -193,7 +198,9 @@ export default function RequestDetailScreen({
             size={16}
             color={isDark ? "#FF6B6B" : METUColors.maroon}
           />
-          <ThemedText style={styles.categoryText}>{getCategoryLabel()}</ThemedText>
+          <ThemedText style={styles.categoryText}>
+            {getCategoryLabel()}
+          </ThemedText>
         </View>
 
         <View style={styles.locationBadge}>
@@ -207,7 +214,10 @@ export default function RequestDetailScreen({
       </View>
 
       <View
-        style={[styles.descriptionCard, { backgroundColor: theme.cardBackground }]}
+        style={[
+          styles.descriptionCard,
+          { backgroundColor: theme.cardBackground },
+        ]}
       >
         <ThemedText style={styles.descriptionLabel}>Details</ThemedText>
         <ThemedText style={styles.descriptionText}>
