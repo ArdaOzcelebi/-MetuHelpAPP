@@ -1,4 +1,4 @@
-# METU Help - MetuAPP
+# METU Help - MetuHelpAPP
 
 A React Native mobile application built with Expo, designed to facilitate help requests and offers within the METU community.
 
