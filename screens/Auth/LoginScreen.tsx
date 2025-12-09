@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -18,6 +18,7 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { hasFirebaseConfig } from "@/src/firebase/firebaseConfig";
 import {
   Spacing,
   BorderRadius,
@@ -90,6 +91,20 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
+          {/* Firebase Configuration Warning */}
+          {!hasFirebaseConfig && (
+            <View style={styles.warningContainer}>
+              <Feather name="alert-triangle" size={20} color="#F59E0B" />
+              <View style={styles.warningTextContainer}>
+                <ThemedText style={styles.warningTitle}>Demo Mode</ThemedText>
+                <ThemedText style={styles.warningText}>
+                  Firebase is not configured. Authentication will not work. See
+                  FIREBASE_AUTH_SETUP.md for setup instructions.
+                </ThemedText>
+              </View>
+            </View>
+          )}
+
           {/* Header */}
           <View style={styles.header}>
             <ThemedText type="h1" style={styles.title}>
@@ -340,5 +355,30 @@ const styles = StyleSheet.create({
   registerLink: {
     fontSize: Typography.small.fontSize,
     fontWeight: "600",
+  },
+  warningContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.md,
+    padding: Spacing.lg,
+    backgroundColor: "rgba(245, 158, 11, 0.1)",
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.3)",
+    marginBottom: Spacing["2xl"],
+  },
+  warningTextContainer: {
+    flex: 1,
+    gap: Spacing.xs,
+  },
+  warningTitle: {
+    fontSize: Typography.small.fontSize,
+    fontWeight: "600",
+    color: "#F59E0B",
+  },
+  warningText: {
+    fontSize: Typography.caption.fontSize,
+    color: "#92400E",
+    lineHeight: 16,
   },
 });

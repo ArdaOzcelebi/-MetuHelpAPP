@@ -102,24 +102,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Listen for authentication state changes
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // User is signed in, check if remember me was enabled
-        const rememberMe = await storage.getItem(REMEMBER_ME_KEY);
-        if (!rememberMe) {
-          // If remember me is not set, sign out the user
-          await firebaseSignOut(auth);
-          setUser(null);
-        } else {
-          setUser(user);
-        }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
+    let unsubscribe: (() => void) | undefined;
 
-    return unsubscribe;
+    try {
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // User is signed in, check if remember me was enabled
+          const rememberMe = await storage.getItem(REMEMBER_ME_KEY);
+          if (!rememberMe) {
+            // If remember me is not set, sign out the user
+            await firebaseSignOut(auth);
+            setUser(null);
+          } else {
+            setUser(user);
+          }
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
+    } catch (error) {
+      console.error("Failed to set up auth state listener:", error);
+      // Set loading to false so the app can still render
+      setLoading(false);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const signUp = async (
