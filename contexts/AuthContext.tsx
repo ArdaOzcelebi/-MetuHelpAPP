@@ -37,12 +37,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If auth is not configured, just set loading to false
+    if (!auth) {
+      console.warn('Auth not configured - running in demo mode');
+      setLoading(false);
+      return;
+    }
+
     // Check if user should be remembered on mount
     const checkRememberMe = async () => {
-      const rememberMe = await storage.getItem(REMEMBER_ME_KEY);
-      if (!rememberMe) {
-        // If rememberMe is not set, sign out any existing session
-        await firebaseSignOut(auth);
+      try {
+        const rememberMe = await storage.getItem(REMEMBER_ME_KEY);
+        if (!rememberMe && auth) {
+          // If rememberMe is not set, sign out any existing session
+          await firebaseSignOut(auth);
+        }
+      } catch (error) {
+        console.error('Error checking remember me:', error);
       }
     };
 
@@ -86,6 +97,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     rememberMe: boolean,
   ): Promise<void> => {
+    if (!auth) {
+      throw new Error("Firebase Auth is not configured. Please set up Firebase credentials.");
+    }
+
     try {
       // Validate inputs
       validateEmail(email);
@@ -140,6 +155,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     rememberMe: boolean,
   ): Promise<void> => {
+    if (!auth) {
+      throw new Error("Firebase Auth is not configured. Please set up Firebase credentials.");
+    }
+
     try {
       // Sign in with Firebase
       const userCredential = await signInWithEmailAndPassword(
@@ -190,7 +209,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async (): Promise<void> => {
     try {
       await storage.removeItem(REMEMBER_ME_KEY);
-      await firebaseSignOut(auth);
+      if (auth) {
+        await firebaseSignOut(auth);
+      }
     } catch (error: any) {
       throw new Error(error.message || "Failed to sign out");
     }

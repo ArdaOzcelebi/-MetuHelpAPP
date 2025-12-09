@@ -1,5 +1,5 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, FirebaseApp } from "firebase/app";
+import { getAuth, Auth } from "firebase/auth";
 import Constants from "expo-constants";
 
 // Validate Firebase configuration
@@ -19,17 +19,15 @@ const validateFirebaseConfig = () => {
   });
 
   if (missingKeys.length > 0) {
-    console.error(
-      `Firebase configuration error: Missing or invalid values for: ${missingKeys.join(', ')}\n` +
-      'Please set these environment variables in your .env file or repository secrets.'
+    console.warn(
+      `Firebase configuration warning: Missing or invalid values for: ${missingKeys.join(', ')}\n` +
+      'Please set these environment variables in your .env file or repository secrets.\n' +
+      'App will run in demo mode without authentication.'
     );
+    return false;
   }
+  return true;
 };
-
-// Validate configuration in development
-if (__DEV__) {
-  validateFirebaseConfig();
-}
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -41,10 +39,23 @@ const firebaseConfig = {
   appId: Constants.expoConfig?.extra?.FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Check if configuration is valid
+const isConfigValid = validateFirebaseConfig();
 
-// Initialize Firebase Auth
-export const auth = getAuth(app);
+// Initialize Firebase only if config is valid
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
 
+try {
+  if (isConfigValid) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+  } else {
+    console.warn('Firebase not initialized due to missing configuration');
+  }
+} catch (error) {
+  console.error('Error initializing Firebase:', error);
+}
+
+export { auth };
 export default app;
