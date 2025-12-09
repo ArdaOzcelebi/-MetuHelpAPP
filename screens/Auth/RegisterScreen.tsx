@@ -45,20 +45,20 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   const handleRegister = async () => {
-    if (!email || !password || !confirmPassword) {
-      setError(t.pleaseFieldAll || "Please fill in all fields");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError(t.passwordsDoNotMatch || "Passwords do not match");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
     try {
+      if (!email || !password || !confirmPassword) {
+        setError(t.pleaseFieldAll || "Please fill in all fields");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setError(t.passwordsDoNotMatch || "Passwords do not match");
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
       await signUp(email, password, rememberMe);
       setRegistrationSuccess(true);
       
@@ -76,17 +76,18 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
         );
       }
     } catch (err: any) {
-      setError(err.message);
+      console.error('Registration error:', err);
+      setError(err.message || "An error occurred during registration");
     } finally {
       setLoading(false);
     }
   };
 
   const handleResendVerification = async () => {
-    setLoading(true);
-    setError("");
-    
     try {
+      setLoading(true);
+      setError("");
+      
       await resendVerificationEmail();
       // Alert.alert doesn't work on web, so only show on native platforms
       if (Platform.OS !== 'web') {
@@ -97,7 +98,8 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
       }
       // On web, user will see the success via console or can try again
     } catch (err: any) {
-      setError(err.message);
+      console.error('Resend verification error:', err);
+      setError(err.message || "Failed to resend verification email");
     } finally {
       setLoading(false);
     }
