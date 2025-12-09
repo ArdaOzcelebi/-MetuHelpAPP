@@ -56,7 +56,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       setError(err.message);
       
       // If email not verified, show option to resend
-      if (err.message.includes("verify your email")) {
+      // Alert.alert doesn't work on web, so only use on native platforms
+      if (err.message.includes("verify your email") && Platform.OS !== 'web') {
         Alert.alert(
           t.emailNotVerified || "Email Not Verified",
           err.message,
@@ -69,6 +70,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           ],
         );
       }
+      // On web, the error message will be displayed in the error container
     } finally {
       setLoading(false);
     }

@@ -62,16 +62,19 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
       await signUp(email, password, rememberMe);
       setRegistrationSuccess(true);
       
-      Alert.alert(
-        t.registrationSuccess || "Registration Successful",
-        t.checkEmailVerification || "A verification email has been sent to your email address. Please verify your email before logging in.",
-        [
-          {
-            text: t.ok || "OK",
-            onPress: () => navigation.navigate("Login"),
-          },
-        ],
-      );
+      // Alert.alert doesn't work on web, so we check platform
+      // On web, just show the success screen; on native, show alert then navigate
+      if (Platform.OS !== 'web') {
+        Alert.alert(
+          t.registrationSuccess || "Registration Successful",
+          t.checkEmailVerification || "A verification email has been sent to your email address. Please verify your email before logging in.",
+          [
+            {
+              text: t.ok || "OK",
+            },
+          ],
+        );
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -85,10 +88,14 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
     
     try {
       await resendVerificationEmail();
-      Alert.alert(
-        t.emailSent || "Email Sent",
-        t.verificationEmailResent || "Verification email has been resent. Please check your inbox.",
-      );
+      // Alert.alert doesn't work on web, so only show on native platforms
+      if (Platform.OS !== 'web') {
+        Alert.alert(
+          t.emailSent || "Email Sent",
+          t.verificationEmailResent || "Verification email has been resent. Please check your inbox.",
+        );
+      }
+      // On web, user will see the success via console or can try again
     } catch (err: any) {
       setError(err.message);
     } finally {
