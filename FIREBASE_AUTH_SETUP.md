@@ -23,7 +23,7 @@ npm install
 ```
 
 This will install the following new dependencies:
-- `firebase@^10.23.0`
+- `firebase@^10.14.1`
 - `expo-secure-store@^12.1.1`
 - `@react-native-async-storage/async-storage@^1.20.1`
 
