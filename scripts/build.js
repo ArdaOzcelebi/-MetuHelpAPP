@@ -426,10 +426,14 @@ function createLandingPage(baseUrl) {
   fs.writeFileSync(path.join("static-build", "index.html"), html);
 
   // Copy favicon for landing page
-  fs.copyFileSync(
-    path.join("assets", "images", "favicon.png"),
-    path.join("static-build", "favicon.png"),
-  );
+  try {
+    fs.copyFileSync(
+      path.join("assets", "images", "favicon.png"),
+      path.join("static-build", "favicon.png"),
+    );
+  } catch (error) {
+    console.warn("Warning: Could not copy favicon.png:", error.message);
+  }
 
   console.log("Complete");
 }
