@@ -25,11 +25,16 @@ type AuthContextValue = {
   ) => Promise<void>;
   signOut: () => Promise<void>;
   sendEmailVerification: () => Promise<void>;
-  resendVerificationEmail: () => Promise<void>;
+  resendVerificationEmail: (email: string, password: string) => Promise<void>;
   updateProfileDisplayName: (displayName: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+// Custom error types for better type safety
+const AUTH_ERROR_TYPES = {
+  EMAIL_NOT_VERIFIED: "EMAIL_NOT_VERIFIED",
+} as const;
 
 /**
  * Parse Firebase error codes and return user-friendly error messages
@@ -154,7 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // Sign out immediately if email is not verified
         await firebaseSignOut(auth);
         // Throw a specific error that the UI can catch
-        throw new Error("EMAIL_NOT_VERIFIED");
+        throw new Error(AUTH_ERROR_TYPES.EMAIL_NOT_VERIFIED);
       }
 
       // If we reach here, user is verified and can proceed
@@ -162,7 +167,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // For now, Firebase Auth handles persistence automatically
     } catch (err) {
       // If it's our custom EMAIL_NOT_VERIFIED error, throw it as-is
-      if (err instanceof Error && err.message === "EMAIL_NOT_VERIFIED") {
+      if (
+        err instanceof Error &&
+        err.message === AUTH_ERROR_TYPES.EMAIL_NOT_VERIFIED
+      ) {
         throw err;
       }
       // Otherwise, parse Firebase errors
@@ -197,15 +205,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }
 
-  async function resendVerificationEmail() {
+  async function resendVerificationEmail(email: string, password: string) {
     try {
       const auth = getAuthInstance();
-      if (!auth.currentUser) {
-        throw new Error(
-          "No authenticated user. Please sign in again to resend verification email.",
-        );
-      }
-      await firebaseSendEmailVerification(auth.currentUser);
+
+      // Sign in temporarily to send the verification email
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+
+      // Send verification email
+      await firebaseSendEmailVerification(credential.user);
+
+      // Sign out immediately after sending
+      await firebaseSignOut(auth);
     } catch (err) {
       const errorMessage = parseFirebaseError(err);
       throw new Error(errorMessage);
