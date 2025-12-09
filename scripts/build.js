@@ -424,6 +424,13 @@ function createLandingPage(baseUrl) {
     .replace(/EXPS_URL_PLACEHOLDER/g, expsUrl);
 
   fs.writeFileSync(path.join("static-build", "index.html"), html);
+
+  // Copy favicon for landing page
+  fs.copyFileSync(
+    path.join("assets", "images", "favicon.png"),
+    path.join("static-build", "favicon.png"),
+  );
+
   console.log("Complete");
 }
 
