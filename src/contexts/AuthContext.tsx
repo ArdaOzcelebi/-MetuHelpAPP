@@ -216,8 +216,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         password,
       );
 
-      // Send verification email
-      await firebaseSendEmailVerification(credential.user);
+      // Only send verification email if not already verified
+      if (!credential.user.emailVerified) {
+        await firebaseSendEmailVerification(credential.user);
+      } else {
+        // Email already verified, sign out and throw informative error
+        await firebaseSignOut(auth);
+        throw new Error(
+          "Your email is already verified. You can now log in normally.",
+        );
+      }
 
       // Sign out immediately after sending
       await firebaseSignOut(auth);

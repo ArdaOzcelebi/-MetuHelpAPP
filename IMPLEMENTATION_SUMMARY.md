@@ -107,19 +107,28 @@ function parseFirebaseError(error: unknown): string {
 
 **Code**:
 ```typescript
-async function resendVerificationEmail() {
+async function resendVerificationEmail(email: string, password: string) {
   try {
     const auth = getAuthInstance();
-    if (!auth.currentUser) {
-      throw new Error("No authenticated user. Please sign in again to resend verification email.");
+    
+    // Sign in temporarily to send the verification email
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Only send verification if email is not verified
+    if (!credential.user.emailVerified) {
+      await firebaseSendEmailVerification(credential.user);
     }
-    await firebaseSendEmailVerification(auth.currentUser);
+    
+    // Sign out immediately after sending
+    await firebaseSignOut(auth);
   } catch (err) {
     const errorMessage = parseFirebaseError(err);
     throw new Error(errorMessage);
   }
 }
 ```
+
+**Note**: This function accepts email and password parameters to solve the catch-22 problem where users are signed out after failed login attempts due to unverified email. The function temporarily signs in the user, sends the verification email, and immediately signs out.
 
 ### 5. Remember Me Parameter Support ✅
 **Location**: `src/contexts/AuthContext.tsx` - `signIn()` and `signUp()` functions
