@@ -94,7 +94,7 @@ function HeroButton({
   // WEB HOVER HANDLERS
   const handleHoverIn = () => {
     if (Platform.OS === 'web') {
-      scale.value = withSpring(1.02, { damping: 15, stiffness: 200 });
+      scale.value = withSpring(1.01, { damping: 15, stiffness: 200 });
     }
   };
 
