@@ -1,0 +1,158 @@
+﻿import React from "react";
+import { View, Text, Button, ScrollView } from "react-native";
+import Constants from "expo-constants";
+
+let AuthProvider: any = null;
+try {
+  // prefer named AuthProvider if present
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mod = require("./src/contexts/AuthContext");
+  AuthProvider = mod?.AuthProvider ?? mod?.default ?? null;
+} catch (e) {
+  // ignore — earlier diagnostics showed AuthProvider is present
+  // eslint-disable-next-line no-console
+  console.error("[App] loading AuthContext failed:", e);
+}
+
+type AttemptResult = {
+  name: string;
+  ok: boolean;
+  reason?: string;
+  keys?: string[];
+  chosenExport?: string | null;
+};
+
+const candidates = [
+  "./src/AppEntry",
+  "./src/MainApp",
+  "./src/Main",
+  "./src/AppNavigator",
+  "./src/navigation",
+  "./src/navigation/index",
+  "./src/navigation/RootNavigator",
+  "./src/navigation/AuthStackNavigator",
+  "./src/navigation/AppNavigator",
+  "./src/index",
+  "./AppEntry",
+];
+
+function tryLoadCandidate(path: string): AttemptResult {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const mod = require(path);
+    const keys = Object.keys(mod || {});
+    // log for debugging
+    // eslint-disable-next-line no-console
+    console.log("[AppDiag] module", path, "keys:", keys);
+
+    // If module itself is a function/component
+    if (typeof mod === "function") {
+      return { name: path, ok: true, keys, chosenExport: "module(func)" };
+    }
+
+    // prefer default export if function or class
+    if (mod.default && (typeof mod.default === "function" || typeof mod.default === "object")) {
+      return { name: path, ok: true, keys, chosenExport: "default" };
+    }
+
+    // prefer named exports that look like components
+    const prefer = ["App", "MainApp", "RootNavigator", "AppNavigator", "Navigation", "default"];
+    for (const p of prefer) {
+      if (mod[p] && (typeof mod[p] === "function" || typeof mod[p] === "object")) {
+        return { name: path, ok: true, keys, chosenExport: p };
+      }
+    }
+
+    // fallback: find first function export
+    for (const k of keys) {
+      if (typeof (mod as any)[k] === "function") {
+        return { name: path, ok: true, keys, chosenExport: k };
+      }
+    }
+
+    return { name: path, ok: false, reason: "no component-like export found", keys };
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    console.warn("[AppDiag] require failed for", path, err && err.message ? err.message : err);
+    return { name: path, ok: false, reason: err?.message ?? String(err) };
+  }
+}
+
+function findFirstWorking() {
+  for (const c of candidates) {
+    const res = tryLoadCandidate(c);
+    if (res.ok) return res;
+  }
+  return null;
+}
+
+export default function App(): JSX.Element {
+  // debug expo extras
+  // eslint-disable-next-line no-console
+  console.log("expoConfig.extra ->", Constants.expoConfig?.extra);
+
+  const working = findFirstWorking();
+
+  // if nothing found, show diagnostic UI
+  if (!working) {
+    // Re-run to collect full reports
+    const reports: AttemptResult[] = candidates.map(tryLoadCandidate);
+    // eslint-disable-next-line no-console
+    console.log("[AppDiag] No working entry found. Reports:", reports);
+    return (
+      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
+        <View style={{ alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+          <Text style={{ fontSize: 20, fontWeight: "700" }}>Diagnostic: No runnable app entry found</Text>
+          <Text style={{ marginTop: 8, color: "#666", textAlign: "center" }}>
+            I attempted several candidate paths and couldn't find a component-like export.
+          </Text>
+        </View>
+        {reports.map((r) => (
+          <View key={r.name} style={{ marginBottom: 12, padding: 8, borderWidth: 1, borderColor: "#eee" }}>
+            <Text style={{ fontWeight: "600" }}>{r.name}</Text>
+            <Text>Status: {r.ok ? "OK" : "FAILED"}</Text>
+            {r.reason ? <Text>Reason: {r.reason}</Text> : null}
+            {r.keys ? <Text>Exports: {JSON.stringify(r.keys)}</Text> : null}
+          </View>
+        ))}
+        <View style={{ height: 12 }} />
+        <Button title="Reload page" onPress={() => { if (typeof window !== "undefined") window.location.reload(); }} />
+      </ScrollView>
+    );
+  }
+
+  // If we found a working candidate, require again and render the chosen export inside AuthProvider
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mod = require(working.name);
+  const chosen = working.chosenExport === "module(func)" ? mod : (working.chosenExport ? mod[working.chosenExport] : mod.default || null);
+
+  // eslint-disable-next-line no-console
+  console.log("[AppDiag] Using:", working.name, "export:", working.chosenExport);
+
+  if (!chosen) {
+    // fallback: show error but do not crash
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <Text style={{ fontSize: 18, fontWeight: "600" }}>Found candidate but couldn't resolve export</Text>
+        <Text style={{ color: "#666", marginTop: 8 }}>{JSON.stringify(working)}</Text>
+        <Button title="Reload" onPress={() => { if (typeof window !== "undefined") window.location.reload(); }} />
+      </View>
+    );
+  }
+
+  const Component = chosen;
+
+  // If AuthProvider exists, wrap; otherwise render component directly
+  const Root = (
+    <Component />
+  );
+
+  if (AuthProvider) {
+    return (
+      <AuthProvider>
+        {Root}
+      </AuthProvider>
+    );
+  }
+  return Root;
+}
