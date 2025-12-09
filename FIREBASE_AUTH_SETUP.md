@@ -207,7 +207,7 @@ The authentication system provides user-friendly error messages for common scena
 
 ## Dependencies
 
-- `firebase@^10.23.0`: Firebase SDK
+- `firebase@^10.13.0`: Firebase SDK
 - `@react-native-async-storage/async-storage@^1.20.1`: Storage for web fallback
 - `expo-secure-store@^12.1.1`: Secure storage for native platforms
 

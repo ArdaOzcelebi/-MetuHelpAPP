@@ -336,7 +336,7 @@ Potential improvements:
 ### Production Dependencies
 ```json
 {
-  "firebase": "^10.23.0",
+  "firebase": "^10.13.0",
   "@react-native-async-storage/async-storage": "^1.20.1",
   "expo-secure-store": "^12.1.1"
 }
