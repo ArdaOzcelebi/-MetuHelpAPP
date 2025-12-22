@@ -92,6 +92,13 @@ interface Translations {
   ok: string;
   logoutFailed: string;
   emailVerified: string;
+  forgotPassword: string;
+  resetPassword: string;
+  enterEmailForReset: string;
+  sendResetLink: string;
+  passwordResetEmailSent: string;
+  passwordResetEmailSentMessage: string;
+  invalidEmail: string;
 
   // Navigation
   home: string;
@@ -198,6 +205,15 @@ const translations: Record<Language, Translations> = {
     ok: "OK",
     logoutFailed: "Failed to log out",
     emailVerified: "Verified",
+    forgotPassword: "Forgot Password?",
+    resetPassword: "Reset Password",
+    enterEmailForReset:
+      "Enter your email address to receive a password reset link",
+    sendResetLink: "Send Reset Link",
+    passwordResetEmailSent: "Password reset email sent!",
+    passwordResetEmailSentMessage:
+      "Please check your inbox for instructions to reset your password.",
+    invalidEmail: "Invalid email format",
 
     // Navigation
     home: "Home",
@@ -302,6 +318,15 @@ const translations: Record<Language, Translations> = {
     ok: "Tamam",
     logoutFailed: "Çıkış yapılamadı",
     emailVerified: "Doğrulandı",
+    forgotPassword: "Şifremi Unuttum?",
+    resetPassword: "Şifreyi Sıfırla",
+    enterEmailForReset:
+      "Şifre sıfırlama bağlantısı almak için e-posta adresinizi girin",
+    sendResetLink: "Sıfırlama Bağlantısı Gönder",
+    passwordResetEmailSent: "Şifre sıfırlama e-postası gönderildi!",
+    passwordResetEmailSentMessage:
+      "Şifrenizi sıfırlamak için lütfen gelen kutunuzu kontrol edin.",
+    invalidEmail: "Geçersiz e-posta formatı",
 
     // Navigation
     home: "Ana Sayfa",
