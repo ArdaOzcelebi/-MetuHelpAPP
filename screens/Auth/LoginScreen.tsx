@@ -15,6 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
+import { ForgotPasswordModal } from "@/components/ForgotPasswordModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
@@ -33,7 +34,7 @@ type LoginScreenProps = {
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const { theme, isDark } = useTheme();
   const { t } = useLanguage();
-  const { signIn, resendVerificationEmail } = useAuth();
+  const { signIn, resendVerificationEmail, resetPassword } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +42,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
   const handleLogin = async () => {
     setError("");
@@ -82,6 +84,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     } catch (err: any) {
       Alert.alert(t.error, err.message || t.failedToSendVerification);
     }
+  };
+
+  const handleForgotPassword = async (resetEmail: string) => {
+    await resetPassword(resetEmail);
+    Alert.alert(t.passwordResetEmailSent, t.passwordResetEmailSentMessage);
   };
 
   return (
@@ -188,31 +195,48 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             </View>
 
             {/* Remember Me */}
-            <Pressable
-              style={styles.rememberMeContainer}
-              onPress={() => setRememberMe(!rememberMe)}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  {
-                    borderColor: theme.border,
-                    backgroundColor: rememberMe
-                      ? isDark
-                        ? "#FF6B6B"
-                        : METUColors.maroon
-                      : "transparent",
-                  },
-                ]}
+            <View style={styles.rememberMeRow}>
+              <Pressable
+                style={styles.rememberMeContainer}
+                onPress={() => setRememberMe(!rememberMe)}
               >
-                {rememberMe && (
-                  <Feather name="check" size={16} color="#FFFFFF" />
-                )}
-              </View>
-              <ThemedText style={styles.rememberMeText}>
-                {t.rememberMe}
-              </ThemedText>
-            </Pressable>
+                <View
+                  style={[
+                    styles.checkbox,
+                    {
+                      borderColor: theme.border,
+                      backgroundColor: rememberMe
+                        ? isDark
+                          ? "#FF6B6B"
+                          : METUColors.maroon
+                        : "transparent",
+                    },
+                  ]}
+                >
+                  {rememberMe && (
+                    <Feather name="check" size={16} color="#FFFFFF" />
+                  )}
+                </View>
+                <ThemedText style={styles.rememberMeText}>
+                  {t.rememberMe}
+                </ThemedText>
+              </Pressable>
+
+              {/* Forgot Password Link */}
+              <Pressable
+                onPress={() => setShowForgotPasswordModal(true)}
+                style={styles.forgotPasswordButton}
+              >
+                <ThemedText
+                  style={[
+                    styles.forgotPasswordText,
+                    { color: isDark ? "#FF6B6B" : METUColors.maroon },
+                  ]}
+                >
+                  {t.forgotPassword}
+                </ThemedText>
+              </Pressable>
+            </View>
 
             {/* Error Message */}
             {error ? (
@@ -260,6 +284,13 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        visible={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+        onSubmit={handleForgotPassword}
+      />
     </ThemedView>
   );
 }
@@ -312,6 +343,11 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: Spacing.sm,
   },
+  rememberMeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   rememberMeContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -327,6 +363,13 @@ const styles = StyleSheet.create({
   },
   rememberMeText: {
     fontSize: Typography.small.fontSize,
+  },
+  forgotPasswordButton: {
+    padding: Spacing.xs,
+  },
+  forgotPasswordText: {
+    fontSize: Typography.small.fontSize,
+    fontWeight: "600",
   },
   errorContainer: {
     flexDirection: "row",

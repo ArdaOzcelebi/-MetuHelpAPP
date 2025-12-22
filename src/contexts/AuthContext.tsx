@@ -5,6 +5,7 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   sendEmailVerification as firebaseSendEmailVerification,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   updateProfile as firebaseUpdateProfile,
   User,
 } from "firebase/auth";
@@ -27,6 +28,7 @@ type AuthContextValue = {
   sendEmailVerification: () => Promise<void>;
   resendVerificationEmail: (email: string, password: string) => Promise<void>;
   updateProfileDisplayName: (displayName: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -249,6 +251,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }
 
+  async function resetPassword(email: string) {
+    try {
+      const auth = getAuthInstance();
+      await firebaseSendPasswordResetEmail(auth, email);
+    } catch (err) {
+      const errorMessage = parseFirebaseError(err);
+      throw new Error(errorMessage);
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -260,6 +272,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         sendEmailVerification,
         resendVerificationEmail,
         updateProfileDisplayName,
+        resetPassword,
       }}
     >
       {children}
