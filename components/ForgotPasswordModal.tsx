@@ -89,6 +89,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               styles.modalContent,
               { backgroundColor: theme.backgroundDefault },
             ]}
+            onPress={() => {}}
           >
             {/* Close Button */}
             <Pressable style={styles.closeButton} onPress={handleClose}>
