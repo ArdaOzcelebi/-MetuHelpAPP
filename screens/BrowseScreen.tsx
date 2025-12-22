@@ -196,7 +196,7 @@ function AnimatedQuestionCard({
     transform: [{ scale: scale.value }],
   }));
 
-  // Temporarily force Turkish for Campus Q&A
+  // TODO: Temporarily force Turkish for Campus Q&A - remove when language selection is restored
   const category = question.categoryTr;
 
   return (
@@ -321,7 +321,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
   });
 
   const filteredQuestions = MOCK_QUESTIONS.filter((q) => {
-    // Temporarily force Turkish for Campus Q&A
+    // TODO: Temporarily force Turkish for Campus Q&A - remove when language selection is restored
     const title = q.titleTr;
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
