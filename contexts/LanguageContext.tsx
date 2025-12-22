@@ -99,6 +99,7 @@ interface Translations {
   passwordResetEmailSent: string;
   passwordResetEmailSentMessage: string;
   invalidEmail: string;
+  emailRequired: string;
 
   // Navigation
   home: string;
@@ -214,6 +215,7 @@ const translations: Record<Language, Translations> = {
     passwordResetEmailSentMessage:
       "Please check your inbox for instructions to reset your password.",
     invalidEmail: "Invalid email format",
+    emailRequired: "Email is required",
 
     // Navigation
     home: "Home",
@@ -327,6 +329,7 @@ const translations: Record<Language, Translations> = {
     passwordResetEmailSentMessage:
       "Şifrenizi sıfırlamak için lütfen gelen kutunuzu kontrol edin.",
     invalidEmail: "Geçersiz e-posta formatı",
+    emailRequired: "E-posta gereklidir",
 
     // Navigation
     home: "Ana Sayfa",

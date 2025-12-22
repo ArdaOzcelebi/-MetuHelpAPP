@@ -44,7 +44,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
     // Basic email validation
     if (!email) {
-      setError(t.invalidEmail);
+      setError(t.emailRequired);
       return;
     }
 
@@ -89,7 +89,6 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               styles.modalContent,
               { backgroundColor: theme.backgroundDefault },
             ]}
-            onPress={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <Pressable style={styles.closeButton} onPress={handleClose}>

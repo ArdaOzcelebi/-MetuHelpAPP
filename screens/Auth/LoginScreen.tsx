@@ -87,12 +87,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   };
 
   const handleForgotPassword = async (resetEmail: string) => {
-    try {
-      await resetPassword(resetEmail);
-      Alert.alert(t.passwordResetEmailSent, t.passwordResetEmailSentMessage);
-    } catch (err: any) {
-      throw err; // Re-throw to be handled by the modal
-    }
+    await resetPassword(resetEmail);
+    Alert.alert(t.passwordResetEmailSent, t.passwordResetEmailSentMessage);
   };
 
   return (
