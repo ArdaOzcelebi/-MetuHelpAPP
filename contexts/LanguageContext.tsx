@@ -212,7 +212,7 @@ const translations: Record<Language, Translations> = {
   },
   tr: {
     // Home Screen
-    welcome: "ODTÜ Yardım'a Hoş geldiniz!",
+    welcome: "METU HELP'e Hoş geldiniz!",
     tagline: "Anında kampüs desteği için diğer öğrencilerle bağlantıya geçin",
     needHelp: "YARDIM İSTE",
     offerHelp: "YARDIM ET",
