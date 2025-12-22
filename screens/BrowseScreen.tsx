@@ -68,15 +68,6 @@ const MOCK_QUESTIONS = [
     time: "2h",
   },
   {
-    id: "2",
-    titleEn: "How is CENG 242 with Prof. Ozyurt?",
-    titleTr: "Prof. Ozyurt ile CENG 242 nasil?",
-    categoryEn: "Professors",
-    categoryTr: "Hocalar",
-    responses: 3,
-    time: "4h",
-  },
-  {
     id: "3",
     titleEn: "Where can I find past exams for MATH 119?",
     titleTr: "MATH 119 icin eski sinavlari nerede bulabilirim?",
@@ -205,8 +196,8 @@ function AnimatedQuestionCard({
     transform: [{ scale: scale.value }],
   }));
 
-  const category =
-    language === "en" ? question.categoryEn : question.categoryTr;
+  // Temporarily force Turkish for Campus Q&A
+  const category = question.categoryTr;
 
   return (
     <AnimatedPressable
@@ -231,9 +222,7 @@ function AnimatedQuestionCard({
         animatedStyle,
       ]}
     >
-      <ThemedText style={styles.questionTitle}>
-        {language === "en" ? question.titleEn : question.titleTr}
-      </ThemedText>
+      <ThemedText style={styles.questionTitle}>{question.titleTr}</ThemedText>
       <View style={styles.questionMeta}>
         <View
           style={[
@@ -332,7 +321,8 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
   });
 
   const filteredQuestions = MOCK_QUESTIONS.filter((q) => {
-    const title = language === "en" ? q.titleEn : q.titleTr;
+    // Temporarily force Turkish for Campus Q&A
+    const title = q.titleTr;
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
