@@ -10,7 +10,7 @@ const firebaseConfig = {
   projectId: "metuhelpapp",
   storageBucket: "metuhelpapp.firebasestorage.app",
   messagingSenderId: "58588114940",
-  appId: "1:58588114940:web:6ec2332bd4409810584c79"
+  appId: "1:58588114940:web:6ec2332bd4409810584c79",
 };
 
 // Initialize Firebase

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -77,7 +77,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const handleResendVerification = async () => {
     try {
-      await resendVerificationEmail();
+      await resendVerificationEmail(email, password);
       Alert.alert(t.success, t.verificationEmailSent);
     } catch (err: any) {
       Alert.alert(t.error, err.message || t.failedToSendVerification);
