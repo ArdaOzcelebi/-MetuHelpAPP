@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Pressable, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, Pressable, Alert, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
@@ -14,6 +14,8 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
+import { getHelpRequest } from "@/src/services/helpRequestService";
+import type { HelpRequest } from "@/src/types/helpRequest";
 
 type RequestDetailScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "RequestDetail">;
@@ -96,6 +98,36 @@ const REQUEST_DATA: Record<
   },
 };
 
+/**
+ * Calculate time difference from now
+ */
+function getTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} min ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hr ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+}
+
+/**
+ * Get user initials from name or email
+ */
+function getUserInitials(name: string, email: string): string {
+  if (name && name !== "Anonymous") {
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+  return email.slice(0, 2).toUpperCase();
+}
+
 export default function RequestDetailScreen({
   navigation,
   route,
@@ -103,8 +135,44 @@ export default function RequestDetailScreen({
   const { theme, isDark } = useTheme();
   const { requestId } = route.params;
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
+  const [request, setRequest] = useState<HelpRequest | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const request = REQUEST_DATA[requestId] || REQUEST_DATA["1"];
+  useEffect(() => {
+    const loadRequest = async () => {
+      try {
+        const data = await getHelpRequest(requestId);
+        setRequest(data);
+      } catch (error) {
+        console.error("Error loading request:", error);
+        Alert.alert("Error", "Failed to load request details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRequest();
+  }, [requestId]);
+
+  if (loading) {
+    return (
+      <ScreenScrollView>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: Spacing.xl }}>
+          <ActivityIndicator size="large" color={METUColors.maroon} />
+        </View>
+      </ScreenScrollView>
+    );
+  }
+
+  if (!request) {
+    return (
+      <ScreenScrollView>
+        <ThemedText style={{ textAlign: "center", marginTop: Spacing.xl }}>
+          Request not found
+        </ThemedText>
+      </ScreenScrollView>
+    );
+  }
 
   const getCategoryIcon = (): keyof typeof Feather.glyphMap => {
     switch (request.category) {
@@ -144,10 +212,12 @@ export default function RequestDetailScreen({
     setHasOfferedHelp(true);
     Alert.alert(
       "Help Offered!",
-      `Thank you for offering to help ${request.posterName}! They will be notified.`,
+      `Thank you for offering to help ${request.userName}! They will be notified.`,
       [{ text: "OK" }],
     );
   };
+
+  const posterInitials = getUserInitials(request.userName, request.userEmail);
 
   return (
     <ScreenScrollView>
@@ -160,17 +230,17 @@ export default function RequestDetailScreen({
             ]}
           >
             <ThemedText style={styles.avatarText}>
-              {request.posterInitials}
+              {posterInitials}
             </ThemedText>
           </View>
           <View>
             <ThemedText style={styles.posterName}>
-              {request.posterName}
+              {request.userName}
             </ThemedText>
             <ThemedText
               style={[styles.postTime, { color: theme.textSecondary }]}
             >
-              Posted {request.time}
+              Posted {getTimeAgo(request.createdAt)}
             </ThemedText>
           </View>
         </View>

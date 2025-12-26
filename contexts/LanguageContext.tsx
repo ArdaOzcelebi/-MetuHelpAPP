@@ -111,6 +111,21 @@ interface Translations {
   postNeed: string;
   questionDetails: string;
   askQuestion: string;
+
+  // Post Need Form
+  whatDoYouNeed: string;
+  itemNamePlaceholder: string;
+  category: string;
+  location: string;
+  additionalDetails: string;
+  additionalDetailsPlaceholder: string;
+  markAsUrgent: string;
+  urgentHint: string;
+  postRequest: string;
+  isReturnNeeded: string;
+  returnNeededHint: string;
+  requestPosted: string;
+  requestPostedMessage: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -227,6 +242,22 @@ const translations: Record<Language, Translations> = {
     postNeed: "Post a Need",
     questionDetails: "Question Details",
     askQuestion: "Ask a Question",
+
+    // Post Need Form
+    whatDoYouNeed: "What do you need?",
+    itemNamePlaceholder: "e.g., Need 1 Bandage",
+    category: "Category",
+    location: "Location",
+    additionalDetails: "Additional Details (Optional)",
+    additionalDetailsPlaceholder: "Any extra info that might help...",
+    markAsUrgent: "Mark as Urgent",
+    urgentHint: "Use only for time-sensitive requests",
+    postRequest: "Post Request",
+    isReturnNeeded: "Item needs to be returned",
+    returnNeededHint: "Check this if you need to return the item",
+    requestPosted: "Request Posted!",
+    requestPostedMessage:
+      "Your request has been posted. Fellow students will be notified.",
   },
   tr: {
     // Home Screen
@@ -341,6 +372,22 @@ const translations: Record<Language, Translations> = {
     postNeed: "İhtiyaç Paylaş",
     questionDetails: "Soru Detayları",
     askQuestion: "Soru Sor",
+
+    // Post Need Form
+    whatDoYouNeed: "Neye ihtiyacınız var?",
+    itemNamePlaceholder: "Örn: 1 Bandaj Lazim",
+    category: "Kategori",
+    location: "Konum",
+    additionalDetails: "Ek Detaylar (Opsiyonel)",
+    additionalDetailsPlaceholder: "Yardımcı olabilecek ekstra bilgiler...",
+    markAsUrgent: "Acil olarak işaretle",
+    urgentHint: "Sadece zamana duyarlı istekler için kullanın",
+    postRequest: "İsteği Gönder",
+    isReturnNeeded: "Eşyanın iade edilmesi gerekiyor",
+    returnNeededHint: "Eşyayı iade etmeniz gerekiyorsa işaretleyin",
+    requestPosted: "İstek Gönderildi!",
+    requestPostedMessage:
+      "İsteğiniz yayınlandı. Diğer öğrenciler bilgilendirilecek.",
   },
 };
 

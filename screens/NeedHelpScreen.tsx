@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Pressable, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, Pressable, ScrollView, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, {
@@ -19,6 +19,8 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
+import { subscribeToHelpRequests } from "@/src/services/helpRequestService";
+import type { HelpRequest } from "@/src/types/helpRequest";
 
 type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
@@ -76,6 +78,22 @@ const MOCK_REQUESTS = [
     urgent: true,
   },
 ];
+
+/**
+ * Calculate time difference from now
+ */
+function getTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} min`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hr`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays > 1 ? "s" : ""}`;
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -255,6 +273,21 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { isDark } = useTheme();
   const { t, language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const unsubscribe = subscribeToHelpRequests(
+      (requests) => {
+        setHelpRequests(requests);
+        setLoading(false);
+      },
+      selectedCategory === "all" ? undefined : selectedCategory as any,
+    );
+
+    return () => unsubscribe();
+  }, [selectedCategory]);
 
   const CATEGORIES = [
     { id: "all", label: t.all, icon: "grid" },
@@ -266,8 +299,8 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
 
   const filteredRequests =
     selectedCategory === "all"
-      ? MOCK_REQUESTS
-      : MOCK_REQUESTS.filter((req) => req.category === selectedCategory);
+      ? helpRequests
+      : helpRequests.filter((req) => req.category === selectedCategory);
 
   return (
     <ScreenScrollView>
@@ -290,26 +323,34 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       </View>
 
       <View style={styles.requestsList}>
-        {filteredRequests.map((request) => (
-          <RequestCard
-            key={request.id}
-            title={language === "en" ? request.titleEn : request.titleTr}
-            category={request.category}
-            location={
-              language === "en" ? request.locationEn : request.locationTr
-            }
-            time={request.time}
-            urgent={request.urgent}
-            urgentLabel={t.urgent}
-            helpButtonLabel={t.iCanHelp}
-            onPress={() =>
-              navigation.navigate("RequestDetail", { requestId: request.id })
-            }
-            onHelp={() => {
-              navigation.navigate("RequestDetail", { requestId: request.id });
-            }}
-          />
-        ))}
+        {loading ? (
+          <ThemedText style={{ textAlign: "center", marginTop: Spacing.xl }}>
+            Loading requests...
+          </ThemedText>
+        ) : filteredRequests.length === 0 ? (
+          <ThemedText style={{ textAlign: "center", marginTop: Spacing.xl }}>
+            No active requests found
+          </ThemedText>
+        ) : (
+          filteredRequests.map((request) => (
+            <RequestCard
+              key={request.id}
+              title={request.title}
+              category={request.category}
+              location={request.location}
+              time={getTimeAgo(request.createdAt)}
+              urgent={request.urgent}
+              urgentLabel={t.urgent}
+              helpButtonLabel={t.iCanHelp}
+              onPress={() =>
+                navigation.navigate("RequestDetail", { requestId: request.id })
+              }
+              onHelp={() => {
+                navigation.navigate("RequestDetail", { requestId: request.id });
+              }}
+            />
+          ))
+        )}
       </View>
 
       <Pressable
