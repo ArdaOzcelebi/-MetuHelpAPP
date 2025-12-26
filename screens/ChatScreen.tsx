@@ -13,6 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -117,6 +118,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
   const { chatId } = route.params;
+  const tabBarHeight = useBottomTabBarHeight();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -303,7 +305,10 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
         <View
           style={[
             styles.inputContainer,
-            { backgroundColor: theme.backgroundDefault },
+            {
+              backgroundColor: theme.backgroundDefault,
+              paddingBottom: tabBarHeight + Spacing.md,
+            },
           ]}
         >
           <View style={styles.inputWrapper}>

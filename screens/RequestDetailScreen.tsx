@@ -293,37 +293,40 @@ export default function RequestDetailScreen({
         </ThemedText>
       </View>
 
-      <Pressable
-        onPress={handleOfferHelp}
-        disabled={offeringHelp}
-        style={({ pressed }) => [
-          styles.helpButton,
-          {
-            backgroundColor: hasOfferedHelp
-              ? theme.backgroundSecondary
-              : METUColors.actionGreen,
-            opacity: pressed || offeringHelp ? 0.9 : 1,
-          },
-        ]}
-      >
-        {offeringHelp ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <Feather
-            name={hasOfferedHelp ? "check" : "heart"}
-            size={20}
-            color={hasOfferedHelp ? theme.text : "#FFFFFF"}
-          />
-        )}
-        <ThemedText
-          style={[
-            styles.helpButtonText,
-            { color: hasOfferedHelp ? theme.text : "#FFFFFF" },
+      {/* Only show "I Can Help" button if user is not the requester */}
+      {user && request.userId !== user.uid && (
+        <Pressable
+          onPress={handleOfferHelp}
+          disabled={offeringHelp}
+          style={({ pressed }) => [
+            styles.helpButton,
+            {
+              backgroundColor: hasOfferedHelp
+                ? theme.backgroundSecondary
+                : METUColors.actionGreen,
+              opacity: pressed || offeringHelp ? 0.9 : 1,
+            },
           ]}
         >
-          {hasOfferedHelp ? "Help Offered" : "I Can Help"}
-        </ThemedText>
-      </Pressable>
+          {offeringHelp ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Feather
+              name={hasOfferedHelp ? "check" : "heart"}
+              size={20}
+              color={hasOfferedHelp ? theme.text : "#FFFFFF"}
+            />
+          )}
+          <ThemedText
+            style={[
+              styles.helpButtonText,
+              { color: hasOfferedHelp ? theme.text : "#FFFFFF" },
+            ]}
+          >
+            {hasOfferedHelp ? "Help Offered" : "I Can Help"}
+          </ThemedText>
+        </Pressable>
+      )}
 
       <View style={styles.contactNote}>
         <Feather name="info" size={16} color={theme.textSecondary} />
