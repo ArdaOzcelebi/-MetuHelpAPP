@@ -39,10 +39,12 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
 
     // Web platform doesn't support Alert.alert, use window.confirm instead
     if (Platform.OS === "web") {
-      const confirmed = window.confirm(`${t.logOut}\n\n${t.logOutConfirm}`);
-      if (confirmed) {
-        console.log("[ProfileScreen] User confirmed logout");
-        performLogout();
+      if (typeof window !== "undefined") {
+        const confirmed = window.confirm(`${t.logOut}\n\n${t.logOutConfirm}`);
+        if (confirmed) {
+          console.log("[ProfileScreen] User confirmed logout");
+          performLogout();
+        }
       }
     } else {
       Alert.alert(t.logOut, t.logOutConfirm, [
@@ -66,7 +68,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       // Navigation to login will be handled by App.tsx
     } catch (error: any) {
       console.error("[ProfileScreen] SignOut failed:", error);
-      if (Platform.OS === "web") {
+      if (Platform.OS === "web" && typeof window !== "undefined") {
         window.alert(`${t.error}\n\n${error.message || t.logoutFailed}`);
       } else {
         Alert.alert(t.error, error.message || t.logoutFailed);
