@@ -364,12 +364,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
     marginBottom: Spacing.lg,
   },
   logoutText: {
     fontSize: Typography.body.fontSize,
     fontWeight: "600",
-    marginLeft: Spacing.sm,
   },
   versionText: {
     fontSize: Typography.caption.fontSize,
