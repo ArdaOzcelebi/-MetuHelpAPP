@@ -47,6 +47,7 @@ export const storage = {
       // Re-throw critical errors
       if (
         error instanceof Error &&
+        error.message &&
         (error.message.includes("permission") ||
           error.message.includes("denied"))
       ) {

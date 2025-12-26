@@ -358,10 +358,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           />
           <View style={styles.urgentToggleText}>
             <ThemedText
-              style={[
-                styles.urgentLabel,
-                { color: isAnonymous ? theme.text : theme.text },
-              ]}
+              style={[styles.urgentLabel, { color: theme.text }]}
             >
               {t.postAnonymously}
             </ThemedText>
