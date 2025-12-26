@@ -171,22 +171,34 @@ export async function createHelpRequest(
   userEmail: string,
   userName: string,
 ): Promise<string> {
-  const db = getFirestoreInstance();
-  const now = Timestamp.now();
+  try {
+    const db = getFirestoreInstance();
+    const now = Timestamp.now();
 
-  const data = {
-    ...requestData,
-    isAnonymous: requestData.isAnonymous || false,
-    userId,
-    userEmail,
-    userName,
-    status: "active",
-    createdAt: now,
-    updatedAt: now,
-  };
+    const data = {
+      ...requestData,
+      isAnonymous: requestData.isAnonymous || false,
+      userId,
+      userEmail,
+      userName,
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    };
 
-  const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
-  return docRef.id;
+    console.log("Creating help request with data:", {
+      ...data,
+      createdAt: "Timestamp",
+      updatedAt: "Timestamp",
+    });
+
+    const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
+    console.log("Help request created successfully with ID:", docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("Error in createHelpRequest:", error);
+    throw error;
+  }
 }
 
 /**
@@ -224,6 +236,8 @@ export function subscribeToHelpRequests(
   const db = getFirestoreInstance();
   let q;
 
+  console.log("Setting up help requests subscription, category:", category);
+
   if (category) {
     q = query(
       collection(db, COLLECTION_NAME),
@@ -242,13 +256,17 @@ export function subscribeToHelpRequests(
   return onSnapshot(
     q,
     (snapshot: QuerySnapshot) => {
+      console.log("Help requests snapshot received, count:", snapshot.size);
       const requests: HelpRequest[] = [];
       snapshot.forEach((doc) => {
         const request = documentToHelpRequest(doc.id, doc.data());
         if (request) {
           requests.push(request);
+        } else {
+          console.warn("Failed to convert document:", doc.id);
         }
       });
+      console.log("Processed help requests:", requests.length);
       callback(requests);
     },
     (error) => {

@@ -103,15 +103,38 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
         userName,
       );
 
+      // Reset form state after successful submission
+      setTitle("");
+      setSelectedCategory(null);
+      setSelectedLocation(null);
+      setDetails("");
+      setIsUrgent(false);
+      setIsReturnNeeded(false);
+      setIsAnonymous(false);
+
+      // Show success message and navigate back
       Alert.alert(t.requestPosted, t.requestPostedMessage, [
         {
           text: t.ok,
           onPress: () => navigation.goBack(),
         },
       ]);
+
+      // Navigate back after alert is shown (fallback if user doesn't press OK)
+      // This ensures the user sees their request was posted successfully
+      setTimeout(() => {
+        try {
+          navigation.goBack();
+        } catch (e) {
+          // Navigation might have already happened
+          console.log("Navigation already completed");
+        }
+      }, 3000);
     } catch (error) {
       console.error("Error posting request:", error);
-      Alert.alert(t.error, t.failedToPostRequest, [{ text: t.ok }]);
+      const errorMessage =
+        error instanceof Error ? error.message : t.failedToPostRequest;
+      Alert.alert(t.error, errorMessage, [{ text: t.ok }]);
     } finally {
       setSubmitting(false);
     }
