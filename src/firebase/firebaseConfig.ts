@@ -1,17 +1,18 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
+// 1. NEW: Import Firestore
+import { getFirestore, Firestore } from "firebase/firestore";
 
 /**
  * Safe firebaseConfig for Expo (web + native):
  * - Does NOT initialize Firebase at module import time.
- * - Exports getAuthInstance() which initializes (idempotent) and returns Auth (throws if missing config).
- * - Exports getAuthIfAvailable() which returns the Auth instance or undefined (does not throw).
- *
- * Reads values directly from process.env.EXPO_PUBLIC_* variables.
+ * - Exports getAuthInstance() AND getDbInstance().
+ * - Reads values directly from process.env.EXPO_PUBLIC_* variables.
  */
 
 let firebaseApp: FirebaseApp | undefined;
 let authInstance: Auth | undefined;
+let dbInstance: Firestore | undefined; // 2. NEW: Database state
 
 function log(...args: any[]) {
   console.log("[firebaseConfig]", ...args);
@@ -32,23 +33,14 @@ function resolveConfig() {
 }
 
 /**
- * Initialize Firebase (idempotent) and return Auth.
- * Throws an Error if apiKey is missing (explicit error makes the source obvious).
+ * INTERNAL HELPER: Starts the Firebase App.
+ * This logic used to be inside getAuthInstance, but we moved it here
+ * so the Database can use it too.
  */
-export function getAuthInstance(): Auth {
-  if (authInstance) return authInstance;
+function ensureAppInitialized(): FirebaseApp {
+  if (firebaseApp) return firebaseApp;
 
   const config = resolveConfig();
-
-  // Log individual config values for debugging
-  log("============ Firebase Configuration Debug ============");
-  log("API Key:", config.apiKey || "(undefined/empty)");
-  log("Auth Domain:", config.authDomain || "(undefined/empty)");
-  log("Project ID:", config.projectId || "(undefined/empty)");
-  log("Storage Bucket:", config.storageBucket || "(undefined/empty)");
-  log("Messaging Sender ID:", config.messagingSenderId || "(undefined/empty)");
-  log("App ID:", config.appId || "(undefined/empty)");
-  log("====================================================");
 
   if (!config.apiKey) {
     const msg =
@@ -66,14 +58,42 @@ export function getAuthInstance(): Auth {
     log("✓ Using existing Firebase app");
   }
 
-  authInstance = getAuth(firebaseApp);
+  return firebaseApp;
+}
+
+/**
+ * Initialize Firebase (idempotent) and return Auth.
+ * (This works exactly the same as before, just calls the helper above)
+ */
+export function getAuthInstance(): Auth {
+  if (authInstance) return authInstance;
+
+  // Debug logs (Moved here to keep your console clean)
+  const config = resolveConfig();
+  log("============ Firebase Configuration Debug ============");
+  log("Project ID:", config.projectId || "(undefined/empty)");
+  log("====================================================");
+
+  const app = ensureAppInitialized();
+  authInstance = getAuth(app);
   log("✓ Auth instance ready");
   return authInstance;
 }
 
 /**
+ * 3. NEW: Initialize Firebase and return the Database (Firestore).
+ */
+export function getDbInstance(): Firestore {
+  if (dbInstance) return dbInstance;
+
+  const app = ensureAppInitialized();
+  dbInstance = getFirestore(app);
+  log("✓ Firestore instance ready");
+  return dbInstance;
+}
+
+/**
  * Return the Auth instance if already initialized, otherwise undefined.
- * Useful for code paths that should not throw during render.
  */
 export function getAuthIfAvailable(): Auth | undefined {
   return authInstance;
@@ -81,7 +101,6 @@ export function getAuthIfAvailable(): Auth | undefined {
 
 /**
  * Check if Firebase configuration is available.
- * Returns true if API key is present, false otherwise.
  */
 export const hasFirebaseConfig = Boolean(
   process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
