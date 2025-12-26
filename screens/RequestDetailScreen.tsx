@@ -76,6 +76,8 @@ export default function RequestDetailScreen({
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
 
+  console.log("[RequestDetail] Component rendered, user:", user?.uid, "requestId:", requestId);
+
   useEffect(() => {
     const loadRequest = async () => {
       try {
@@ -243,6 +245,17 @@ export default function RequestDetailScreen({
     (isAccepted || isFinalized) &&
     request.chatId;
 
+  console.log("[RequestDetail] Button state:", {
+    isOwnRequest,
+    isAccepted,
+    isFinalized,
+    canAccept,
+    canViewChat,
+    status: request.status,
+    userId: user?.uid,
+    requestUserId: request.userId,
+  });
+
   const getStatusBadge = () => {
     if (isFinalized) {
       return (
@@ -386,7 +399,10 @@ export default function RequestDetailScreen({
         </Pressable>
       ) : canAccept ? (
         <Pressable
-          onPress={handleAcceptRequest}
+          onPress={() => {
+            console.log("[RequestDetail] Accept button clicked!");
+            handleAcceptRequest();
+          }}
           disabled={accepting}
           style={({ pressed }) => [
             styles.helpButton,
