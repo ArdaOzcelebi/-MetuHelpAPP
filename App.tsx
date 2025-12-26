@@ -12,8 +12,20 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
 
+const NAVIGATION_KEYS = {
+  AUTHENTICATED: "main",
+  UNAUTHENTICATED: "auth",
+} as const;
+
 function AppContent() {
   const { user, loading } = useAuth();
+
+  console.log(
+    "[AppContent] Rendering - user:",
+    user ? "authenticated" : "null",
+    "loading:",
+    loading,
+  );
 
   if (loading) {
     return (
@@ -23,8 +35,13 @@ function AppContent() {
     );
   }
 
+  const navigationKey = user
+    ? NAVIGATION_KEYS.AUTHENTICATED
+    : NAVIGATION_KEYS.UNAUTHENTICATED;
+  console.log("[AppContent] NavigationContainer key:", navigationKey);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer key={navigationKey}>
       {user ? <MainTabNavigator /> : <AuthStackNavigator />}
     </NavigationContainer>
   );
