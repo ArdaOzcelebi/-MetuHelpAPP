@@ -224,6 +224,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("[NeedHelpScreen] Setting up subscription for category:", selectedCategory);
     setLoading(true);
 
     // Type-safe category filtering
@@ -233,11 +234,16 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
         : (selectedCategory as HelpRequestCategory);
 
     const unsubscribe = subscribeToHelpRequests((requests) => {
+      console.log("[NeedHelpScreen] Received requests update, count:", requests.length);
+      console.log("[NeedHelpScreen] Requests:", requests);
       setHelpRequests(requests);
       setLoading(false);
     }, categoryFilter);
 
-    return () => unsubscribe();
+    return () => {
+      console.log("[NeedHelpScreen] Cleaning up subscription");
+      unsubscribe();
+    };
   }, [selectedCategory]);
 
   const CATEGORIES = [
@@ -252,6 +258,12 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
     selectedCategory === "all"
       ? helpRequests
       : helpRequests.filter((req) => req.category === selectedCategory);
+
+  // Debug logging
+  console.log("[NeedHelpScreen] Render - helpRequests count:", helpRequests.length);
+  console.log("[NeedHelpScreen] Render - filteredRequests count:", filteredRequests.length);
+  console.log("[NeedHelpScreen] Render - loading:", loading);
+  console.log("[NeedHelpScreen] Render - selectedCategory:", selectedCategory);
 
   return (
     <ScreenScrollView>

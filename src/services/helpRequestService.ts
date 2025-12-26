@@ -172,6 +172,13 @@ export async function createHelpRequest(
   userName: string,
 ): Promise<string> {
   try {
+    console.log("[createHelpRequest] Starting with input:", {
+      requestData,
+      userId,
+      userEmail,
+      userName,
+    });
+
     const db = getFirestoreInstance();
     const now = Timestamp.now();
 
@@ -186,17 +193,37 @@ export async function createHelpRequest(
       updatedAt: now,
     };
 
-    console.log("Creating help request with data:", {
+    console.log("[createHelpRequest] Data to be written:", {
       ...data,
       createdAt: "Timestamp",
       updatedAt: "Timestamp",
     });
 
+    // Validate that all required fields are present
+    if (!data.title || !data.category || !data.location || !data.userId) {
+      const error = new Error(
+        "Missing required fields: " +
+          JSON.stringify({
+            hasTitle: !!data.title,
+            hasCategory: !!data.category,
+            hasLocation: !!data.location,
+            hasUserId: !!data.userId,
+          }),
+      );
+      console.error("[createHelpRequest] Validation failed:", error.message);
+      throw error;
+    }
+
     const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
-    console.log("Help request created successfully with ID:", docRef.id);
+    console.log("[createHelpRequest] Successfully created with ID:", docRef.id);
+    console.log("[createHelpRequest] Collection:", COLLECTION_NAME);
     return docRef.id;
   } catch (error) {
-    console.error("Error in createHelpRequest:", error);
+    console.error("[createHelpRequest] Error occurred:", error);
+    if (error instanceof Error) {
+      console.error("[createHelpRequest] Error message:", error.message);
+      console.error("[createHelpRequest] Error stack:", error.stack);
+    }
     throw error;
   }
 }
@@ -233,47 +260,77 @@ export function subscribeToHelpRequests(
   callback: (requests: HelpRequest[]) => void,
   category?: HelpRequestCategory,
 ): Unsubscribe {
-  const db = getFirestoreInstance();
-  let q;
+  try {
+    const db = getFirestoreInstance();
+    let q;
 
-  console.log("Setting up help requests subscription, category:", category);
-
-  if (category) {
-    q = query(
-      collection(db, COLLECTION_NAME),
-      where("status", "==", "active"),
-      where("category", "==", category),
-      orderBy("createdAt", "desc"),
+    console.log(
+      "[subscribeToHelpRequests] Setting up subscription, category:",
+      category || "all",
     );
-  } else {
-    q = query(
-      collection(db, COLLECTION_NAME),
-      where("status", "==", "active"),
-      orderBy("createdAt", "desc"),
-    );
-  }
 
-  return onSnapshot(
-    q,
-    (snapshot: QuerySnapshot) => {
-      console.log("Help requests snapshot received, count:", snapshot.size);
-      const requests: HelpRequest[] = [];
-      snapshot.forEach((doc) => {
-        const request = documentToHelpRequest(doc.id, doc.data());
-        if (request) {
-          requests.push(request);
-        } else {
-          console.warn("Failed to convert document:", doc.id);
+    if (category) {
+      q = query(
+        collection(db, COLLECTION_NAME),
+        where("status", "==", "active"),
+        where("category", "==", category),
+        orderBy("createdAt", "desc"),
+      );
+    } else {
+      q = query(
+        collection(db, COLLECTION_NAME),
+        where("status", "==", "active"),
+        orderBy("createdAt", "desc"),
+      );
+    }
+
+    return onSnapshot(
+      q,
+      (snapshot: QuerySnapshot) => {
+        console.log(
+          "[subscribeToHelpRequests] Snapshot received, document count:",
+          snapshot.size,
+        );
+        
+        if (snapshot.metadata.fromCache) {
+          console.warn("[subscribeToHelpRequests] Data is from cache, not server");
         }
-      });
-      console.log("Processed help requests:", requests.length);
-      callback(requests);
-    },
-    (error) => {
-      console.error("Error fetching help requests:", error);
-      callback([]);
-    },
-  );
+        
+        const requests: HelpRequest[] = [];
+        snapshot.forEach((doc) => {
+          console.log("[subscribeToHelpRequests] Processing document:", doc.id, doc.data());
+          const request = documentToHelpRequest(doc.id, doc.data());
+          if (request) {
+            requests.push(request);
+          } else {
+            console.warn(
+              "[subscribeToHelpRequests] Failed to convert document:",
+              doc.id,
+              "Data:",
+              doc.data(),
+            );
+          }
+        });
+        console.log(
+          "[subscribeToHelpRequests] Processed requests:",
+          requests.length,
+        );
+        callback(requests);
+      },
+      (error) => {
+        console.error("[subscribeToHelpRequests] Subscription error:", error);
+        console.error("[subscribeToHelpRequests] Error code:", error.code);
+        console.error("[subscribeToHelpRequests] Error message:", error.message);
+        callback([]);
+      },
+    );
+  } catch (error) {
+    console.error("[subscribeToHelpRequests] Setup error:", error);
+    // Return a no-op unsubscribe function
+    return () => {
+      console.log("[subscribeToHelpRequests] No-op unsubscribe called");
+    };
+  }
 }
 
 /**
