@@ -147,14 +147,17 @@ export default function RequestDetailScreen({
       return;
     }
     setHasOfferedHelp(true);
+    const posterName = request.isAnonymous ? "this person" : request.userName;
     Alert.alert(
       "Help Offered!",
-      `Thank you for offering to help ${request.userName}! They will be notified.`,
+      `Thank you for offering to help ${posterName}! They will be notified.`,
       [{ text: "OK" }],
     );
   };
 
   const posterInitials = getUserInitials(request.userName, request.userEmail);
+  const displayName = request.isAnonymous ? "Anonymous" : request.userName;
+  const displayInitials = request.isAnonymous ? "AN" : posterInitials;
 
   return (
     <ScreenScrollView>
@@ -166,12 +169,10 @@ export default function RequestDetailScreen({
               { backgroundColor: isDark ? "#CC3333" : METUColors.maroon },
             ]}
           >
-            <ThemedText style={styles.avatarText}>{posterInitials}</ThemedText>
+            <ThemedText style={styles.avatarText}>{displayInitials}</ThemedText>
           </View>
           <View>
-            <ThemedText style={styles.posterName}>
-              {request.userName}
-            </ThemedText>
+            <ThemedText style={styles.posterName}>{displayName}</ThemedText>
             <ThemedText
               style={[styles.postTime, { color: theme.textSecondary }]}
             >

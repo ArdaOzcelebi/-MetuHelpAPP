@@ -114,7 +114,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               <View
                 style={[
                   styles.inputWrapper,
-                  { backgroundColor: theme.background },
+                  { backgroundColor: theme.backgroundDefault },
                 ]}
               >
                 <Feather

@@ -124,6 +124,8 @@ interface Translations {
   postRequest: string;
   isReturnNeeded: string;
   returnNeededHint: string;
+  postAnonymously: string;
+  anonymousHint: string;
   requestPosted: string;
   requestPostedMessage: string;
   mustBeLoggedIn: string;
@@ -258,6 +260,8 @@ const translations: Record<Language, Translations> = {
     postRequest: "Post Request",
     isReturnNeeded: "Item needs to be returned",
     returnNeededHint: "Check this if you need to return the item",
+    postAnonymously: "Post Anonymously",
+    anonymousHint: "Your name will be hidden from other users",
     requestPosted: "Request Posted!",
     requestPostedMessage:
       "Your request has been posted. Fellow students will be notified.",
@@ -391,6 +395,8 @@ const translations: Record<Language, Translations> = {
     postRequest: "İsteği Gönder",
     isReturnNeeded: "Eşyanın iade edilmesi gerekiyor",
     returnNeededHint: "Eşyayı iade etmeniz gerekiyorsa işaretleyin",
+    postAnonymously: "Anonim Olarak Gönder",
+    anonymousHint: "Adınız diğer kullanıcılardan gizlenecek",
     requestPosted: "İstek Gönderildi!",
     requestPostedMessage:
       "İsteğiniz yayınlandı. Diğer öğrenciler bilgilendirilecek.",

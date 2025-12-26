@@ -69,6 +69,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
   const [details, setDetails] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
   const [isReturnNeeded, setIsReturnNeeded] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const isValid = title.length > 0 && selectedCategory && selectedLocation;
@@ -95,21 +96,45 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           location: selectedLocation!,
           isReturnNeeded,
           urgent: isUrgent,
+          isAnonymous,
         },
         user.uid,
         user.email || "",
         userName,
       );
 
+      // Reset form state after successful submission
+      setTitle("");
+      setSelectedCategory(null);
+      setSelectedLocation(null);
+      setDetails("");
+      setIsUrgent(false);
+      setIsReturnNeeded(false);
+      setIsAnonymous(false);
+
+      // Show success message and navigate back
       Alert.alert(t.requestPosted, t.requestPostedMessage, [
         {
           text: t.ok,
           onPress: () => navigation.goBack(),
         },
       ]);
+
+      // Navigate back after alert is shown (fallback if user doesn't press OK)
+      // This ensures the user sees their request was posted successfully
+      setTimeout(() => {
+        try {
+          navigation.goBack();
+        } catch (e) {
+          // Navigation might have already happened
+          console.log("Navigation already completed");
+        }
+      }, 3000);
     } catch (error) {
       console.error("Error posting request:", error);
-      Alert.alert(t.error, t.failedToPostRequest, [{ text: t.ok }]);
+      const errorMessage =
+        error instanceof Error ? error.message : t.failedToPostRequest;
+      Alert.alert(t.error, errorMessage, [{ text: t.ok }]);
     } finally {
       setSubmitting(false);
     }
@@ -333,6 +358,54 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           ]}
         >
           {isUrgent ? <Feather name="check" size={14} color="#FFFFFF" /> : null}
+        </View>
+      </Pressable>
+
+      <Pressable
+        onPress={() => setIsAnonymous(!isAnonymous)}
+        style={[
+          styles.urgentToggle,
+          {
+            backgroundColor: isAnonymous
+              ? "rgba(128, 128, 128, 0.1)"
+              : theme.backgroundDefault,
+            borderColor: isAnonymous ? theme.textSecondary : "transparent",
+          },
+        ]}
+      >
+        <View style={styles.urgentToggleContent}>
+          <Feather
+            name="user-x"
+            size={20}
+            color={isAnonymous ? theme.text : theme.textSecondary}
+          />
+          <View style={styles.urgentToggleText}>
+            <ThemedText style={[styles.urgentLabel, { color: theme.text }]}>
+              {t.postAnonymously}
+            </ThemedText>
+            <ThemedText
+              style={[styles.urgentHint, { color: theme.textSecondary }]}
+            >
+              {t.anonymousHint}
+            </ThemedText>
+          </View>
+        </View>
+        <View
+          style={[
+            styles.checkbox,
+            {
+              backgroundColor: isAnonymous
+                ? theme.textSecondary
+                : "transparent",
+              borderColor: isAnonymous
+                ? theme.textSecondary
+                : theme.textSecondary,
+            },
+          ]}
+        >
+          {isAnonymous ? (
+            <Feather name="check" size={14} color="#FFFFFF" />
+          ) : null}
         </View>
       </Pressable>
 
