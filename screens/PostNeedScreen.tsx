@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { addHelpRequest } from "@/src/firebase/firebaseconfig"; // Import Firestore helper
 import {
   Spacing,
   BorderRadius,
@@ -47,19 +48,36 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
 
   const isValid = title.length > 0 && selectedCategory && selectedLocation;
 
-  const handlePost = () => {
-    if (!isValid) return;
+  const handlePost = async () => {
+    if (!isValid) {
+      Alert.alert("Validation Error", "Please fill out all required fields.");
+      return;
+    }
 
-    Alert.alert(
-      "Request Posted!",
-      "Your request has been posted. Fellow students will be notified.",
-      [
-        {
-          text: "OK",
-          onPress: () => navigation.goBack(),
-        },
-      ],
-    );
+    try {
+      await addHelpRequest({
+        item: title,
+        category: selectedCategory!,
+        description: details,
+        location: selectedLocation!,
+        needReturn: false, // You can add a toggle for this field later
+        isAnonymous: false, // Set to true if implementing anonymity toggle
+      });
+
+      Alert.alert(
+        "Request Posted!",
+        "Your request has been posted. Fellow students will be notified.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+    } catch (error) {
+      console.error("Error posting request:", error);
+      Alert.alert("Error", "An error occurred while posting your request. Please try again.");
+    }
   };
 
   return (
