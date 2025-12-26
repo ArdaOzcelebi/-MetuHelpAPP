@@ -126,6 +126,9 @@ interface Translations {
   returnNeededHint: string;
   requestPosted: string;
   requestPostedMessage: string;
+  mustBeLoggedIn: string;
+  failedToPostRequest: string;
+  posting: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -258,6 +261,9 @@ const translations: Record<Language, Translations> = {
     requestPosted: "Request Posted!",
     requestPostedMessage:
       "Your request has been posted. Fellow students will be notified.",
+    mustBeLoggedIn: "You must be logged in to post a request.",
+    failedToPostRequest: "Failed to post request. Please try again.",
+    posting: "Posting...",
   },
   tr: {
     // Home Screen
@@ -388,6 +394,9 @@ const translations: Record<Language, Translations> = {
     requestPosted: "İstek Gönderildi!",
     requestPostedMessage:
       "İsteğiniz yayınlandı. Diğer öğrenciler bilgilendirilecek.",
+    mustBeLoggedIn: "İstek göndermek için giriş yapmalısınız.",
+    failedToPostRequest: "İstek gönderilemedi. Lütfen tekrar deneyin.",
+    posting: "Gönderiliyor...",
   },
 };
 

@@ -77,7 +77,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
     if (!isValid || submitting) return;
 
     if (!user) {
-      Alert.alert("Error", "You must be logged in to post a request.");
+      Alert.alert(t.error, t.mustBeLoggedIn);
       return;
     }
 
@@ -109,9 +109,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
       ]);
     } catch (error) {
       console.error("Error posting request:", error);
-      Alert.alert(t.error, "Failed to post request. Please try again.", [
-        { text: t.ok },
-      ]);
+      Alert.alert(t.error, t.failedToPostRequest, [{ text: t.ok }]);
     } finally {
       setSubmitting(false);
     }
@@ -360,7 +358,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
             },
           ]}
         >
-          {submitting ? "Posting..." : t.postRequest}
+          {submitting ? t.posting : t.postRequest}
         </ThemedText>
       </Pressable>
     </ScreenKeyboardAwareScrollView>

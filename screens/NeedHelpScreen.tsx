@@ -225,13 +225,17 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
 
   useEffect(() => {
     setLoading(true);
-    const unsubscribe = subscribeToHelpRequests(
-      (requests) => {
-        setHelpRequests(requests);
-        setLoading(false);
-      },
-      selectedCategory === "all" ? undefined : (selectedCategory as any),
-    );
+
+    // Type-safe category filtering
+    const categoryFilter =
+      selectedCategory === "all"
+        ? undefined
+        : (selectedCategory as HelpRequestCategory);
+
+    const unsubscribe = subscribeToHelpRequests((requests) => {
+      setHelpRequests(requests);
+      setLoading(false);
+    }, categoryFilter);
 
     return () => unsubscribe();
   }, [selectedCategory]);

@@ -31,12 +31,15 @@ const COLLECTION_NAME = "helpRequests";
  * Convert Firestore timestamp to Date
  */
 function convertTimestamp(timestamp: any): Date {
-  if (timestamp?.toDate) {
+  // Handle Firestore Timestamp
+  if (timestamp?.toDate && typeof timestamp.toDate === "function") {
     return timestamp.toDate();
   }
-  if (timestamp?.seconds) {
+  // Handle timestamp with seconds property
+  if (timestamp?.seconds && typeof timestamp.seconds === "number") {
     return new Date(timestamp.seconds * 1000);
   }
+  // Fallback to current date if timestamp is invalid
   return new Date();
 }
 
@@ -48,15 +51,21 @@ function documentToHelpRequest(
   data: DocumentData,
 ): HelpRequest | null {
   try {
+    // Validate required fields
+    if (!data.title || !data.category || !data.location || !data.userId) {
+      console.warn(`Missing required fields in document ${id}`);
+      return null;
+    }
+
     return {
       id,
-      title: data.title || "",
-      category: data.category || "other",
+      title: data.title,
+      category: data.category,
       description: data.description || "",
-      location: data.location || "",
+      location: data.location,
       isReturnNeeded: data.isReturnNeeded || false,
       urgent: data.urgent || false,
-      userId: data.userId || "",
+      userId: data.userId,
       userEmail: data.userEmail || "",
       userName: data.userName || "Anonymous",
       createdAt: convertTimestamp(data.createdAt),
