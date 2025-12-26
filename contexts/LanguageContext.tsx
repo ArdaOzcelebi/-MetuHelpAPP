@@ -129,6 +129,35 @@ interface Translations {
   mustBeLoggedIn: string;
   failedToPostRequest: string;
   posting: string;
+
+  // Chat
+  chat: string;
+  typeMessage: string;
+  send: string;
+  finalizeRequest: string;
+  finalizeConfirm: string;
+  finalizeConfirmMessage: string;
+  requestFinalized: string;
+  requestFinalizedMessage: string;
+  acceptRequest: string;
+  acceptConfirm: string;
+  acceptConfirmMessage: string;
+  requestAccepted: string;
+  requestAcceptedMessage: string;
+  cannotAcceptOwnRequest: string;
+  requestAlreadyAccepted: string;
+  failedToAcceptRequest: string;
+  failedToSendMessage: string;
+  failedToFinalizeRequest: string;
+  accepting: string;
+  finalizing: string;
+  noMessages: string;
+  startConversation: string;
+
+  // Status
+  statusOpen: string;
+  statusAccepted: string;
+  statusFinalized: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -264,6 +293,39 @@ const translations: Record<Language, Translations> = {
     mustBeLoggedIn: "You must be logged in to post a request.",
     failedToPostRequest: "Failed to post request. Please try again.",
     posting: "Posting...",
+
+    // Chat
+    chat: "Chat",
+    typeMessage: "Type a message...",
+    send: "Send",
+    finalizeRequest: "Finalize Request",
+    finalizeConfirm: "Finalize Request?",
+    finalizeConfirmMessage:
+      "Are you sure you want to finalize this request? This will close the chat and mark the request as completed.",
+    requestFinalized: "Request Finalized",
+    requestFinalizedMessage:
+      "The request has been finalized successfully. Thank you for helping!",
+    acceptRequest: "Accept Request",
+    acceptConfirm: "Accept this Request?",
+    acceptConfirmMessage:
+      "By accepting this request, you'll be able to chat with the requester and help them.",
+    requestAccepted: "Request Accepted!",
+    requestAcceptedMessage:
+      "You have accepted this request. You can now chat with the requester.",
+    cannotAcceptOwnRequest: "You cannot accept your own request.",
+    requestAlreadyAccepted: "This request has already been accepted.",
+    failedToAcceptRequest: "Failed to accept request. Please try again.",
+    failedToSendMessage: "Failed to send message. Please try again.",
+    failedToFinalizeRequest: "Failed to finalize request. Please try again.",
+    accepting: "Accepting...",
+    finalizing: "Finalizing...",
+    noMessages: "No messages yet",
+    startConversation: "Start the conversation!",
+
+    // Status
+    statusOpen: "Open",
+    statusAccepted: "Accepted",
+    statusFinalized: "Finalized",
   },
   tr: {
     // Home Screen
@@ -397,6 +459,39 @@ const translations: Record<Language, Translations> = {
     mustBeLoggedIn: "İstek göndermek için giriş yapmalısınız.",
     failedToPostRequest: "İstek gönderilemedi. Lütfen tekrar deneyin.",
     posting: "Gönderiliyor...",
+
+    // Chat
+    chat: "Sohbet",
+    typeMessage: "Mesaj yazın...",
+    send: "Gönder",
+    finalizeRequest: "İsteği Tamamla",
+    finalizeConfirm: "İstek Tamamlansın mı?",
+    finalizeConfirmMessage:
+      "Bu isteği tamamlamak istediğinizden emin misiniz? Bu işlem sohbeti kapatacak ve isteği tamamlandı olarak işaretleyecek.",
+    requestFinalized: "İstek Tamamlandı",
+    requestFinalizedMessage:
+      "İstek başarıyla tamamlandı. Yardımınız için teşekkürler!",
+    acceptRequest: "İsteği Kabul Et",
+    acceptConfirm: "Bu İsteği Kabul Et?",
+    acceptConfirmMessage:
+      "Bu isteği kabul ederek, istekte bulunan kişiyle sohbet edebilir ve yardımcı olabilirsiniz.",
+    requestAccepted: "İstek Kabul Edildi!",
+    requestAcceptedMessage:
+      "Bu isteği kabul ettiniz. Artık istekte bulunan kişiyle sohbet edebilirsiniz.",
+    cannotAcceptOwnRequest: "Kendi isteğinizi kabul edemezsiniz.",
+    requestAlreadyAccepted: "Bu istek zaten kabul edildi.",
+    failedToAcceptRequest: "İstek kabul edilemedi. Lütfen tekrar deneyin.",
+    failedToSendMessage: "Mesaj gönderilemedi. Lütfen tekrar deneyin.",
+    failedToFinalizeRequest: "İstek tamamlanamadı. Lütfen tekrar deneyin.",
+    accepting: "Kabul ediliyor...",
+    finalizing: "Tamamlanıyor...",
+    noMessages: "Henüz mesaj yok",
+    startConversation: "Sohbeti başlatın!",
+
+    // Status
+    statusOpen: "Açık",
+    statusAccepted: "Kabul Edildi",
+    statusFinalized: "Tamamlandı",
   },
 };
 

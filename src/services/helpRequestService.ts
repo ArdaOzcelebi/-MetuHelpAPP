@@ -187,3 +187,41 @@ export async function deleteHelpRequest(requestId: string): Promise<void> {
   const docRef = doc(db, COLLECTION_NAME, requestId);
   await deleteDoc(docRef);
 }
+
+/**
+ * Accept a help request
+ * Updates the request with acceptedBy info, changes status to "accepted",
+ * and assigns a chatId
+ */
+export async function acceptHelpRequest(
+  requestId: string,
+  accepterId: string,
+  accepterName: string,
+  accepterEmail: string,
+  chatId: string
+): Promise<void> {
+  const db = getFirestoreInstance();
+  const docRef = doc(db, COLLECTION_NAME, requestId);
+
+  await updateDoc(docRef, {
+    status: "accepted",
+    acceptedBy: accepterId,
+    acceptedByName: accepterName,
+    acceptedByEmail: accepterEmail,
+    chatId,
+    updatedAt: Timestamp.now(),
+  });
+}
+
+/**
+ * Finalize a help request (mark as completed)
+ */
+export async function finalizeHelpRequest(requestId: string): Promise<void> {
+  const db = getFirestoreInstance();
+  const docRef = doc(db, COLLECTION_NAME, requestId);
+
+  await updateDoc(docRef, {
+    status: "finalized",
+    updatedAt: Timestamp.now(),
+  });
+}
