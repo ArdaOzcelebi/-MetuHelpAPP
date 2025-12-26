@@ -20,18 +20,23 @@ METU Help is a React Native mobile application built with Expo, designed to faci
 ├── components/          # Reusable UI components (Button, Card, ThemedText, etc.)
 ├── screens/            # Screen components (HomeScreen, BrowseScreen, etc.)
 ├── navigation/         # Navigation configuration (Tab & Stack navigators)
-├── contexts/           # React Context for state management (LanguageContext)
+├── contexts/           # UI-related contexts (LanguageContext for i18n)
 ├── hooks/              # Custom React hooks (useTheme, useColorScheme, etc.)
 ├── constants/          # Application constants (theme.ts)
 ├── src/                # Source code directory
-│   ├── firebase/       # Firebase configuration (firebaseConfig.js)
-│   ├── contexts/       # Additional contexts (AuthContext)
+│   ├── firebase/       # Firebase configuration (firebaseConfig.js + .d.ts)
+│   ├── contexts/       # Backend-related contexts (AuthContext)
 │   ├── services/       # API services (helpRequestService)
 │   └── types/          # TypeScript type definitions
 ├── assets/             # Static assets (images)
 ├── scripts/            # Build and utility scripts
 └── App.tsx             # Root component
 ```
+
+**Note:** The project has two context directories:
+
+- `/contexts/` - For UI and presentation layer contexts (language, theme)
+- `/src/contexts/` - For backend and business logic contexts (authentication)
 
 ## Development Guidelines
 
@@ -133,6 +138,8 @@ Supported languages: Turkish and English
 ### Firebase Configuration
 
 The app uses Firebase for authentication and Firestore for data storage. All Firebase operations **MUST** use the centralized configuration from `src/firebase/firebaseConfig.js`.
+
+**Note:** The Firebase config uses JavaScript (`.js`) with TypeScript definitions (`.d.ts`) to ensure compatibility across all Expo platforms (web, iOS, Android).
 
 **Environment Variables Required:**
 
@@ -412,7 +419,7 @@ Currently, the project uses ESLint for code quality. When adding new features:
 
 1. Install dependencies: `npm install`
 2. Copy environment template: `cp .env.example .env.local`
-3. Add Firebase credentials to `.env.local`
+3. Add Firebase credentials to `.env.local` (all listed variables are safe for client-side code)
 4. Test Firebase configuration: `npm run test:firebase`
 5. Start development server: `npm start`
 
@@ -421,8 +428,10 @@ Currently, the project uses ESLint for code quality. When adding new features:
 - Get credentials from [Firebase Console](https://console.firebase.google.com/)
 - Enable Email/Password authentication
 - Set up Firestore database
-- Configure Firestore security rules
+- Configure Firestore security rules (this is where actual security is enforced)
 - See README.md for detailed Firebase setup instructions
+
+**Security Note:** All `EXPO_PUBLIC_FIREBASE_*` credentials are safe to include in `.env.local` as they're designed for client-side use. Security is enforced through Firebase Authentication and Firestore security rules, not by hiding these configuration values.
 
 ## Build & Deploy
 
