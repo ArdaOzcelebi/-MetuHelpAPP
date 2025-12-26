@@ -29,9 +29,6 @@ import {
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 
-
-
-
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "Home">;
 };

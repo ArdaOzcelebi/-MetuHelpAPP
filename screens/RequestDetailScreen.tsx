@@ -26,7 +26,7 @@ import {
   getHelpRequest,
   acceptHelpRequest,
 } from "@/src/services/helpRequestService";
-import { createChat, getChatByRequestId } from "@/src/services/chatService";
+import { createChat } from "@/src/services/chatService";
 import type { HelpRequest } from "@/src/types/helpRequest";
 
 type RequestDetailScreenProps = {
@@ -72,7 +72,6 @@ export default function RequestDetailScreen({
   const { t } = useLanguage();
   const { user } = useAuth();
   const { requestId } = route.params;
-  const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
   const [request, setRequest] = useState<HelpRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -146,23 +145,6 @@ export default function RequestDetailScreen({
     }
   };
 
-  const handleOfferHelp = () => {
-    if (hasOfferedHelp) {
-      Alert.alert(
-        "Already Offered",
-        "You've already offered to help with this request.",
-        [{ text: "OK" }],
-      );
-      return;
-    }
-    setHasOfferedHelp(true);
-    Alert.alert(
-      "Help Offered!",
-      `Thank you for offering to help ${request.userName}! They will be notified.`,
-      [{ text: "OK" }],
-    );
-  };
-
   const handleAcceptRequest = async () => {
     if (!user || !request) return;
 
@@ -207,7 +189,7 @@ export default function RequestDetailScreen({
               user.uid,
               user.displayName || user.email || "Unknown",
               user.email || "",
-              chatId
+              chatId,
             );
 
             // Show success message and navigate to chat
@@ -225,7 +207,7 @@ export default function RequestDetailScreen({
                   },
                 },
               ],
-              { cancelable: false }
+              { cancelable: false },
             );
           } catch (error) {
             console.error("Error accepting request:", error);
@@ -277,9 +259,7 @@ export default function RequestDetailScreen({
     }
     if (isAccepted) {
       return (
-        <View
-          style={[styles.statusBadge, { backgroundColor: "#3B82F6" }]}
-        >
+        <View style={[styles.statusBadge, { backgroundColor: "#3B82F6" }]}>
           <Feather name="user-check" size={14} color="#FFFFFF" />
           <ThemedText style={styles.statusBadgeText}>
             {t.statusAccepted}
@@ -376,9 +356,7 @@ export default function RequestDetailScreen({
         >
           <Feather name="user-check" size={20} color={METUColors.actionGreen} />
           <View style={styles.acceptedByInfo}>
-            <ThemedText style={styles.acceptedByLabel}>
-              Accepted by
-            </ThemedText>
+            <ThemedText style={styles.acceptedByLabel}>Accepted by</ThemedText>
             <ThemedText style={styles.acceptedByName}>
               {request.acceptedByName}
             </ThemedText>
@@ -419,7 +397,9 @@ export default function RequestDetailScreen({
           {accepting ? (
             <>
               <ActivityIndicator size="small" color={theme.text} />
-              <ThemedText style={[styles.helpButtonText, { color: theme.text }]}>
+              <ThemedText
+                style={[styles.helpButtonText, { color: theme.text }]}
+              >
                 {t.accepting}
               </ThemedText>
             </>
@@ -434,9 +414,16 @@ export default function RequestDetailScreen({
         </Pressable>
       ) : isFinalized ? (
         <View style={styles.finalizedMessage}>
-          <Feather name="check-circle" size={20} color={METUColors.actionGreen} />
+          <Feather
+            name="check-circle"
+            size={20}
+            color={METUColors.actionGreen}
+          />
           <ThemedText
-            style={[styles.finalizedMessageText, { color: theme.textSecondary }]}
+            style={[
+              styles.finalizedMessageText,
+              { color: theme.textSecondary },
+            ]}
           >
             This request has been finalized
           </ThemedText>

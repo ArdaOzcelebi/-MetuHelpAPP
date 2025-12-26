@@ -9,7 +9,6 @@ import {
   doc,
   query,
   where,
-  orderBy,
   onSnapshot,
   Timestamp,
   DocumentData,
@@ -18,7 +17,12 @@ import {
   arrayUnion,
 } from "firebase/firestore";
 import { getFirestoreInstance } from "@/src/firebase/firebaseConfig";
-import type { Chat, CreateChatData, SendMessageData, Message } from "@/src/types/chat";
+import type {
+  Chat,
+  CreateChatData,
+  SendMessageData,
+  Message,
+} from "@/src/types/chat";
 
 const COLLECTION_NAME = "chats";
 
@@ -125,7 +129,7 @@ export async function getChat(chatId: string): Promise<Chat | null> {
  */
 export function subscribeToChat(
   chatId: string,
-  callback: (chat: Chat | null) => void
+  callback: (chat: Chat | null) => void,
 ): Unsubscribe {
   const db = getFirestoreInstance();
   const docRef = doc(db, COLLECTION_NAME, chatId);
@@ -143,7 +147,7 @@ export function subscribeToChat(
     (error) => {
       console.error("Error fetching chat:", error);
       callback(null);
-    }
+    },
   );
 }
 
@@ -155,7 +159,7 @@ export async function sendMessage(
   messageData: SendMessageData,
   senderId: string,
   senderName: string,
-  senderEmail: string
+  senderEmail: string,
 ): Promise<void> {
   const db = getFirestoreInstance();
   const docRef = doc(db, COLLECTION_NAME, chatId);
@@ -193,12 +197,12 @@ export async function finalizeChat(chatId: string): Promise<void> {
  * Get chat by request ID
  */
 export async function getChatByRequestId(
-  requestId: string
+  requestId: string,
 ): Promise<Chat | null> {
   const db = getFirestoreInstance();
   const q = query(
     collection(db, COLLECTION_NAME),
-    where("requestId", "==", requestId)
+    where("requestId", "==", requestId),
   );
 
   return new Promise((resolve) => {
@@ -219,7 +223,7 @@ export async function getChatByRequestId(
         console.error("Error fetching chat by request ID:", error);
         unsubscribe();
         resolve(null);
-      }
+      },
     );
   });
 }

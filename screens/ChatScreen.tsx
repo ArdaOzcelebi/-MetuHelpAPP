@@ -89,7 +89,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
         { message: messageText },
         user.uid,
         user.displayName || user.email || "Unknown",
-        user.email || ""
+        user.email || "",
       );
     } catch (error) {
       console.error("Error sending message:", error);
@@ -129,7 +129,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
                   },
                 },
               ],
-              { cancelable: false }
+              { cancelable: false },
             );
           } catch (error) {
             console.error("Error finalizing request:", error);
@@ -229,14 +229,9 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       <ThemedView style={styles.container}>
         {/* Chat Header with request title */}
         <View
-          style={[
-            styles.chatHeader,
-            { backgroundColor: theme.cardBackground },
-          ]}
+          style={[styles.chatHeader, { backgroundColor: theme.cardBackground }]}
         >
-          <ThemedText style={styles.chatTitle}>
-            {chat.requestTitle}
-          </ThemedText>
+          <ThemedText style={styles.chatTitle}>{chat.requestTitle}</ThemedText>
           {isFinalized && (
             <View style={styles.finalizedBadge}>
               <Feather name="check-circle" size={14} color="#FFFFFF" />
@@ -255,10 +250,14 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
               size={48}
               color={theme.textSecondary}
             />
-            <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
+            <ThemedText
+              style={[styles.emptyText, { color: theme.textSecondary }]}
+            >
               {t.noMessages}
             </ThemedText>
-            <ThemedText style={[styles.emptySubtext, { color: theme.textSecondary }]}>
+            <ThemedText
+              style={[styles.emptySubtext, { color: theme.textSecondary }]}
+            >
               {t.startConversation}
             </ThemedText>
           </View>

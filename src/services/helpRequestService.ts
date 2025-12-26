@@ -198,7 +198,7 @@ export async function acceptHelpRequest(
   accepterId: string,
   accepterName: string,
   accepterEmail: string,
-  chatId: string
+  chatId: string,
 ): Promise<void> {
   const db = getFirestoreInstance();
   const docRef = doc(db, COLLECTION_NAME, requestId);

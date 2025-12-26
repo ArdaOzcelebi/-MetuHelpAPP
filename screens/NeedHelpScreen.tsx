@@ -20,7 +20,7 @@ import {
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { subscribeToHelpRequests } from "@/src/services/helpRequestService";
-import type { HelpRequest } from "@/src/types/helpRequest";
+import type { HelpRequest, HelpRequestCategory } from "@/src/types/helpRequest";
 
 type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
@@ -104,8 +104,12 @@ interface RequestCardProps {
   location: string;
   time: string;
   urgent: boolean;
+  status: string;
   urgentLabel: string;
   helpButtonLabel: string;
+  statusOpenLabel: string;
+  statusAcceptedLabel: string;
+  statusFinalizedLabel: string;
   onPress: () => void;
   onHelp: () => void;
 }
@@ -116,8 +120,12 @@ function RequestCard({
   location,
   time,
   urgent,
+  status,
   urgentLabel,
   helpButtonLabel,
+  statusOpenLabel,
+  statusAcceptedLabel,
+  statusFinalizedLabel,
   onPress,
   onHelp,
 }: RequestCardProps) {
@@ -135,6 +143,35 @@ function RequestCard({
       default:
         return "help-circle";
     }
+  };
+
+  const getStatusBadge = () => {
+    if (status === "finalized") {
+      return (
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: METUColors.actionGreen },
+          ]}
+        >
+          <Feather name="check-circle" size={10} color="#FFFFFF" />
+          <ThemedText style={styles.statusBadgeText}>
+            {statusFinalizedLabel}
+          </ThemedText>
+        </View>
+      );
+    }
+    if (status === "accepted") {
+      return (
+        <View style={[styles.statusBadge, { backgroundColor: "#3B82F6" }]}>
+          <Feather name="user-check" size={10} color="#FFFFFF" />
+          <ThemedText style={styles.statusBadgeText}>
+            {statusAcceptedLabel}
+          </ThemedText>
+        </View>
+      );
+    }
+    return null;
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -182,7 +219,8 @@ function RequestCard({
         <View style={styles.requestInfo}>
           <View style={styles.requestHeader}>
             <ThemedText style={styles.requestTitle}>{title}</ThemedText>
-            {urgent ? (
+            {getStatusBadge()}
+            {urgent && status === "active" ? (
               <View style={styles.urgentBadge}>
                 <ThemedText style={styles.urgentText}>{urgentLabel}</ThemedText>
               </View>
@@ -291,8 +329,12 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
               location={request.location}
               time={getTimeAgo(request.createdAt)}
               urgent={request.urgent}
+              status={request.status}
               urgentLabel={t.urgent}
               helpButtonLabel={t.iCanHelp}
+              statusOpenLabel={t.statusOpen}
+              statusAcceptedLabel={t.statusAccepted}
+              statusFinalizedLabel={t.statusFinalized}
               onPress={() =>
                 navigation.navigate("RequestDetail", { requestId: request.id })
               }
@@ -381,6 +423,20 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   urgentText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.xs,
+    marginLeft: Spacing.sm,
+    gap: 2,
+  },
+  statusBadgeText: {
     fontSize: 10,
     fontWeight: "600",
     color: "#FFFFFF",
