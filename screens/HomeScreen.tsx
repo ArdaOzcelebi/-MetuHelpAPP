@@ -30,7 +30,7 @@ import {
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 
 
-import React, { useEffect } from "react";
+
 import { getFirestoreInstance } from "@/src/firebase/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
 
