@@ -214,12 +214,17 @@ function RequestCard({
         </View>
       </View>
       <Pressable
-        onPress={isOwnRequest && hasActiveChat && onOpenChat ? onOpenChat : onHelp}
+        onPress={
+          isOwnRequest && hasActiveChat && onOpenChat ? onOpenChat : onHelp
+        }
         style={({ pressed }) => [
           styles.helpButton,
-          { 
-            backgroundColor: isOwnRequest && hasActiveChat ? METUColors.maroon : METUColors.actionGreen,
-            opacity: pressed ? 0.8 : 1 
+          {
+            backgroundColor:
+              isOwnRequest && hasActiveChat
+                ? METUColors.maroon
+                : METUColors.actionGreen,
+            opacity: pressed ? 0.8 : 1,
           },
         ]}
       >
@@ -240,8 +245,45 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const [loading, setLoading] = useState(true);
   const [chatsMap, setChatsMap] = useState<Map<string, string>>(new Map());
 
+  const checkActiveChats = async (requests: HelpRequest[]) => {
+    const newChatsMap = new Map<string, string>();
+
+    for (const request of requests) {
+      // Only check for chats on user's own requests
+      if (user && request.userId === user.uid) {
+        console.log(
+          "[NeedHelpScreen] Checking active chats for Request ID:",
+          request.id,
+        );
+        try {
+          const chat = await getChatByRequestId(request.id);
+          if (chat) {
+            console.log(
+              "[NeedHelpScreen] Found active chat for request:",
+              request.id,
+              "chatId:",
+              chat.id,
+            );
+            newChatsMap.set(request.id, chat.id);
+          }
+        } catch (error) {
+          console.error(
+            "[NeedHelpScreen] Error checking chat for request:",
+            request.id,
+            error,
+          );
+        }
+      }
+    }
+
+    setChatsMap(newChatsMap);
+  };
+
   useEffect(() => {
-    console.log("[NeedHelpScreen] Setting up subscription for category:", selectedCategory);
+    console.log(
+      "[NeedHelpScreen] Setting up subscription for category:",
+      selectedCategory,
+    );
     setLoading(true);
 
     // Type-safe category filtering
@@ -251,11 +293,14 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
         : (selectedCategory as HelpRequestCategory);
 
     const unsubscribe = subscribeToHelpRequests((requests) => {
-      console.log("[NeedHelpScreen] Received requests update, count:", requests.length);
+      console.log(
+        "[NeedHelpScreen] Received requests update, count:",
+        requests.length,
+      );
       console.log("[NeedHelpScreen] Requests:", requests);
       setHelpRequests(requests);
       setLoading(false);
-      
+
       // Check for active chats for each request
       if (user) {
         checkActiveChats(requests);
@@ -266,29 +311,8 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       console.log("[NeedHelpScreen] Cleaning up subscription");
       unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, user]);
-
-  const checkActiveChats = async (requests: HelpRequest[]) => {
-    const newChatsMap = new Map<string, string>();
-    
-    for (const request of requests) {
-      // Only check for chats on user's own requests
-      if (user && request.userId === user.uid) {
-        console.log("[NeedHelpScreen] Checking active chats for Request ID:", request.id);
-        try {
-          const chat = await getChatByRequestId(request.id);
-          if (chat) {
-            console.log("[NeedHelpScreen] Found active chat for request:", request.id, "chatId:", chat.id);
-            newChatsMap.set(request.id, chat.id);
-          }
-        } catch (error) {
-          console.error("[NeedHelpScreen] Error checking chat for request:", request.id, error);
-        }
-      }
-    }
-    
-    setChatsMap(newChatsMap);
-  };
 
   const CATEGORIES = [
     { id: "all", label: t.all, icon: "grid" },
@@ -304,8 +328,14 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       : helpRequests.filter((req) => req.category === selectedCategory);
 
   // Debug logging
-  console.log("[NeedHelpScreen] Render - helpRequests count:", helpRequests.length);
-  console.log("[NeedHelpScreen] Render - filteredRequests count:", filteredRequests.length);
+  console.log(
+    "[NeedHelpScreen] Render - helpRequests count:",
+    helpRequests.length,
+  );
+  console.log(
+    "[NeedHelpScreen] Render - filteredRequests count:",
+    filteredRequests.length,
+  );
   console.log("[NeedHelpScreen] Render - loading:", loading);
   console.log("[NeedHelpScreen] Render - selectedCategory:", selectedCategory);
 
@@ -358,10 +388,14 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 hasActiveChat={hasActiveChat}
                 openChatLabel="Open Chat"
                 onPress={() =>
-                  navigation.navigate("RequestDetail", { requestId: request.id })
+                  navigation.navigate("RequestDetail", {
+                    requestId: request.id,
+                  })
                 }
                 onHelp={() => {
-                  navigation.navigate("RequestDetail", { requestId: request.id });
+                  navigation.navigate("RequestDetail", {
+                    requestId: request.id,
+                  });
                 }}
                 onOpenChat={() => {
                   if (chatId) {

@@ -166,11 +166,9 @@ export default function RequestDetailScreen({
 
     // Check if user is trying to help their own request
     if (request.userId === user.uid) {
-      Alert.alert(
-        "Cannot Help",
-        "You cannot offer help on your own request.",
-        [{ text: "OK" }],
-      );
+      Alert.alert("Cannot Help", "You cannot offer help on your own request.", [
+        { text: "OK" },
+      ]);
       return;
     }
 
@@ -179,16 +177,19 @@ export default function RequestDetailScreen({
     try {
       // Check if a chat already exists
       const existingChat = await getChatByRequestId(requestId);
-      
+
       let chatId: string;
-      
+
       if (existingChat) {
         // Chat already exists, just navigate to it
         chatId = existingChat.id;
         console.log("[RequestDetailScreen] Using existing chat:", chatId);
       } else {
         // Create a new chat
-        console.log("[RequestDetailScreen] Creating new chat for request:", requestId);
+        console.log(
+          "[RequestDetailScreen] Creating new chat for request:",
+          requestId,
+        );
         chatId = await createChat({
           requestId: request.id,
           requestTitle: request.title,
@@ -208,11 +209,9 @@ export default function RequestDetailScreen({
       navigation.navigate("Chat", { chatId });
     } catch (error) {
       console.error("[RequestDetailScreen] Error offering help:", error);
-      Alert.alert(
-        "Error",
-        "Failed to create chat. Please try again.",
-        [{ text: "OK" }],
-      );
+      Alert.alert("Error", "Failed to create chat. Please try again.", [
+        { text: "OK" },
+      ]);
     } finally {
       setOfferingHelp(false);
     }

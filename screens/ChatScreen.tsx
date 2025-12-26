@@ -85,9 +85,7 @@ function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           style={[
             styles.messageTime,
             {
-              color: isOwn
-                ? "rgba(255, 255, 255, 0.7)"
-                : theme.textSecondary,
+              color: isOwn ? "rgba(255, 255, 255, 0.7)" : theme.textSecondary,
             },
           ]}
         >
@@ -105,10 +103,10 @@ function formatMessageTime(date: Date): string {
 
   if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins}m ago`;
-  
+
   const diffHours = Math.floor(diffMins / 60);
   if (diffHours < 24) return `${diffHours}h ago`;
-  
+
   // Format as date if older than 24 hours
   return date.toLocaleDateString();
 }
@@ -124,6 +122,51 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const [sending, setSending] = useState(false);
   const [chat, setChat] = useState<Chat | null>(null);
   const flatListRef = useRef<FlatList>(null);
+
+  // Load chat details
+  useEffect(() => {
+    if (!chatId) return;
+
+    const loadChat = async () => {
+      try {
+        const chatData = await getChat(chatId);
+        setChat(chatData);
+      } catch (error) {
+        console.error("[ChatScreen] Error loading chat:", error);
+      }
+    };
+
+    loadChat();
+  }, [chatId]);
+
+  // Subscribe to messages with real-time updates using onSnapshot
+  useEffect(() => {
+    if (!chatId) return;
+
+    console.log(
+      "[ChatScreen] Setting up message subscription for chat:",
+      chatId,
+    );
+
+    const unsubscribe = subscribeToMessages(chatId, (newMessages) => {
+      console.log(
+        "[ChatScreen] Received message update, count:",
+        newMessages.length,
+      );
+      setMessages(newMessages);
+      setLoading(false);
+
+      // Auto-scroll to bottom when new messages arrive
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    });
+
+    return () => {
+      console.log("[ChatScreen] Cleaning up message subscription");
+      unsubscribe();
+    };
+  }, [chatId]);
 
   // Safeguard: Check if chatId is missing
   if (!chatId) {
@@ -141,41 +184,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       </ThemedView>
     );
   }
-
-  // Load chat details
-  useEffect(() => {
-    const loadChat = async () => {
-      try {
-        const chatData = await getChat(chatId);
-        setChat(chatData);
-      } catch (error) {
-        console.error("[ChatScreen] Error loading chat:", error);
-      }
-    };
-
-    loadChat();
-  }, [chatId]);
-
-  // Subscribe to messages with real-time updates using onSnapshot
-  useEffect(() => {
-    console.log("[ChatScreen] Setting up message subscription for chat:", chatId);
-
-    const unsubscribe = subscribeToMessages(chatId, (newMessages) => {
-      console.log("[ChatScreen] Received message update, count:", newMessages.length);
-      setMessages(newMessages);
-      setLoading(false);
-
-      // Auto-scroll to bottom when new messages arrive
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    });
-
-    return () => {
-      console.log("[ChatScreen] Cleaning up message subscription");
-      unsubscribe();
-    };
-  }, [chatId]);
 
   const handleSend = async () => {
     if (!inputText.trim() || !user || sending) return;
@@ -234,9 +242,15 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
               {chat.requestTitle}
             </ThemedText>
             <ThemedText
-              style={[styles.chatHeaderSubtitle, { color: theme.textSecondary }]}
+              style={[
+                styles.chatHeaderSubtitle,
+                { color: theme.textSecondary },
+              ]}
             >
-              Chat with {user?.uid === chat.requesterId ? chat.helperName : chat.requesterName}
+              Chat with{" "}
+              {user?.uid === chat.requesterId
+                ? chat.helperName
+                : chat.requesterName}
             </ThemedText>
           </View>
         )}

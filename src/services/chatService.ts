@@ -5,7 +5,7 @@
  * in the METU Help app. It handles real-time chat updates and message delivery.
  *
  * Firestore Collection Structure:
- * 
+ *
  * Collection: 'chats'
  * Document Fields:
  *   - requestId (string): The help request this chat is about
@@ -176,8 +176,11 @@ export async function getChatByRequestId(
   requestId: string,
 ): Promise<Chat | null> {
   try {
-    console.log("[getChatByRequestId] Checking for chat with requestId:", requestId);
-    
+    console.log(
+      "[getChatByRequestId] Checking for chat with requestId:",
+      requestId,
+    );
+
     const db = getFirestoreInstance();
     const q = query(
       collection(db, CHATS_COLLECTION),
@@ -185,7 +188,7 @@ export async function getChatByRequestId(
     );
 
     const querySnapshot = await getDocs(q);
-    
+
     console.log("[getChatByRequestId] Found documents:", querySnapshot.size);
 
     if (querySnapshot.empty) {
@@ -265,7 +268,10 @@ export function subscribeToMessages(
           }
         });
 
-        console.log("[subscribeToMessages] Processed messages:", messages.length);
+        console.log(
+          "[subscribeToMessages] Processed messages:",
+          messages.length,
+        );
         callback(messages);
       },
       (error) => {
@@ -343,10 +349,13 @@ export function subscribeToUserChats(
   callback: (chats: Chat[]) => void,
 ): Unsubscribe {
   try {
-    console.log("[subscribeToUserChats] Setting up subscription for user:", userId);
+    console.log(
+      "[subscribeToUserChats] Setting up subscription for user:",
+      userId,
+    );
 
     const db = getFirestoreInstance();
-    
+
     // Query for chats where user is either requester or helper
     // Note: This requires creating two separate queries since Firestore doesn't support OR queries
     // For simplicity, we'll query for requester chats first
@@ -354,7 +363,7 @@ export function subscribeToUserChats(
       collection(db, CHATS_COLLECTION),
       where("requesterId", "==", userId),
     );
-    
+
     const q2 = query(
       collection(db, CHATS_COLLECTION),
       where("helperId", "==", userId),
