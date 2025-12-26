@@ -146,7 +146,10 @@ export default function RequestDetailScreen({
   };
 
   const handleAcceptRequest = async () => {
-    if (!user || !request) return;
+    if (!user || !request) {
+      console.log("[RequestDetail] Cannot accept: user or request is null");
+      return;
+    }
 
     // Check if user is trying to accept their own request
     if (user.uid === request.userId) {
@@ -171,6 +174,8 @@ export default function RequestDetailScreen({
         onPress: async () => {
           setAccepting(true);
           try {
+            console.log("[RequestDetail] Creating chat for request:", request.id);
+            
             // Create chat first
             const chatId = await createChat({
               requestId: request.id,
@@ -183,6 +188,8 @@ export default function RequestDetailScreen({
               accepterEmail: user.email || "",
             });
 
+            console.log("[RequestDetail] Chat created with ID:", chatId);
+
             // Update the help request with acceptance info
             await acceptHelpRequest(
               request.id,
@@ -192,26 +199,21 @@ export default function RequestDetailScreen({
               chatId,
             );
 
-            // Show success message and navigate to chat
-            Alert.alert(
-              t.requestAccepted,
-              t.requestAcceptedMessage,
-              [
-                {
-                  text: t.ok,
-                  onPress: () => {
-                    navigation.navigate("Chat", {
-                      chatId,
-                      requestId: request.id,
-                    });
-                  },
-                },
-              ],
-              { cancelable: false },
-            );
+            console.log("[RequestDetail] Request accepted, navigating to chat");
+
+            // Navigate directly to chat without showing intermediate alert
+            navigation.navigate("Chat", {
+              chatId,
+              requestId: request.id,
+            });
           } catch (error) {
-            console.error("Error accepting request:", error);
-            Alert.alert(t.error, t.failedToAcceptRequest);
+            console.error("[RequestDetail] Error accepting request:", error);
+            // Show detailed error for debugging
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            Alert.alert(
+              t.error, 
+              `${t.failedToAcceptRequest}\n\nDebug info: ${errorMessage}`
+            );
           } finally {
             setAccepting(false);
           }

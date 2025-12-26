@@ -200,17 +200,26 @@ export async function acceptHelpRequest(
   accepterEmail: string,
   chatId: string,
 ): Promise<void> {
-  const db = getFirestoreInstance();
-  const docRef = doc(db, COLLECTION_NAME, requestId);
+  try {
+    const db = getFirestoreInstance();
+    const docRef = doc(db, COLLECTION_NAME, requestId);
 
-  await updateDoc(docRef, {
-    status: "accepted",
-    acceptedBy: accepterId,
-    acceptedByName: accepterName,
-    acceptedByEmail: accepterEmail,
-    chatId,
-    updatedAt: Timestamp.now(),
-  });
+    console.log("[helpRequestService] Accepting request:", requestId);
+
+    await updateDoc(docRef, {
+      status: "accepted",
+      acceptedBy: accepterId,
+      acceptedByName: accepterName,
+      acceptedByEmail: accepterEmail,
+      chatId,
+      updatedAt: Timestamp.now(),
+    });
+
+    console.log("[helpRequestService] Request accepted successfully");
+  } catch (error) {
+    console.error("[helpRequestService] Failed to accept request:", error);
+    throw error;
+  }
 }
 
 /**

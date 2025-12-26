@@ -54,12 +54,25 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
 
   useEffect(() => {
     if (!chatId) {
+      console.error("[ChatScreen] Chat ID is missing");
       Alert.alert(t.error, "Chat ID is missing");
       navigation.goBack();
       return;
     }
 
+    console.log("[ChatScreen] Subscribing to chat:", chatId);
+
     const unsubscribe = subscribeToChat(chatId, (chatData) => {
+      if (chatData) {
+        console.log("[ChatScreen] Chat data received:", {
+          id: chatData.id,
+          messageCount: chatData.messages.length,
+          status: chatData.status,
+        });
+      } else {
+        console.warn("[ChatScreen] Chat data is null");
+      }
+      
       setChat(chatData);
       setLoading(false);
 
@@ -72,6 +85,7 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
     });
 
     return () => {
+      console.log("[ChatScreen] Unsubscribing from chat");
       unsubscribe();
     };
   }, [chatId, navigation, t.error]);

@@ -85,29 +85,40 @@ function documentToChat(id: string, data: DocumentData): Chat | null {
  * Create a new chat in Firestore
  */
 export async function createChat(chatData: CreateChatData): Promise<string> {
-  const db = getFirestoreInstance();
-  const now = Timestamp.now();
+  try {
+    const db = getFirestoreInstance();
+    const now = Timestamp.now();
 
-  const data = {
-    requestId: chatData.requestId,
-    requestTitle: chatData.requestTitle,
-    members: [chatData.requesterId, chatData.accepterId],
-    memberNames: {
-      [chatData.requesterId]: chatData.requesterName,
-      [chatData.accepterId]: chatData.accepterName,
-    },
-    memberEmails: {
-      [chatData.requesterId]: chatData.requesterEmail,
-      [chatData.accepterId]: chatData.accepterEmail,
-    },
-    messages: [],
-    status: "active",
-    createdAt: now,
-    updatedAt: now,
-  };
+    const data = {
+      requestId: chatData.requestId,
+      requestTitle: chatData.requestTitle,
+      members: [chatData.requesterId, chatData.accepterId],
+      memberNames: {
+        [chatData.requesterId]: chatData.requesterName,
+        [chatData.accepterId]: chatData.accepterName,
+      },
+      memberEmails: {
+        [chatData.requesterId]: chatData.requesterEmail,
+        [chatData.accepterId]: chatData.accepterEmail,
+      },
+      messages: [],
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    };
 
-  const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
-  return docRef.id;
+    console.log("[chatService] Creating chat with data:", {
+      requestId: data.requestId,
+      members: data.members,
+    });
+
+    const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
+    console.log("[chatService] Chat created successfully:", docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("[chatService] Failed to create chat:", error);
+    throw error;
+  }
 }
 
 /**
