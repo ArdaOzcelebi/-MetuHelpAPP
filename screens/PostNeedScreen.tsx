@@ -6,7 +6,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { addHelpRequest } from "@/src/firebase/firebaseconfig"; // Import Firestore helper
+import { addHelpRequest } from "@/src/firebase/firebaseConfig"; // Import Firestore helper
 import {
   Spacing,
   BorderRadius,
