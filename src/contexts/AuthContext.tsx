@@ -185,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const auth = getAuthInstance();
       await firebaseSignOut(auth);
-      // User state will be updated automatically by onAuthStateChanged listener
+      setUser(null);
     } catch (err) {
       const errorMessage = parseFirebaseError(err);
 

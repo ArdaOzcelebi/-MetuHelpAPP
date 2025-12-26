@@ -24,7 +24,7 @@ function AppContent() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer key={user ? "main" : "auth"}>
       {user ? <MainTabNavigator /> : <AuthStackNavigator />}
     </NavigationContainer>
   );
