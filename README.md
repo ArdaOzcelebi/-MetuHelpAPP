@@ -246,7 +246,19 @@ The following helper functions are exported from `firebaseConfig.js`:
 
 ### Testing Firebase Connection
 
-To verify your Firebase configuration is working correctly:
+#### Quick Configuration Check
+
+Before running the app, you can validate your Firebase configuration:
+
+```bash
+npm run test:firebase
+```
+
+This script checks that all required environment variables are set in your `.env.local` file.
+
+#### In-App Connection Test
+
+To verify Firebase is working correctly within your app:
 
 ```javascript
 import { testFirebaseConnection } from '@/src/firebase/firebaseConfig';

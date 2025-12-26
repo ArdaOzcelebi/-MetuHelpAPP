@@ -10,7 +10,8 @@
     "web": "npx expo start --web",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "check:format": "prettier --check \"**/*.{js,ts,tsx,css,json}\"",
-    "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\""
+    "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\"",
+    "test:firebase": "node scripts/test-firebase-connection.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
