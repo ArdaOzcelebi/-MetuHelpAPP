@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Pressable, Switch, Alert } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  Switch,
+  Alert,
+  Platform,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -29,24 +36,42 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
 
   const handleLogout = () => {
     console.log("[ProfileScreen] Logout button pressed");
-    Alert.alert(t.logOut, t.logOutConfirm, [
-      { text: t.cancel, style: "cancel" },
-      {
-        text: t.logOut,
-        style: "destructive",
-        onPress: async () => {
-          console.log("[ProfileScreen] User confirmed logout");
-          try {
-            await signOut();
-            console.log("[ProfileScreen] SignOut completed successfully");
-            // Navigation to login will be handled by App.tsx
-          } catch (error: any) {
-            console.error("[ProfileScreen] SignOut failed:", error);
-            Alert.alert(t.error, error.message || t.logoutFailed);
-          }
+
+    // Web platform doesn't support Alert.alert, use window.confirm instead
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(`${t.logOut}\n\n${t.logOutConfirm}`);
+      if (confirmed) {
+        console.log("[ProfileScreen] User confirmed logout");
+        performLogout();
+      }
+    } else {
+      Alert.alert(t.logOut, t.logOutConfirm, [
+        { text: t.cancel, style: "cancel" },
+        {
+          text: t.logOut,
+          style: "destructive",
+          onPress: async () => {
+            console.log("[ProfileScreen] User confirmed logout");
+            performLogout();
+          },
         },
-      },
-    ]);
+      ]);
+    }
+  };
+
+  const performLogout = async () => {
+    try {
+      await signOut();
+      console.log("[ProfileScreen] SignOut completed successfully");
+      // Navigation to login will be handled by App.tsx
+    } catch (error: any) {
+      console.error("[ProfileScreen] SignOut failed:", error);
+      if (Platform.OS === "web") {
+        window.alert(`${t.error}\n\n${error.message || t.logoutFailed}`);
+      } else {
+        Alert.alert(t.error, error.message || t.logoutFailed);
+      }
+    }
   };
 
   const getInitials = () => {
