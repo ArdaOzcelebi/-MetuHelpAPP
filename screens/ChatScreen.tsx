@@ -12,6 +12,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -45,7 +46,8 @@ function MessageBubble({ message, isOwn }: MessageBubbleProps) {
   const { theme, isDark } = useTheme();
 
   return (
-    <View
+    <Animated.View
+      entering={isOwn ? FadeInUp.duration(300) : FadeInDown.duration(300)}
       style={[
         styles.messageBubbleContainer,
         isOwn ? styles.ownMessageContainer : styles.otherMessageContainer,
@@ -92,7 +94,7 @@ function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           {formatMessageTime(message.createdAt)}
         </ThemedText>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -238,20 +240,30 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
               { backgroundColor: theme.backgroundDefault },
             ]}
           >
-            <ThemedText style={styles.chatHeaderTitle}>
-              {chat.requestTitle}
-            </ThemedText>
-            <ThemedText
-              style={[
-                styles.chatHeaderSubtitle,
-                { color: theme.textSecondary },
-              ]}
-            >
-              Chat with{" "}
-              {user?.uid === chat.requesterId
-                ? chat.helperName
-                : chat.requesterName}
-            </ThemedText>
+            <View style={{ flex: 1 }}>
+              <ThemedText style={styles.chatHeaderTitle}>
+                {chat.requestTitle}
+              </ThemedText>
+              <View style={styles.chatHeaderSubtitleContainer}>
+                <View
+                  style={[
+                    styles.onlineIndicator,
+                    { backgroundColor: METUColors.actionGreen },
+                  ]}
+                />
+                <ThemedText
+                  style={[
+                    styles.chatHeaderSubtitle,
+                    { color: theme.textSecondary },
+                  ]}
+                >
+                  Chat with{" "}
+                  {user?.uid === chat.requesterId
+                    ? chat.helperName
+                    : chat.requesterName}
+                </ThemedText>
+              </View>
+            </View>
           </View>
         )}
 
@@ -290,21 +302,45 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
             { backgroundColor: theme.backgroundDefault },
           ]}
         >
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: theme.cardBackground,
-                color: theme.text,
-              },
-            ]}
-            placeholder="Type a message..."
-            placeholderTextColor={theme.textSecondary}
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-            maxLength={500}
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.cardBackground,
+                  color: theme.text,
+                },
+              ]}
+              placeholder="Type a message..."
+              placeholderTextColor={theme.textSecondary}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              maxLength={500}
+              returnKeyType="send"
+              onSubmitEditing={() => {
+                if (inputText.trim() && !sending) {
+                  handleSend();
+                }
+              }}
+              blurOnSubmit={false}
+            />
+            {inputText.length > 400 && (
+              <ThemedText
+                style={[
+                  styles.charCounter,
+                  {
+                    color:
+                      inputText.length >= 500
+                        ? METUColors.alertRed
+                        : theme.textSecondary,
+                  },
+                ]}
+              >
+                {inputText.length}/500
+              </ThemedText>
+            )}
+          </View>
           <Pressable
             onPress={handleSend}
             disabled={!inputText.trim() || sending}
@@ -368,9 +404,19 @@ const styles = StyleSheet.create({
     fontSize: Typography.body.fontSize,
     fontWeight: "600",
   },
+  chatHeaderSubtitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2,
+  },
+  onlineIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: Spacing.xs,
+  },
   chatHeaderSubtitle: {
     fontSize: Typography.small.fontSize,
-    marginTop: 2,
   },
   messagesList: {
     padding: Spacing.md,
@@ -421,6 +467,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "rgba(0, 0, 0, 0.1)",
   },
+  inputWrapper: {
+    flex: 1,
+    position: "relative",
+  },
   input: {
     flex: 1,
     minHeight: 40,
@@ -430,6 +480,13 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     marginRight: Spacing.sm,
     fontSize: Typography.body.fontSize,
+  },
+  charCounter: {
+    position: "absolute",
+    bottom: 4,
+    right: Spacing.md + Spacing.sm,
+    fontSize: 10,
+    fontWeight: "500",
   },
   sendButton: {
     width: 40,

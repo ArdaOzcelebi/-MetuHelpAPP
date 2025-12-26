@@ -228,6 +228,14 @@ function RequestCard({
           },
         ]}
       >
+        {isOwnRequest && hasActiveChat && (
+          <Feather
+            name="message-circle"
+            size={14}
+            color="#FFFFFF"
+            style={{ marginRight: Spacing.xs }}
+          />
+        )}
         <ThemedText style={styles.helpButtonText}>
           {isOwnRequest && hasActiveChat ? openChatLabel : helpButtonLabel}
         </ThemedText>
