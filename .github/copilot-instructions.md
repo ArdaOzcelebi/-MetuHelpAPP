@@ -419,7 +419,7 @@ Currently, the project uses ESLint for code quality. When adding new features:
 
 1. Install dependencies: `npm install`
 2. Copy environment template: `cp .env.example .env.local`
-3. Add Firebase credentials to `.env.local` (all listed variables are safe for client-side code)
+3. Add Firebase credentials to `.env.local` (all `EXPO_PUBLIC_FIREBASE_*` variables are safe for client-side code)
 4. Test Firebase configuration: `npm run test:firebase`
 5. Start development server: `npm start`
 
