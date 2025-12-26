@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { StyleSheet, View, Pressable, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -253,39 +253,42 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const [loading, setLoading] = useState(true);
   const [chatsMap, setChatsMap] = useState<Map<string, string>>(new Map());
 
-  const checkActiveChats = async (requests: HelpRequest[]) => {
-    const newChatsMap = new Map<string, string>();
+  const checkActiveChats = useCallback(
+    async (requests: HelpRequest[]) => {
+      const newChatsMap = new Map<string, string>();
 
-    for (const request of requests) {
-      // Only check for chats on user's own requests
-      if (user && request.userId === user.uid) {
-        console.log(
-          "[NeedHelpScreen] Checking active chats for Request ID:",
-          request.id,
-        );
-        try {
-          const chat = await getChatByRequestId(request.id);
-          if (chat) {
-            console.log(
-              "[NeedHelpScreen] Found active chat for request:",
-              request.id,
-              "chatId:",
-              chat.id,
-            );
-            newChatsMap.set(request.id, chat.id);
-          }
-        } catch (error) {
-          console.error(
-            "[NeedHelpScreen] Error checking chat for request:",
+      for (const request of requests) {
+        // Only check for chats on user's own requests
+        if (user && request.userId === user.uid) {
+          console.log(
+            "[NeedHelpScreen] Checking active chats for Request ID:",
             request.id,
-            error,
           );
+          try {
+            const chat = await getChatByRequestId(request.id);
+            if (chat) {
+              console.log(
+                "[NeedHelpScreen] Found active chat for request:",
+                request.id,
+                "chatId:",
+                chat.id,
+              );
+              newChatsMap.set(request.id, chat.id);
+            }
+          } catch (error) {
+            console.error(
+              "[NeedHelpScreen] Error checking chat for request:",
+              request.id,
+              error,
+            );
+          }
         }
       }
-    }
 
-    setChatsMap(newChatsMap);
-  };
+      setChatsMap(newChatsMap);
+    },
+    [user],
+  );
 
   useEffect(() => {
     console.log(
@@ -319,8 +322,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       console.log("[NeedHelpScreen] Cleaning up subscription");
       unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, user]);
+  }, [selectedCategory, user, checkActiveChats]);
 
   const CATEGORIES = [
     { id: "all", label: t.all, icon: "grid" },

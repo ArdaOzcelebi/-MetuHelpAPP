@@ -157,11 +157,6 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       );
       setMessages(newMessages);
       setLoading(false);
-
-      // Auto-scroll to bottom when new messages arrive
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
     });
 
     return () => {
@@ -276,9 +271,18 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
             <MessageBubble message={item} isOwn={item.senderId === user?.uid} />
           )}
           contentContainerStyle={styles.messagesList}
-          onContentSizeChange={() =>
-            flatListRef.current?.scrollToEnd({ animated: false })
-          }
+          onContentSizeChange={() => {
+            // Scroll to bottom when content size changes (new messages)
+            if (messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }
+          }}
+          onLayout={() => {
+            // Initial scroll to bottom when list is first laid out
+            if (messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }
+          }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Feather

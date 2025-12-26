@@ -60,13 +60,27 @@ const CHATS_COLLECTION = "chats";
 const MESSAGES_SUBCOLLECTION = "messages";
 
 /**
+ * Type for Firestore timestamp objects
+ */
+type FirestoreTimestamp =
+  | Timestamp
+  | { seconds: number; nanoseconds?: number; toDate?: () => Date }
+  | null
+  | undefined;
+
+/**
  * Convert Firestore timestamp to Date
  */
-function convertTimestamp(timestamp: any): Date {
+function convertTimestamp(timestamp: FirestoreTimestamp): Date {
   if (timestamp?.toDate && typeof timestamp.toDate === "function") {
     return timestamp.toDate();
   }
-  if (timestamp?.seconds && typeof timestamp.seconds === "number") {
+  if (
+    timestamp &&
+    typeof timestamp === "object" &&
+    "seconds" in timestamp &&
+    typeof timestamp.seconds === "number"
+  ) {
     return new Date(timestamp.seconds * 1000);
   }
   return new Date();
