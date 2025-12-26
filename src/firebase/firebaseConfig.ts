@@ -1,17 +1,20 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
 
 /**
  * Safe firebaseConfig for Expo (web + native):
  * - Does NOT initialize Firebase at module import time.
  * - Exports getAuthInstance() which initializes (idempotent) and returns Auth (throws if missing config).
  * - Exports getAuthIfAvailable() which returns the Auth instance or undefined (does not throw).
+ * - Exports getFirestoreInstance() which initializes (idempotent) and returns Firestore.
  *
  * Reads values directly from process.env.EXPO_PUBLIC_* variables.
  */
 
 let firebaseApp: FirebaseApp | undefined;
 let authInstance: Auth | undefined;
+let firestoreInstance: Firestore | undefined;
 
 function log(...args: any[]) {
   console.log("[firebaseConfig]", ...args);
@@ -77,6 +80,34 @@ export function getAuthInstance(): Auth {
  */
 export function getAuthIfAvailable(): Auth | undefined {
   return authInstance;
+}
+
+/**
+ * Return the Firestore instance if already initialized, otherwise undefined.
+ */
+export function getFirestoreIfAvailable(): Firestore | undefined {
+  return firestoreInstance;
+}
+
+/**
+ * Initialize Firebase (idempotent) and return Firestore.
+ * Throws an Error if apiKey is missing.
+ */
+export function getFirestoreInstance(): Firestore {
+  if (firestoreInstance) return firestoreInstance;
+
+  // Ensure Firebase app is initialized first
+  if (!firebaseApp) {
+    getAuthInstance(); // This will initialize the app
+  }
+
+  if (!firebaseApp) {
+    throw new Error("Firebase app not initialized");
+  }
+
+  firestoreInstance = getFirestore(firebaseApp);
+  log("✓ Firestore instance ready");
+  return firestoreInstance;
 }
 
 /**

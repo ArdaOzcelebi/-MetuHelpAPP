@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, View, Pressable, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -19,63 +19,28 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
+import { subscribeToHelpRequests } from "@/src/services/helpRequestService";
+import type { HelpRequest } from "@/src/types/helpRequest";
 
 type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
 };
 
-const MOCK_REQUESTS = [
-  {
-    id: "1",
-    titleEn: "Need 1 Bandage",
-    titleTr: "1 Bandaj Lazim",
-    category: "medical",
-    locationEn: "Near Library",
-    locationTr: "Kutuphane Yakininda",
-    time: "5 min",
-    urgent: true,
-  },
-  {
-    id: "2",
-    titleEn: "Need Pain Reliever",
-    titleTr: "Agri Kesici Lazim",
-    category: "medical",
-    locationEn: "Engineering Building",
-    locationTr: "Muhendislik Binasi",
-    time: "12 min",
-    urgent: true,
-  },
-  {
-    id: "3",
-    titleEn: "Need a Phone Charger (USB-C)",
-    titleTr: "Telefon Sarj Aleti (USB-C) Lazim",
-    category: "other",
-    locationEn: "Student Center",
-    locationTr: "Ogrenci Merkezi",
-    time: "18 min",
-    urgent: false,
-  },
-  {
-    id: "4",
-    titleEn: "Looking for Ride to Kizilay",
-    titleTr: "Kizilay'a Arac Ariyorum",
-    category: "transport",
-    locationEn: "Main Gate",
-    locationTr: "Ana Kapi",
-    time: "25 min",
-    urgent: false,
-  },
-  {
-    id: "5",
-    titleEn: "Need Calculator for Exam",
-    titleTr: "Sinav icin Hesap Makinesi Lazim",
-    category: "academic",
-    locationEn: "Physics Building",
-    locationTr: "Fizik Binasi",
-    time: "32 min",
-    urgent: true,
-  },
-];
+/**
+ * Calculate time difference from now
+ */
+function getTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} min`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hr`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays > 1 ? "s" : ""}`;
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -253,8 +218,27 @@ function RequestCard({
 
 export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { isDark } = useTheme();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+
+    // Type-safe category filtering
+    const categoryFilter =
+      selectedCategory === "all"
+        ? undefined
+        : (selectedCategory as HelpRequestCategory);
+
+    const unsubscribe = subscribeToHelpRequests((requests) => {
+      setHelpRequests(requests);
+      setLoading(false);
+    }, categoryFilter);
+
+    return () => unsubscribe();
+  }, [selectedCategory]);
 
   const CATEGORIES = [
     { id: "all", label: t.all, icon: "grid" },
@@ -266,8 +250,8 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
 
   const filteredRequests =
     selectedCategory === "all"
-      ? MOCK_REQUESTS
-      : MOCK_REQUESTS.filter((req) => req.category === selectedCategory);
+      ? helpRequests
+      : helpRequests.filter((req) => req.category === selectedCategory);
 
   return (
     <ScreenScrollView>
@@ -290,26 +274,34 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       </View>
 
       <View style={styles.requestsList}>
-        {filteredRequests.map((request) => (
-          <RequestCard
-            key={request.id}
-            title={language === "en" ? request.titleEn : request.titleTr}
-            category={request.category}
-            location={
-              language === "en" ? request.locationEn : request.locationTr
-            }
-            time={request.time}
-            urgent={request.urgent}
-            urgentLabel={t.urgent}
-            helpButtonLabel={t.iCanHelp}
-            onPress={() =>
-              navigation.navigate("RequestDetail", { requestId: request.id })
-            }
-            onHelp={() => {
-              navigation.navigate("RequestDetail", { requestId: request.id });
-            }}
-          />
-        ))}
+        {loading ? (
+          <ThemedText style={{ textAlign: "center", marginTop: Spacing.xl }}>
+            Loading requests...
+          </ThemedText>
+        ) : filteredRequests.length === 0 ? (
+          <ThemedText style={{ textAlign: "center", marginTop: Spacing.xl }}>
+            No active requests found
+          </ThemedText>
+        ) : (
+          filteredRequests.map((request) => (
+            <RequestCard
+              key={request.id}
+              title={request.title}
+              category={request.category}
+              location={request.location}
+              time={getTimeAgo(request.createdAt)}
+              urgent={request.urgent}
+              urgentLabel={t.urgent}
+              helpButtonLabel={t.iCanHelp}
+              onPress={() =>
+                navigation.navigate("RequestDetail", { requestId: request.id })
+              }
+              onHelp={() => {
+                navigation.navigate("RequestDetail", { requestId: request.id });
+              }}
+            />
+          ))
+        )}
       </View>
 
       <Pressable

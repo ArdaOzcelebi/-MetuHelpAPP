@@ -6,6 +6,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/src/contexts/AuthContext";
 import {
   Spacing,
   BorderRadius,
@@ -13,58 +15,109 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
+import { createHelpRequest } from "@/src/services/helpRequestService";
+import type { HelpRequestCategory } from "@/src/types/helpRequest";
 
 type PostNeedScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "PostNeed">;
 };
 
 const CATEGORIES = [
-  { id: "medical", label: "Medical", icon: "activity" },
-  { id: "academic", label: "Academic", icon: "book" },
-  { id: "transport", label: "Transport", icon: "navigation" },
-  { id: "other", label: "Other", icon: "help-circle" },
+  { id: "medical", labelEn: "Medical", labelTr: "Sağlık", icon: "activity" },
+  { id: "academic", labelEn: "Academic", labelTr: "Akademik", icon: "book" },
+  {
+    id: "transport",
+    labelEn: "Transport",
+    labelTr: "Ulaşım",
+    icon: "navigation",
+  },
+  { id: "other", labelEn: "Other", labelTr: "Diğer", icon: "help-circle" },
 ] as const;
 
 const LOCATIONS = [
-  "Library",
-  "Student Center",
-  "Engineering Building",
-  "Physics Building",
-  "Main Gate",
-  "Cafeteria",
-  "Dormitory Area",
-  "Sports Complex",
-  "Other",
+  { id: "library", labelEn: "Library", labelTr: "Kütüphane" },
+  {
+    id: "student_center",
+    labelEn: "Student Center",
+    labelTr: "Öğrenci Merkezi",
+  },
+  {
+    id: "engineering",
+    labelEn: "Engineering Building",
+    labelTr: "Mühendislik Binası",
+  },
+  { id: "physics", labelEn: "Physics Building", labelTr: "Fizik Binası" },
+  { id: "main_gate", labelEn: "Main Gate", labelTr: "Ana Kapı" },
+  { id: "cafeteria", labelEn: "Cafeteria", labelTr: "Kafeterya" },
+  { id: "dormitory", labelEn: "Dormitory Area", labelTr: "Yurt Bölgesi" },
+  {
+    id: "sports_complex",
+    labelEn: "Sports Complex",
+    labelTr: "Spor Kompleksi",
+  },
+  { id: "other", labelEn: "Other", labelTr: "Diğer" },
 ] as const;
 
 export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
   const { theme, isDark } = useTheme();
+  const { t, language } = useLanguage();
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<HelpRequestCategory | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [details, setDetails] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
+  const [isReturnNeeded, setIsReturnNeeded] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const isValid = title.length > 0 && selectedCategory && selectedLocation;
 
-  const handlePost = () => {
-    if (!isValid) return;
+  const handlePost = async () => {
+    if (!isValid || submitting) return;
 
-    Alert.alert(
-      "Request Posted!",
-      "Your request has been posted. Fellow students will be notified.",
-      [
+    if (!user) {
+      Alert.alert(t.error, t.mustBeLoggedIn);
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const userName =
+        user.displayName || user.email?.split("@")[0] || "Anonymous";
+
+      await createHelpRequest(
         {
-          text: "OK",
+          title,
+          category: selectedCategory!,
+          description: details,
+          location: selectedLocation!,
+          isReturnNeeded,
+          urgent: isUrgent,
+        },
+        user.uid,
+        user.email || "",
+        userName,
+      );
+
+      Alert.alert(t.requestPosted, t.requestPostedMessage, [
+        {
+          text: t.ok,
           onPress: () => navigation.goBack(),
         },
-      ],
-    );
+      ]);
+    } catch (error) {
+      console.error("Error posting request:", error);
+      Alert.alert(t.error, t.failedToPostRequest, [{ text: t.ok }]);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <ScreenKeyboardAwareScrollView>
-      <ThemedText style={styles.sectionLabel}>What do you need?</ThemedText>
+      <ThemedText style={styles.sectionLabel}>{t.whatDoYouNeed}</ThemedText>
       <TextInput
         style={[
           styles.titleInput,
@@ -73,7 +126,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
             color: theme.text,
           },
         ]}
-        placeholder="e.g., Need 1 Bandage"
+        placeholder={t.itemNamePlaceholder}
         placeholderTextColor={theme.textSecondary}
         value={title}
         onChangeText={(text) => setTitle(text.slice(0, 60))}
@@ -83,12 +136,12 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
         {title.length}/60
       </ThemedText>
 
-      <ThemedText style={styles.sectionLabel}>Category</ThemedText>
+      <ThemedText style={styles.sectionLabel}>{t.category}</ThemedText>
       <View style={styles.categoriesGrid}>
         {CATEGORIES.map((cat) => (
           <Pressable
             key={cat.id}
-            onPress={() => setSelectedCategory(cat.id)}
+            onPress={() => setSelectedCategory(cat.id as HelpRequestCategory)}
             style={[
               styles.categoryCard,
               {
@@ -114,23 +167,26 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
                 },
               ]}
             >
-              {cat.label}
+              {language === "en" ? cat.labelEn : cat.labelTr}
             </ThemedText>
           </Pressable>
         ))}
       </View>
 
-      <ThemedText style={styles.sectionLabel}>Location</ThemedText>
+      <ThemedText style={styles.sectionLabel}>{t.location}</ThemedText>
       <View style={styles.locationsGrid}>
         {LOCATIONS.map((loc) => (
           <Pressable
-            key={loc}
-            onPress={() => setSelectedLocation(loc)}
+            key={loc.id}
+            onPress={() =>
+              setSelectedLocation(language === "en" ? loc.labelEn : loc.labelTr)
+            }
             style={[
               styles.locationChip,
               {
                 backgroundColor:
-                  selectedLocation === loc
+                  selectedLocation ===
+                  (language === "en" ? loc.labelEn : loc.labelTr)
                     ? isDark
                       ? "#CC3333"
                       : METUColors.maroon
@@ -142,19 +198,21 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
               style={[
                 styles.locationText,
                 {
-                  color: selectedLocation === loc ? "#FFFFFF" : theme.text,
+                  color:
+                    selectedLocation ===
+                    (language === "en" ? loc.labelEn : loc.labelTr)
+                      ? "#FFFFFF"
+                      : theme.text,
                 },
               ]}
             >
-              {loc}
+              {language === "en" ? loc.labelEn : loc.labelTr}
             </ThemedText>
           </Pressable>
         ))}
       </View>
 
-      <ThemedText style={styles.sectionLabel}>
-        Additional Details (Optional)
-      </ThemedText>
+      <ThemedText style={styles.sectionLabel}>{t.additionalDetails}</ThemedText>
       <TextInput
         style={[
           styles.detailsInput,
@@ -163,7 +221,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
             color: theme.text,
           },
         ]}
-        placeholder="Any extra info that might help..."
+        placeholder={t.additionalDetailsPlaceholder}
         placeholderTextColor={theme.textSecondary}
         value={details}
         onChangeText={setDetails}
@@ -171,6 +229,65 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
         numberOfLines={3}
         textAlignVertical="top"
       />
+
+      <Pressable
+        onPress={() => setIsReturnNeeded(!isReturnNeeded)}
+        style={[
+          styles.urgentToggle,
+          {
+            backgroundColor: isReturnNeeded
+              ? "rgba(16, 185, 129, 0.1)"
+              : theme.backgroundDefault,
+            borderColor: isReturnNeeded
+              ? METUColors.actionGreen
+              : "transparent",
+          },
+        ]}
+      >
+        <View style={styles.urgentToggleContent}>
+          <Feather
+            name="rotate-ccw"
+            size={20}
+            color={
+              isReturnNeeded ? METUColors.actionGreen : theme.textSecondary
+            }
+          />
+          <View style={styles.urgentToggleText}>
+            <ThemedText
+              style={[
+                styles.urgentLabel,
+                {
+                  color: isReturnNeeded ? METUColors.actionGreen : theme.text,
+                },
+              ]}
+            >
+              {t.isReturnNeeded}
+            </ThemedText>
+            <ThemedText
+              style={[styles.urgentHint, { color: theme.textSecondary }]}
+            >
+              {t.returnNeededHint}
+            </ThemedText>
+          </View>
+        </View>
+        <View
+          style={[
+            styles.checkbox,
+            {
+              backgroundColor: isReturnNeeded
+                ? METUColors.actionGreen
+                : "transparent",
+              borderColor: isReturnNeeded
+                ? METUColors.actionGreen
+                : theme.textSecondary,
+            },
+          ]}
+        >
+          {isReturnNeeded ? (
+            <Feather name="check" size={14} color="#FFFFFF" />
+          ) : null}
+        </View>
+      </Pressable>
 
       <Pressable
         onPress={() => setIsUrgent(!isUrgent)}
@@ -197,12 +314,12 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
                 { color: isUrgent ? METUColors.alertRed : theme.text },
               ]}
             >
-              Mark as Urgent
+              {t.markAsUrgent}
             </ThemedText>
             <ThemedText
               style={[styles.urgentHint, { color: theme.textSecondary }]}
             >
-              Use only for time-sensitive requests
+              {t.urgentHint}
             </ThemedText>
           </View>
         </View>
@@ -221,24 +338,27 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
 
       <Pressable
         onPress={handlePost}
-        disabled={!isValid}
+        disabled={!isValid || submitting}
         style={({ pressed }) => [
           styles.postButton,
           {
-            backgroundColor: isValid
-              ? METUColors.actionGreen
-              : theme.backgroundSecondary,
-            opacity: pressed && isValid ? 0.9 : 1,
+            backgroundColor:
+              isValid && !submitting
+                ? METUColors.actionGreen
+                : theme.backgroundSecondary,
+            opacity: pressed && isValid && !submitting ? 0.9 : 1,
           },
         ]}
       >
         <ThemedText
           style={[
             styles.postButtonText,
-            { color: isValid ? "#FFFFFF" : theme.textSecondary },
+            {
+              color: isValid && !submitting ? "#FFFFFF" : theme.textSecondary,
+            },
           ]}
         >
-          Post Request
+          {submitting ? t.posting : t.postRequest}
         </ThemedText>
       </Pressable>
     </ScreenKeyboardAwareScrollView>
