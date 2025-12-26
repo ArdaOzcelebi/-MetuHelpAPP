@@ -10,7 +10,7 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { fetchHelpRequestsRealTime } from "@/src/firebase/firebaseconfig"; // Firebase helper
+import { fetchHelpRequestsRealTime } from "@/src/firebase/firebaseConfig"; // Firebase helper
 import {
   Spacing,
   BorderRadius,
