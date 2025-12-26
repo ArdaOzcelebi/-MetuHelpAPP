@@ -148,80 +148,161 @@ export default function RequestDetailScreen({
   };
 
   const handleAcceptRequest = async () => {
+    console.log("[RequestDetail] handleAcceptRequest called");
+    
     if (!user || !request) {
-      console.log("[RequestDetail] Cannot accept: user or request is null");
+      console.log("[RequestDetail] Cannot accept: user or request is null", {
+        hasUser: !!user,
+        hasRequest: !!request,
+      });
       return;
     }
 
+    console.log("[RequestDetail] Validation checks...", {
+      userUid: user.uid,
+      requestUserId: request.userId,
+      requestStatus: request.status,
+    });
+
     // Check if user is trying to accept their own request
     if (user.uid === request.userId) {
+      console.log("[RequestDetail] User is trying to accept own request");
       Alert.alert(t.error, t.cannotAcceptOwnRequest);
       return;
     }
 
     // Check if request is already accepted
     if (request.status === "accepted" || request.status === "finalized") {
+      console.log("[RequestDetail] Request already accepted/finalized");
       Alert.alert(t.error, t.requestAlreadyAccepted);
       return;
     }
 
-    // Show confirmation dialog
-    Alert.alert(t.acceptConfirm, t.acceptConfirmMessage, [
-      {
-        text: t.cancel,
-        style: "cancel",
-      },
-      {
-        text: t.acceptRequest,
-        onPress: async () => {
-          setAccepting(true);
-          try {
-            console.log("[RequestDetail] Creating chat for request:", request.id);
-            
-            // Create chat first
-            const chatId = await createChat({
-              requestId: request.id,
-              requestTitle: request.title,
-              requesterId: request.userId,
-              requesterName: request.userName,
-              requesterEmail: request.userEmail,
-              accepterId: user.uid,
-              accepterName: user.displayName || user.email || "Unknown",
-              accepterEmail: user.email || "",
-            });
+    console.log("[RequestDetail] Showing confirmation dialog...");
+    
+    // For web compatibility: use window.confirm instead of Alert.alert with buttons
+    if (typeof window !== "undefined" && window.confirm) {
+      const confirmed = window.confirm(
+        `${t.acceptConfirm}\n\n${t.acceptConfirmMessage}`,
+      );
+      
+      if (!confirmed) {
+        console.log("[RequestDetail] User cancelled acceptance");
+        return;
+      }
+      
+      console.log("[RequestDetail] User confirmed, proceeding with acceptance");
+      setAccepting(true);
+      
+      try {
+        console.log("[RequestDetail] Creating chat for request:", request.id);
 
-            console.log("[RequestDetail] Chat created with ID:", chatId);
+        // Create chat first
+        const chatId = await createChat({
+          requestId: request.id,
+          requestTitle: request.title,
+          requesterId: request.userId,
+          requesterName: request.userName,
+          requesterEmail: request.userEmail,
+          accepterId: user.uid,
+          accepterName: user.displayName || user.email || "Unknown",
+          accepterEmail: user.email || "",
+        });
 
-            // Update the help request with acceptance info
-            await acceptHelpRequest(
-              request.id,
-              user.uid,
-              user.displayName || user.email || "Unknown",
-              user.email || "",
-              chatId,
-            );
+        console.log("[RequestDetail] Chat created with ID:", chatId);
 
-            console.log("[RequestDetail] Request accepted, navigating to chat");
+        // Update the help request with acceptance info
+        await acceptHelpRequest(
+          request.id,
+          user.uid,
+          user.displayName || user.email || "Unknown",
+          user.email || "",
+          chatId,
+        );
 
-            // Navigate directly to chat without showing intermediate alert
-            navigation.navigate("Chat", {
-              chatId,
-              requestId: request.id,
-            });
-          } catch (error) {
-            console.error("[RequestDetail] Error accepting request:", error);
-            // Show detailed error for debugging
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            Alert.alert(
-              t.error, 
-              `${t.failedToAcceptRequest}\n\nDebug info: ${errorMessage}`
-            );
-          } finally {
-            setAccepting(false);
-          }
+        console.log("[RequestDetail] Request accepted, navigating to chat");
+
+        // Navigate directly to chat
+        navigation.navigate("Chat", {
+          chatId,
+          requestId: request.id,
+        });
+      } catch (error) {
+        console.error("[RequestDetail] Error accepting request:", error);
+        // Show detailed error for debugging
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        alert(`${t.failedToAcceptRequest}\n\nDebug info: ${errorMessage}`);
+      } finally {
+        setAccepting(false);
+      }
+    } else {
+      // Fallback for mobile: use Alert.alert
+      Alert.alert(t.acceptConfirm, t.acceptConfirmMessage, [
+        {
+          text: t.cancel,
+          style: "cancel",
+          onPress: () => {
+            console.log("[RequestDetail] User cancelled acceptance");
+          },
         },
-      },
-    ]);
+        {
+          text: t.acceptRequest,
+          onPress: async () => {
+            console.log("[RequestDetail] User confirmed, proceeding with acceptance");
+            setAccepting(true);
+            try {
+              console.log(
+                "[RequestDetail] Creating chat for request:",
+                request.id,
+              );
+
+              // Create chat first
+              const chatId = await createChat({
+                requestId: request.id,
+                requestTitle: request.title,
+                requesterId: request.userId,
+                requesterName: request.userName,
+                requesterEmail: request.userEmail,
+                accepterId: user.uid,
+                accepterName: user.displayName || user.email || "Unknown",
+                accepterEmail: user.email || "",
+              });
+
+              console.log("[RequestDetail] Chat created with ID:", chatId);
+
+              // Update the help request with acceptance info
+              await acceptHelpRequest(
+                request.id,
+                user.uid,
+                user.displayName || user.email || "Unknown",
+                user.email || "",
+                chatId,
+              );
+
+              console.log("[RequestDetail] Request accepted, navigating to chat");
+
+              // Navigate directly to chat without showing intermediate alert
+              navigation.navigate("Chat", {
+                chatId,
+                requestId: request.id,
+              });
+            } catch (error) {
+              console.error("[RequestDetail] Error accepting request:", error);
+              // Show detailed error for debugging
+              const errorMessage =
+                error instanceof Error ? error.message : String(error);
+              Alert.alert(
+                t.error,
+                `${t.failedToAcceptRequest}\n\nDebug info: ${errorMessage}`,
+              );
+            } finally {
+              setAccepting(false);
+            }
+          },
+        },
+      ]);
+    }
   };
 
   const handleOpenChat = async () => {
