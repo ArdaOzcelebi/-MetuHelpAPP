@@ -1,17 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Pressable, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { fetchHelpRequestsRealTime } from "@/src/firebase/firebaseconfig"; // Firebase helper
 import {
   Spacing,
   BorderRadius,
@@ -24,59 +23,6 @@ type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
 };
 
-const MOCK_REQUESTS = [
-  {
-    id: "1",
-    titleEn: "Need 1 Bandage",
-    titleTr: "1 Bandaj Lazim",
-    category: "medical",
-    locationEn: "Near Library",
-    locationTr: "Kutuphane Yakininda",
-    time: "5 min",
-    urgent: true,
-  },
-  {
-    id: "2",
-    titleEn: "Need Pain Reliever",
-    titleTr: "Agri Kesici Lazim",
-    category: "medical",
-    locationEn: "Engineering Building",
-    locationTr: "Muhendislik Binasi",
-    time: "12 min",
-    urgent: true,
-  },
-  {
-    id: "3",
-    titleEn: "Need a Phone Charger (USB-C)",
-    titleTr: "Telefon Sarj Aleti (USB-C) Lazim",
-    category: "other",
-    locationEn: "Student Center",
-    locationTr: "Ogrenci Merkezi",
-    time: "18 min",
-    urgent: false,
-  },
-  {
-    id: "4",
-    titleEn: "Looking for Ride to Kizilay",
-    titleTr: "Kizilay'a Arac Ariyorum",
-    category: "transport",
-    locationEn: "Main Gate",
-    locationTr: "Ana Kapi",
-    time: "25 min",
-    urgent: false,
-  },
-  {
-    id: "5",
-    titleEn: "Need Calculator for Exam",
-    titleTr: "Sinav icin Hesap Makinesi Lazim",
-    category: "academic",
-    locationEn: "Physics Building",
-    locationTr: "Fizik Binasi",
-    time: "32 min",
-    urgent: true,
-  },
-];
-
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface FilterChipProps {
@@ -84,6 +30,18 @@ interface FilterChipProps {
   icon: keyof typeof Feather.glyphMap;
   isSelected: boolean;
   onPress: () => void;
+}
+
+interface RequestCardProps {
+  title: string;
+  category: string;
+  location: string;
+  time: string;
+  urgent: boolean;
+  urgentLabel: string;
+  helpButtonLabel: string;
+  onPress: () => void;
+  onHelp: () => void;
 }
 
 function FilterChip({ label, icon, isSelected, onPress }: FilterChipProps) {
@@ -131,18 +89,6 @@ function FilterChip({ label, icon, isSelected, onPress }: FilterChipProps) {
       </ThemedText>
     </AnimatedPressable>
   );
-}
-
-interface RequestCardProps {
-  title: string;
-  category: string;
-  location: string;
-  time: string;
-  urgent: boolean;
-  urgentLabel: string;
-  helpButtonLabel: string;
-  onPress: () => void;
-  onHelp: () => void;
 }
 
 function RequestCard({
@@ -209,8 +155,8 @@ function RequestCard({
               urgent
                 ? METUColors.alertRed
                 : isDark
-                  ? "#FF6B6B"
-                  : METUColors.maroon
+                ? "#FF6B6B"
+                : METUColors.maroon
             }
           />
         </View>
@@ -255,6 +201,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { isDark } = useTheme();
   const { t, language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [helpRequests, setHelpRequests] = useState([]); // Firebase data state
 
   const CATEGORIES = [
     { id: "all", label: t.all, icon: "grid" },
@@ -264,10 +211,18 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
     { id: "other", label: t.other, icon: "help-circle" },
   ] as const;
 
+  useEffect(() => {
+    const unsubscribe = fetchHelpRequestsRealTime((data) => {
+      setHelpRequests(data); // Update state with live data
+    });
+
+    return () => unsubscribe(); // Clean up Firestore listener
+  }, []);
+
   const filteredRequests =
     selectedCategory === "all"
-      ? MOCK_REQUESTS
-      : MOCK_REQUESTS.filter((req) => req.category === selectedCategory);
+      ? helpRequests
+      : helpRequests.filter((req) => req.category === selectedCategory);
 
   return (
     <ScreenScrollView>
@@ -290,7 +245,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       </View>
 
       <View style={styles.requestsList}>
-        {filteredRequests.map((request) => (
+        {filteredRequests.map((request: any) => (
           <RequestCard
             key={request.id}
             title={language === "en" ? request.titleEn : request.titleTr}
