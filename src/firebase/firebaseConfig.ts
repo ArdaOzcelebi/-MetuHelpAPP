@@ -1,12 +1,86 @@
+// Import Firebase SDKs
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
-// 1. NEW: Import Firestore
-import { getFirestore, Firestore } from "firebase/firestore";
+import { getFirestore, Firestore, doc, writeBatch, collection, addDoc, getDocs, query, onSnapshot } from "firebase/firestore";
 
+// State for Firebase services
+let firebaseApp: FirebaseApp | undefined;
+let authInstance: Auth | undefined;
+let dbInstance: Firestore | undefined;
 
+// Logging utility
+function log(...args: any[]) {
+  console.log("[firebaseConfig]", ...args);
+}
 
-// Add Firestore operations for 'helpRequests' collection
-import { collection, addDoc, getDocs, query, onSnapshot } from "firebase/firestore";
+// Resolve configuration from environment variables
+function resolveConfig() {
+  const cfg = {
+    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? "",
+    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
+    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? "",
+    storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ?? undefined,
+    messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? undefined,
+    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? undefined,
+  } as const;
+
+  if (!cfg.apiKey) {
+    const msg =
+      "Firebase API key is missing. Ensure EXPO_PUBLIC_FIREBASE_API_KEY is set correctly in .env.local.";
+    log("ERROR:", msg);
+    throw new Error(msg);
+  }
+
+  return cfg;
+}
+
+// Initialize Firebase (idempotent)
+function ensureAppInitialized(): FirebaseApp {
+  if (firebaseApp) return firebaseApp;
+
+  const config = resolveConfig();
+
+  if (!getApps().length) {
+    log("Initializing Firebase app with config...");
+    firebaseApp = initializeApp(config);
+    log("✓ Firebase app initialized successfully");
+  } else {
+    firebaseApp = getApps()[0];
+    log("✓ Using existing Firebase app");
+  }
+
+  return firebaseApp;
+}
+
+// Get Firebase Auth instance
+export function getAuthInstance(): Auth {
+  if (authInstance) return authInstance;
+
+  const app = ensureAppInitialized();
+  authInstance = getAuth(app);
+  log("✓ Auth instance ready");
+  return authInstance;
+}
+
+// Get Firestore Database instance
+export function getDbInstance(): Firestore {
+  if (dbInstance) return dbInstance;
+
+  const app = ensureAppInitialized();
+  dbInstance = getFirestore(app);
+  log("✓ Firestore instance ready");
+  return dbInstance;
+}
+
+// Return Auth instance if initialized
+export function getAuthIfAvailable(): Auth | undefined {
+  return authInstance;
+}
+
+// Check if Firebase configuration is available
+export const hasFirebaseConfig = Boolean(process.env.EXPO_PUBLIC_FIREBASE_API_KEY);
+
+// Firestore helper functions
 
 /**
  * Fetch all active Help Requests in real-time.
@@ -16,7 +90,6 @@ export function fetchHelpRequestsRealTime(callback: (data: any[]) => void) {
   const db = getDbInstance();
   const helpRequestsRef = collection(db, "helpRequests");
 
-  // Listen to changes in the helpRequests collection
   const q = query(helpRequestsRef);
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const data = snapshot.docs.map((doc) => ({
@@ -49,9 +122,9 @@ export async function addHelpRequest(helpRequest: {
       createdAt: new Date(),
       status: "active", // Default status for a new request
     });
-    console.log("Help request added successfully.");
+    log("✓ Help request added successfully.");
   } catch (error) {
-    console.error("Error adding help request:", error);
+    log("ERROR: Failed to add help request:", error);
     throw error;
   }
 }
@@ -71,109 +144,40 @@ export async function fetchHelpRequests() {
     }));
     return data;
   } catch (error) {
-    console.error("Error fetching help requests:", error);
+    log("ERROR: Failed to fetch help requests:", error);
     throw error;
   }
 }
-/**
- * Safe firebaseConfig for Expo (web + native):
- * - Does NOT initialize Firebase at module import time.
- * - Exports getAuthInstance() AND getDbInstance().
- * - Reads values directly from process.env.EXPO_PUBLIC_* variables.
- */
-
-let firebaseApp: FirebaseApp | undefined;
-let authInstance: Auth | undefined;
-let dbInstance: Firestore | undefined; // 2. NEW: Database state
-
-function log(...args: any[]) {
-  console.log("[firebaseConfig]", ...args);
-}
-
-function resolveConfig() {
-  const cfg = {
-    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? "",
-    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
-    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? "",
-    storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ?? undefined,
-    messagingSenderId:
-      process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? undefined,
-    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? undefined,
-  } as const;
-
-  return cfg;
-}
 
 /**
- * INTERNAL HELPER: Starts the Firebase App.
- * This logic used to be inside getAuthInstance, but we moved it here
- * so the Database can use it too.
+ * Bulk import predefined Help Requests into Firestore.
+ * Helpful for adding predefined locations/categories/documents.
  */
-function ensureAppInitialized(): FirebaseApp {
-  if (firebaseApp) return firebaseApp;
+export async function addBulkHelpRequests(helpRequests: {
+  item: string;
+  category: string;
+  description: string;
+  location: string;
+  needReturn: boolean;
+  isAnonymous: boolean;
+}[]) {
+  const db = getDbInstance();
+  const batch = writeBatch(db);
 
-  const config = resolveConfig();
+  try {
+    helpRequests.forEach((request) => {
+      const docRef = doc(collection(db, "helpRequests"));
+      batch.set(docRef, {
+        ...request,
+        createdAt: new Date(),
+        status: "active",
+      });
+    });
 
-  if (!config.apiKey) {
-    const msg =
-      "Firebase API key is missing. Check .env.local file and ensure EXPO_PUBLIC_FIREBASE_API_KEY is set";
-    log("ERROR:", msg);
-    throw new Error(msg);
+    await batch.commit();
+    log("✓ Bulk help requests added successfully.");
+  } catch (error) {
+    log("ERROR: Failed to add bulk requests:", error);
+    throw error;
   }
-
-  if (!getApps().length) {
-    log("Initializing Firebase app with config...");
-    firebaseApp = initializeApp(config);
-    log("✓ Firebase app initialized successfully");
-  } else {
-    firebaseApp = getApps()[0];
-    log("✓ Using existing Firebase app");
-  }
-
-  return firebaseApp;
 }
-
-/**
- * Initialize Firebase (idempotent) and return Auth.
- * (This works exactly the same as before, just calls the helper above)
- */
-export function getAuthInstance(): Auth {
-  if (authInstance) return authInstance;
-
-  // Debug logs (Moved here to keep your console clean)
-  const config = resolveConfig();
-  log("============ Firebase Configuration Debug ============");
-  log("Project ID:", config.projectId || "(undefined/empty)");
-  log("====================================================");
-
-  const app = ensureAppInitialized();
-  authInstance = getAuth(app);
-  log("✓ Auth instance ready");
-  return authInstance;
-}
-
-/**
- * 3. NEW: Initialize Firebase and return the Database (Firestore).
- */
-export function getDbInstance(): Firestore {
-  if (dbInstance) return dbInstance;
-
-  const app = ensureAppInitialized();
-  dbInstance = getFirestore(app);
-  log("✓ Firestore instance ready");
-  return dbInstance;
-}
-
-/**
- * Return the Auth instance if already initialized, otherwise undefined.
- */
-export function getAuthIfAvailable(): Auth | undefined {
-  return authInstance;
-}
-
-/**
- * Check if Firebase configuration is available.
- */
-export const hasFirebaseConfig = Boolean(
-  process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-);
