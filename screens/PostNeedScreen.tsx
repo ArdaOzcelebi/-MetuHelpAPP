@@ -69,6 +69,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
   const [details, setDetails] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
   const [isReturnNeeded, setIsReturnNeeded] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const isValid = title.length > 0 && selectedCategory && selectedLocation;
@@ -95,6 +96,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           location: selectedLocation!,
           isReturnNeeded,
           urgent: isUrgent,
+          isAnonymous,
         },
         user.uid,
         user.email || "",
@@ -333,6 +335,59 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           ]}
         >
           {isUrgent ? <Feather name="check" size={14} color="#FFFFFF" /> : null}
+        </View>
+      </Pressable>
+
+      <Pressable
+        onPress={() => setIsAnonymous(!isAnonymous)}
+        style={[
+          styles.urgentToggle,
+          {
+            backgroundColor: isAnonymous
+              ? "rgba(128, 128, 128, 0.1)"
+              : theme.backgroundDefault,
+            borderColor: isAnonymous ? theme.textSecondary : "transparent",
+          },
+        ]}
+      >
+        <View style={styles.urgentToggleContent}>
+          <Feather
+            name="user-x"
+            size={20}
+            color={isAnonymous ? theme.text : theme.textSecondary}
+          />
+          <View style={styles.urgentToggleText}>
+            <ThemedText
+              style={[
+                styles.urgentLabel,
+                { color: isAnonymous ? theme.text : theme.text },
+              ]}
+            >
+              {t.postAnonymously}
+            </ThemedText>
+            <ThemedText
+              style={[styles.urgentHint, { color: theme.textSecondary }]}
+            >
+              {t.anonymousHint}
+            </ThemedText>
+          </View>
+        </View>
+        <View
+          style={[
+            styles.checkbox,
+            {
+              backgroundColor: isAnonymous
+                ? theme.textSecondary
+                : "transparent",
+              borderColor: isAnonymous
+                ? theme.textSecondary
+                : theme.textSecondary,
+            },
+          ]}
+        >
+          {isAnonymous ? (
+            <Feather name="check" size={14} color="#FFFFFF" />
+          ) : null}
         </View>
       </Pressable>
 

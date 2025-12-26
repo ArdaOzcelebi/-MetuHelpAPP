@@ -20,7 +20,7 @@ import {
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { subscribeToHelpRequests } from "@/src/services/helpRequestService";
-import type { HelpRequest } from "@/src/types/helpRequest";
+import type { HelpRequest, HelpRequestCategory } from "@/src/types/helpRequest";
 
 type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
