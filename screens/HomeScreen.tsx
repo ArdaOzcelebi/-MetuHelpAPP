@@ -29,6 +29,34 @@ import {
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 
+
+import React, { useEffect } from "react";
+import { getFirestoreInstance } from "@/src/firebase/firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
+
+const NeedHelpScreen = () => {
+  useEffect(() => {
+    const testFirestore = async () => {
+      try {
+        const db = getFirestoreInstance();
+        const snapshot = await getDocs(collection(db, "helpRequests"));
+        snapshot.forEach((doc) => {
+          console.log("Firestore data:", doc.id, doc.data());
+        });
+      } catch (error) {
+        console.error("Error accessing Firestore:", error);
+      }
+    };
+
+    testFirestore();
+  }, []);
+
+  return null; // This component does not render anything for the test; replace with your UI if needed.
+};
+
+export default NeedHelpScreen;
+
+
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "Home">;
 };
