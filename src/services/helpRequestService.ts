@@ -236,6 +236,10 @@ export async function createHelpRequest(
  * - Existing requests are modified
  * - Requests are deleted or their status changes
  *
+ * NOTE: Results are sorted by createdAt (most recent first) on the client side
+ * to avoid requiring a Firestore composite index. This is more efficient for
+ * small to medium datasets and avoids the need to create and maintain indexes.
+ *
  * @param callback - Function called with updated array of help requests whenever data changes
  * @param category - Optional category filter. If provided, only requests of this category are returned
  * @returns Unsubscribe function to stop listening for updates
@@ -262,25 +266,25 @@ export function subscribeToHelpRequests(
 ): Unsubscribe {
   try {
     const db = getFirestoreInstance();
-    let q;
 
     console.log(
       "[subscribeToHelpRequests] Setting up subscription, category:",
       category || "all",
     );
 
+    // Simplified query without orderBy to avoid requiring composite index
+    // We'll sort on the client side instead
+    let q;
     if (category) {
       q = query(
         collection(db, COLLECTION_NAME),
         where("status", "==", "active"),
         where("category", "==", category),
-        orderBy("createdAt", "desc"),
       );
     } else {
       q = query(
         collection(db, COLLECTION_NAME),
         where("status", "==", "active"),
-        orderBy("createdAt", "desc"),
       );
     }
 
@@ -291,14 +295,20 @@ export function subscribeToHelpRequests(
           "[subscribeToHelpRequests] Snapshot received, document count:",
           snapshot.size,
         );
-        
+
         if (snapshot.metadata.fromCache) {
-          console.warn("[subscribeToHelpRequests] Data is from cache, not server");
+          console.warn(
+            "[subscribeToHelpRequests] Data is from cache, not server",
+          );
         }
-        
+
         const requests: HelpRequest[] = [];
         snapshot.forEach((doc) => {
-          console.log("[subscribeToHelpRequests] Processing document:", doc.id, doc.data());
+          console.log(
+            "[subscribeToHelpRequests] Processing document:",
+            doc.id,
+            doc.data(),
+          );
           const request = documentToHelpRequest(doc.id, doc.data());
           if (request) {
             requests.push(request);
@@ -311,8 +321,12 @@ export function subscribeToHelpRequests(
             );
           }
         });
+
+        // Sort by createdAt descending on client side (most recent first)
+        requests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
         console.log(
-          "[subscribeToHelpRequests] Processed requests:",
+          "[subscribeToHelpRequests] Processed and sorted requests:",
           requests.length,
         );
         callback(requests);
@@ -320,7 +334,27 @@ export function subscribeToHelpRequests(
       (error) => {
         console.error("[subscribeToHelpRequests] Subscription error:", error);
         console.error("[subscribeToHelpRequests] Error code:", error.code);
-        console.error("[subscribeToHelpRequests] Error message:", error.message);
+        console.error(
+          "[subscribeToHelpRequests] Error message:",
+          error.message,
+        );
+
+        // Check if it's an index error
+        if (
+          error.code === "failed-precondition" &&
+          error.message.includes("index")
+        ) {
+          console.error(
+            "[subscribeToHelpRequests] FIRESTORE INDEX REQUIRED:",
+          );
+          console.error(
+            "The query requires a composite index. This has been fixed by simplifying the query.",
+          );
+          console.error(
+            "If you see this error, the simplified query should work now.",
+          );
+        }
+
         callback([]);
       },
     );

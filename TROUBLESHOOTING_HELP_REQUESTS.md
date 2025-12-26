@@ -1,7 +1,31 @@
 # Troubleshooting Help Requests Not Appearing
 
+## ✅ FIXED: Composite Index Issue (Latest Update)
+
+**Issue Identified:** The query requiring a composite index has been **FIXED** by removing the `orderBy` from the Firestore query and sorting results on the client side instead.
+
+**What was changed:**
+- Removed `orderBy("createdAt", "desc")` from Firestore query
+- Added client-side sorting: `requests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())`
+- No Firestore index creation required anymore
+
+**Result:** Help requests should now appear immediately without any additional Firebase configuration!
+
+---
+
 ## Issue
 Help requests are successfully submitted but don't appear in the Find Help screen.
+
+## Quick Fix (If Still Not Working)
+
+If requests still don't appear after the latest update:
+
+1. **Clear browser cache and reload**
+2. **Log out and log back in**  
+3. **Check Firebase Console** to verify the document exists
+4. **Check console logs** for any remaining errors
+
+---
 
 ## Diagnostic Steps
 
@@ -27,9 +51,9 @@ Open the browser/app console and look for these log messages in sequence:
 [subscribeToHelpRequests] Setting up subscription, category: all
 [subscribeToHelpRequests] Snapshot received, document count: X
 [subscribeToHelpRequests] Processing document: [document-id] {...}
-[subscribeToHelpRequests] Processed requests: X
+[subscribeToHelpRequests] Processed and sorted requests: X
 [NeedHelpScreen] Received requests update, count: X
-[NeedHelpScreen] Received requests: [...]
+[NeedHelpScreen] Requests: [...]
 [NeedHelpScreen] Render - helpRequests count: X
 [NeedHelpScreen] Render - filteredRequests count: X
 ```
@@ -111,21 +135,13 @@ service cloud.firestore {
 - Check cleanup logs: `[NeedHelpScreen] Cleaning up subscription`
 - Ensure useEffect dependency array is correct `[selectedCategory]`
 
-### 3. Firestore Composite Index Required
+### 3. ~~Firestore Composite Index~~ (NO LONGER NEEDED - FIXED)
 
-If you see this error in console:
-```
-The query requires an index
-```
+**Previous Issue:** The query required a composite index for `status + createdAt`
 
-**Solution:**
-1. Click the link in the error message (auto-generates index)
-2. Or manually create in Firebase Console:
-   - Collection: `helpRequests`
-   - Fields indexed:
-     - status (Ascending)
-     - category (Ascending)  
-     - createdAt (Descending)
+**Current Status:** ✅ **FIXED** - Query has been simplified to not require any composite index. Sorting is now done on the client side.
+
+If you still see an index error (you shouldn't), it means you're using an older version of the code. Update to the latest commit.
 
 ### 4. Testing Checklist
 
