@@ -13,6 +13,7 @@ import { RouteProp } from "@react-navigation/native";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/src/contexts/AuthContext";
 import {
   Spacing,
   BorderRadius,
@@ -22,6 +23,7 @@ import {
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { getHelpRequest } from "@/src/services/helpRequestService";
 import type { HelpRequest } from "@/src/types/helpRequest";
+import { createChat, getChatByRequestId } from "@/src/services/chatService";
 
 type RequestDetailScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "RequestDetail">;
@@ -63,16 +65,26 @@ export default function RequestDetailScreen({
   route,
 }: RequestDetailScreenProps) {
   const { theme, isDark } = useTheme();
+  const { user } = useAuth();
   const { requestId } = route.params;
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
   const [request, setRequest] = useState<HelpRequest | null>(null);
   const [loading, setLoading] = useState(true);
+  const [offeringHelp, setOfferingHelp] = useState(false);
 
   useEffect(() => {
     const loadRequest = async () => {
       try {
         const data = await getHelpRequest(requestId);
         setRequest(data);
+
+        // Check if user has already offered help (chat exists)
+        if (user && data) {
+          const existingChat = await getChatByRequestId(requestId);
+          if (existingChat && existingChat.helperId === user.uid) {
+            setHasOfferedHelp(true);
+          }
+        }
       } catch (error) {
         console.error("Error loading request:", error);
         Alert.alert("Error", "Failed to load request details.");
@@ -82,7 +94,7 @@ export default function RequestDetailScreen({
     };
 
     loadRequest();
-  }, [requestId]);
+  }, [requestId, user]);
 
   if (loading) {
     return (
@@ -137,7 +149,12 @@ export default function RequestDetailScreen({
     }
   };
 
-  const handleOfferHelp = () => {
+  const handleOfferHelp = async () => {
+    if (!user || !request) {
+      Alert.alert("Error", "Unable to offer help at this time.");
+      return;
+    }
+
     if (hasOfferedHelp) {
       Alert.alert(
         "Already Offered",
@@ -146,13 +163,59 @@ export default function RequestDetailScreen({
       );
       return;
     }
-    setHasOfferedHelp(true);
-    const posterName = request.isAnonymous ? "this person" : request.userName;
-    Alert.alert(
-      "Help Offered!",
-      `Thank you for offering to help ${posterName}! They will be notified.`,
-      [{ text: "OK" }],
-    );
+
+    // Check if user is trying to help their own request
+    if (request.userId === user.uid) {
+      Alert.alert(
+        "Cannot Help",
+        "You cannot offer help on your own request.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
+    setOfferingHelp(true);
+
+    try {
+      // Check if a chat already exists
+      const existingChat = await getChatByRequestId(requestId);
+      
+      let chatId: string;
+      
+      if (existingChat) {
+        // Chat already exists, just navigate to it
+        chatId = existingChat.id;
+        console.log("[RequestDetailScreen] Using existing chat:", chatId);
+      } else {
+        // Create a new chat
+        console.log("[RequestDetailScreen] Creating new chat for request:", requestId);
+        chatId = await createChat({
+          requestId: request.id,
+          requestTitle: request.title,
+          requesterId: request.userId,
+          requesterName: request.userName,
+          requesterEmail: request.userEmail,
+          helperId: user.uid,
+          helperName: user.displayName || user.email || "Helper",
+          helperEmail: user.email || "",
+        });
+        console.log("[RequestDetailScreen] Chat created successfully:", chatId);
+      }
+
+      setHasOfferedHelp(true);
+
+      // Navigate to the chat screen
+      navigation.navigate("Chat", { chatId });
+    } catch (error) {
+      console.error("[RequestDetailScreen] Error offering help:", error);
+      Alert.alert(
+        "Error",
+        "Failed to create chat. Please try again.",
+        [{ text: "OK" }],
+      );
+    } finally {
+      setOfferingHelp(false);
+    }
   };
 
   const posterInitials = getUserInitials(request.userName, request.userEmail);
@@ -233,21 +296,26 @@ export default function RequestDetailScreen({
 
       <Pressable
         onPress={handleOfferHelp}
+        disabled={offeringHelp}
         style={({ pressed }) => [
           styles.helpButton,
           {
             backgroundColor: hasOfferedHelp
               ? theme.backgroundSecondary
               : METUColors.actionGreen,
-            opacity: pressed ? 0.9 : 1,
+            opacity: pressed || offeringHelp ? 0.9 : 1,
           },
         ]}
       >
-        <Feather
-          name={hasOfferedHelp ? "check" : "heart"}
-          size={20}
-          color={hasOfferedHelp ? theme.text : "#FFFFFF"}
-        />
+        {offeringHelp ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Feather
+            name={hasOfferedHelp ? "check" : "heart"}
+            size={20}
+            color={hasOfferedHelp ? theme.text : "#FFFFFF"}
+          />
+        )}
         <ThemedText
           style={[
             styles.helpButtonText,

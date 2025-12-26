@@ -5,6 +5,7 @@ import NeedHelpScreen from "@/screens/NeedHelpScreen";
 import OfferHelpScreen from "@/screens/OfferHelpScreen";
 import RequestDetailScreen from "@/screens/RequestDetailScreen";
 import PostNeedScreen from "@/screens/PostNeedScreen";
+import ChatScreen from "@/screens/ChatScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useTheme } from "@/hooks/useTheme";
@@ -17,6 +18,7 @@ export type HomeStackParamList = {
   OfferHelp: undefined;
   RequestDetail: { requestId: string };
   PostNeed: undefined;
+  Chat: { chatId: string };
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -61,6 +63,11 @@ export default function HomeStackNavigator() {
           headerTitle: t.postNeed,
           presentation: "modal",
         }}
+      />
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{ headerTitle: "Chat" }}
       />
     </Stack.Navigator>
   );

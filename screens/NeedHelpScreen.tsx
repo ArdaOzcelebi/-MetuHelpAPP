@@ -12,6 +12,7 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/src/contexts/AuthContext";
 import {
   Spacing,
   BorderRadius,
@@ -20,6 +21,7 @@ import {
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { subscribeToHelpRequests } from "@/src/services/helpRequestService";
+import { getChatByRequestId } from "@/src/services/chatService";
 import type { HelpRequest, HelpRequestCategory } from "@/src/types/helpRequest";
 
 type NeedHelpScreenProps = {
@@ -108,6 +110,10 @@ interface RequestCardProps {
   helpButtonLabel: string;
   onPress: () => void;
   onHelp: () => void;
+  isOwnRequest?: boolean;
+  hasActiveChat?: boolean;
+  openChatLabel?: string;
+  onOpenChat?: () => void;
 }
 
 function RequestCard({
@@ -120,6 +126,10 @@ function RequestCard({
   helpButtonLabel,
   onPress,
   onHelp,
+  isOwnRequest = false,
+  hasActiveChat = false,
+  openChatLabel = "Open Chat",
+  onOpenChat,
 }: RequestCardProps) {
   const { theme, isDark } = useTheme();
   const scale = useSharedValue(1);
@@ -204,13 +214,18 @@ function RequestCard({
         </View>
       </View>
       <Pressable
-        onPress={onHelp}
+        onPress={isOwnRequest && hasActiveChat && onOpenChat ? onOpenChat : onHelp}
         style={({ pressed }) => [
           styles.helpButton,
-          { opacity: pressed ? 0.8 : 1 },
+          { 
+            backgroundColor: isOwnRequest && hasActiveChat ? METUColors.maroon : METUColors.actionGreen,
+            opacity: pressed ? 0.8 : 1 
+          },
         ]}
       >
-        <ThemedText style={styles.helpButtonText}>{helpButtonLabel}</ThemedText>
+        <ThemedText style={styles.helpButtonText}>
+          {isOwnRequest && hasActiveChat ? openChatLabel : helpButtonLabel}
+        </ThemedText>
       </Pressable>
     </AnimatedPressable>
   );
@@ -219,9 +234,11 @@ function RequestCard({
 export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { isDark } = useTheme();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chatsMap, setChatsMap] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     console.log("[NeedHelpScreen] Setting up subscription for category:", selectedCategory);
@@ -238,13 +255,40 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       console.log("[NeedHelpScreen] Requests:", requests);
       setHelpRequests(requests);
       setLoading(false);
+      
+      // Check for active chats for each request
+      if (user) {
+        checkActiveChats(requests);
+      }
     }, categoryFilter);
 
     return () => {
       console.log("[NeedHelpScreen] Cleaning up subscription");
       unsubscribe();
     };
-  }, [selectedCategory]);
+  }, [selectedCategory, user]);
+
+  const checkActiveChats = async (requests: HelpRequest[]) => {
+    const newChatsMap = new Map<string, string>();
+    
+    for (const request of requests) {
+      // Only check for chats on user's own requests
+      if (user && request.userId === user.uid) {
+        console.log("[NeedHelpScreen] Checking active chats for Request ID:", request.id);
+        try {
+          const chat = await getChatByRequestId(request.id);
+          if (chat) {
+            console.log("[NeedHelpScreen] Found active chat for request:", request.id, "chatId:", chat.id);
+            newChatsMap.set(request.id, chat.id);
+          }
+        } catch (error) {
+          console.error("[NeedHelpScreen] Error checking chat for request:", request.id, error);
+        }
+      }
+    }
+    
+    setChatsMap(newChatsMap);
+  };
 
   const CATEGORIES = [
     { id: "all", label: t.all, icon: "grid" },
@@ -295,24 +339,39 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
             No active requests found
           </ThemedText>
         ) : (
-          filteredRequests.map((request) => (
-            <RequestCard
-              key={request.id}
-              title={request.title}
-              category={request.category}
-              location={request.location}
-              time={getTimeAgo(request.createdAt)}
-              urgent={request.urgent}
-              urgentLabel={t.urgent}
-              helpButtonLabel={t.iCanHelp}
-              onPress={() =>
-                navigation.navigate("RequestDetail", { requestId: request.id })
-              }
-              onHelp={() => {
-                navigation.navigate("RequestDetail", { requestId: request.id });
-              }}
-            />
-          ))
+          filteredRequests.map((request) => {
+            const isOwnRequest = user?.uid === request.userId;
+            const chatId = chatsMap.get(request.id);
+            const hasActiveChat = !!chatId;
+
+            return (
+              <RequestCard
+                key={request.id}
+                title={request.title}
+                category={request.category}
+                location={request.location}
+                time={getTimeAgo(request.createdAt)}
+                urgent={request.urgent}
+                urgentLabel={t.urgent}
+                helpButtonLabel={t.iCanHelp}
+                isOwnRequest={isOwnRequest}
+                hasActiveChat={hasActiveChat}
+                openChatLabel="Open Chat"
+                onPress={() =>
+                  navigation.navigate("RequestDetail", { requestId: request.id })
+                }
+                onHelp={() => {
+                  navigation.navigate("RequestDetail", { requestId: request.id });
+                }}
+                onOpenChat={() => {
+                  if (chatId) {
+                    console.log("[NeedHelpScreen] Opening chat:", chatId);
+                    navigation.navigate("Chat", { chatId });
+                  }
+                }}
+              />
+            );
+          })
         )}
       </View>
 
