@@ -28,16 +28,20 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const [emailUpdates, setEmailUpdates] = useState(false);
 
   const handleLogout = () => {
+    console.log("[ProfileScreen] Logout button pressed");
     Alert.alert(t.logOut, t.logOutConfirm, [
       { text: t.cancel, style: "cancel" },
       {
         text: t.logOut,
         style: "destructive",
         onPress: async () => {
+          console.log("[ProfileScreen] User confirmed logout");
           try {
             await signOut();
+            console.log("[ProfileScreen] SignOut completed successfully");
             // Navigation to login will be handled by App.tsx
           } catch (error: any) {
+            console.error("[ProfileScreen] SignOut failed:", error);
             Alert.alert(t.error, error.message || t.logoutFailed);
           }
         },

@@ -182,10 +182,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }
 
   async function signOut() {
+    console.log("[AuthContext] signOut called");
     try {
       const auth = getAuthInstance();
+      console.log("[AuthContext] Calling firebaseSignOut");
       await firebaseSignOut(auth);
+      console.log(
+        "[AuthContext] firebaseSignOut completed, setting user to null",
+      );
       setUser(null);
+      console.log("[AuthContext] User set to null");
     } catch (err) {
       const errorMessage = parseFirebaseError(err);
 

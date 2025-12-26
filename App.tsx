@@ -20,6 +20,13 @@ const NAVIGATION_KEYS = {
 function AppContent() {
   const { user, loading } = useAuth();
 
+  console.log(
+    "[AppContent] Rendering - user:",
+    user ? "authenticated" : "null",
+    "loading:",
+    loading,
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -28,12 +35,13 @@ function AppContent() {
     );
   }
 
+  const navigationKey = user
+    ? NAVIGATION_KEYS.AUTHENTICATED
+    : NAVIGATION_KEYS.UNAUTHENTICATED;
+  console.log("[AppContent] NavigationContainer key:", navigationKey);
+
   return (
-    <NavigationContainer
-      key={
-        user ? NAVIGATION_KEYS.AUTHENTICATED : NAVIGATION_KEYS.UNAUTHENTICATED
-      }
-    >
+    <NavigationContainer key={navigationKey}>
       {user ? <MainTabNavigator /> : <AuthStackNavigator />}
     </NavigationContainer>
   );
