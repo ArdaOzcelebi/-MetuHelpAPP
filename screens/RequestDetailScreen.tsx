@@ -315,6 +315,8 @@ export default function RequestDetailScreen({
   };
 
   const posterInitials = getUserInitials(request.userName, request.userEmail);
+  const displayName = request.isAnonymous ? "Anonymous" : request.userName;
+  const displayInitials = request.isAnonymous ? "AN" : posterInitials;
 
   // Determine button state and action
   const isOwnRequest = user?.uid === request.userId;
@@ -376,12 +378,10 @@ export default function RequestDetailScreen({
               { backgroundColor: isDark ? "#CC3333" : METUColors.maroon },
             ]}
           >
-            <ThemedText style={styles.avatarText}>{posterInitials}</ThemedText>
+            <ThemedText style={styles.avatarText}>{displayInitials}</ThemedText>
           </View>
           <View>
-            <ThemedText style={styles.posterName}>
-              {request.userName}
-            </ThemedText>
+            <ThemedText style={styles.posterName}>{displayName}</ThemedText>
             <ThemedText
               style={[styles.postTime, { color: theme.textSecondary }]}
             >
