@@ -245,7 +245,9 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       </View>
 
       <Pressable
+        testID="logout-button"
         onPress={handleLogout}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         style={({ pressed }) => [
           styles.logoutButton,
           {
@@ -362,12 +364,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
-    gap: Spacing.sm,
     marginBottom: Spacing.lg,
   },
   logoutText: {
     fontSize: Typography.body.fontSize,
     fontWeight: "600",
+    marginLeft: Spacing.sm,
   },
   versionText: {
     fontSize: Typography.caption.fontSize,
