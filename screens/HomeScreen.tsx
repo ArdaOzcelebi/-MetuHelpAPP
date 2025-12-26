@@ -29,6 +29,35 @@ import {
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 
+// Add these imports at the top temporarily
+import { getDbInstance } from "@/firebase/firebaseConfig";
+import { collection, addDoc } from "firebase/firestore";
+
+// Inside the HomeScreen function...
+useEffect(() => {
+  // This runs once when the Home Screen loads
+  const testDatabase = async () => {
+    try {
+      const db = getDbInstance();
+      console.log("✅ Firestore Instance initialized:", db);
+      
+      // OPTIONAL: Uncomment this to write a real test file to your database
+      /*
+      await addDoc(collection(db, "test_connection"), {
+        message: "Hello from the app!",
+        timestamp: new Date()
+      });
+      console.log("✅ Successfully wrote to Firestore!");
+      */
+    } catch (error) {
+      console.error("❌ Database Error:", error);
+    }
+  };
+
+  testDatabase();
+}, []);
+
+
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "Home">;
 };
