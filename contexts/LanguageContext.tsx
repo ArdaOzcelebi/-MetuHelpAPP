@@ -153,6 +153,8 @@ interface Translations {
   finalizing: string;
   noMessages: string;
   startConversation: string;
+  acceptedBy: string;
+  requestFinalizedStatus: string;
 
   // Status
   statusOpen: string;
@@ -321,6 +323,8 @@ const translations: Record<Language, Translations> = {
     finalizing: "Finalizing...",
     noMessages: "No messages yet",
     startConversation: "Start the conversation!",
+    acceptedBy: "Accepted by",
+    requestFinalizedStatus: "This request has been finalized",
 
     // Status
     statusOpen: "Open",
@@ -487,6 +491,8 @@ const translations: Record<Language, Translations> = {
     finalizing: "Tamamlanıyor...",
     noMessages: "Henüz mesaj yok",
     startConversation: "Sohbeti başlatın!",
+    acceptedBy: "Kabul eden",
+    requestFinalizedStatus: "Bu istek tamamlandı",
 
     // Status
     statusOpen: "Açık",

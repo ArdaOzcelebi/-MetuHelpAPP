@@ -356,7 +356,9 @@ export default function RequestDetailScreen({
         >
           <Feather name="user-check" size={20} color={METUColors.actionGreen} />
           <View style={styles.acceptedByInfo}>
-            <ThemedText style={styles.acceptedByLabel}>Accepted by</ThemedText>
+            <ThemedText style={styles.acceptedByLabel}>
+              {t.acceptedBy}
+            </ThemedText>
             <ThemedText style={styles.acceptedByName}>
               {request.acceptedByName}
             </ThemedText>
@@ -425,7 +427,7 @@ export default function RequestDetailScreen({
               { color: theme.textSecondary },
             ]}
           >
-            This request has been finalized
+            {t.requestFinalizedStatus}
           </ThemedText>
         </View>
       ) : null}
