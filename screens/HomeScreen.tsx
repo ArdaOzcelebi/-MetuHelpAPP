@@ -30,7 +30,7 @@ import {
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 
 // Add these imports at the top temporarily
-import { getDbInstance } from "@/firebase/firebaseConfig";
+import { getDbInstance } from "../src/firebase/firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
 
 // Inside the HomeScreen function...
