@@ -22,6 +22,7 @@ export interface Chat {
   helperId: string;
   helperName: string;
   helperEmail: string;
+  members: string[]; // Array of user IDs who can access this chat
   createdAt: Date;
   updatedAt: Date;
   lastMessage?: string;

@@ -16,6 +16,7 @@
  *   - helperId (string): User ID of the person offering help
  *   - helperName (string): Display name of helper
  *   - helperEmail (string): Email of helper
+ *   - members (array): Array of user IDs [requesterId, helperId] - required for security rules
  *   - createdAt (Timestamp): When the chat was created
  *   - updatedAt (Timestamp): Last update time
  *   - lastMessage (string): Text of the last message
@@ -111,6 +112,7 @@ function documentToChat(id: string, data: DocumentData): Chat | null {
       helperId: data.helperId,
       helperName: data.helperName || "Anonymous",
       helperEmail: data.helperEmail || "",
+      members: data.members || [data.requesterId, data.helperId],
       createdAt: convertTimestamp(data.createdAt),
       updatedAt: convertTimestamp(data.updatedAt),
       lastMessage: data.lastMessage,
@@ -164,6 +166,7 @@ export async function createChat(chatData: CreateChatData): Promise<string> {
 
     const data = {
       ...chatData,
+      members: [chatData.requesterId, chatData.helperId], // Required for Firebase security rules
       createdAt: now,
       updatedAt: now,
     };

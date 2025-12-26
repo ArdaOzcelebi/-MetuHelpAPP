@@ -96,6 +96,7 @@ chats/
     - helperId: string             // User ID of helper
     - helperName: string           // Display name
     - helperEmail: string          // Email address
+    - members: array               // [requesterId, helperId] - required for security rules
     - createdAt: Timestamp         // When chat was created
     - updatedAt: Timestamp         // Last activity
     - lastMessage: string          // Preview text
