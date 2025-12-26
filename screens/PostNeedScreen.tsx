@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { StyleSheet, View, TextInput, Pressable, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -7,7 +7,7 @@ import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareS
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { AuthContext } from "@/src/contexts/AuthContext";
+import { useAuth } from "@/src/contexts/AuthContext";
 import {
   Spacing,
   BorderRadius,
@@ -61,7 +61,7 @@ const LOCATIONS = [
 export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
-  const authContext = useContext(AuthContext);
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<HelpRequestCategory | null>(null);
@@ -76,7 +76,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
   const handlePost = async () => {
     if (!isValid || submitting) return;
 
-    if (!authContext?.user) {
+    if (!user) {
       Alert.alert("Error", "You must be logged in to post a request.");
       return;
     }
@@ -85,9 +85,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
 
     try {
       const userName =
-        authContext.user.displayName ||
-        authContext.user.email?.split("@")[0] ||
-        "Anonymous";
+        user.displayName || user.email?.split("@")[0] || "Anonymous";
 
       await createHelpRequest(
         {
@@ -98,8 +96,8 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           isReturnNeeded,
           urgent: isUrgent,
         },
-        authContext.user.uid,
-        authContext.user.email || "",
+        user.uid,
+        user.email || "",
         userName,
       );
 
@@ -111,11 +109,9 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
       ]);
     } catch (error) {
       console.error("Error posting request:", error);
-      Alert.alert(
-        t.error,
-        "Failed to post request. Please try again.",
-        [{ text: t.ok }],
-      );
+      Alert.alert(t.error, "Failed to post request. Please try again.", [
+        { text: t.ok },
+      ]);
     } finally {
       setSubmitting(false);
     }
@@ -185,9 +181,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           <Pressable
             key={loc.id}
             onPress={() =>
-              setSelectedLocation(
-                language === "en" ? loc.labelEn : loc.labelTr,
-              )
+              setSelectedLocation(language === "en" ? loc.labelEn : loc.labelTr)
             }
             style={[
               styles.locationChip,
@@ -246,7 +240,9 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
             backgroundColor: isReturnNeeded
               ? "rgba(16, 185, 129, 0.1)"
               : theme.backgroundDefault,
-            borderColor: isReturnNeeded ? METUColors.actionGreen : "transparent",
+            borderColor: isReturnNeeded
+              ? METUColors.actionGreen
+              : "transparent",
           },
         ]}
       >
@@ -360,8 +356,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           style={[
             styles.postButtonText,
             {
-              color:
-                isValid && !submitting ? "#FFFFFF" : theme.textSecondary,
+              color: isValid && !submitting ? "#FFFFFF" : theme.textSecondary,
             },
           ]}
         >

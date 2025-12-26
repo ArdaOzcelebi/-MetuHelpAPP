@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Pressable, Alert, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
@@ -20,82 +26,6 @@ import type { HelpRequest } from "@/src/types/helpRequest";
 type RequestDetailScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "RequestDetail">;
   route: RouteProp<HomeStackParamList, "RequestDetail">;
-};
-
-const REQUEST_DATA: Record<
-  string,
-  {
-    id: string;
-    title: string;
-    category: string;
-    location: string;
-    time: string;
-    urgent: boolean;
-    description: string;
-    posterName: string;
-    posterInitials: string;
-  }
-> = {
-  "1": {
-    id: "1",
-    title: "Need 1 Bandage",
-    category: "medical",
-    location: "Near Library",
-    time: "5 min ago",
-    urgent: true,
-    description:
-      "Cut my finger while studying. Nothing serious but I need a bandage to stop the bleeding. Will be at the library entrance.",
-    posterName: "Ahmet Y.",
-    posterInitials: "AY",
-  },
-  "2": {
-    id: "2",
-    title: "Need Pain Reliever",
-    category: "medical",
-    location: "Engineering Building",
-    time: "12 min ago",
-    urgent: true,
-    description:
-      "Having a bad headache before my exam. Would appreciate any pain reliever. I'm in room B-104.",
-    posterName: "Zeynep K.",
-    posterInitials: "ZK",
-  },
-  "3": {
-    id: "3",
-    title: "Need a Phone Charger (USB-C)",
-    category: "other",
-    location: "Student Center",
-    time: "18 min ago",
-    urgent: false,
-    description:
-      "My phone is at 2% and I need to call my family. Looking for a USB-C charger I can borrow for 30 minutes.",
-    posterName: "Mehmet A.",
-    posterInitials: "MA",
-  },
-  "4": {
-    id: "4",
-    title: "Looking for Ride to Kizilay",
-    category: "transport",
-    location: "Main Gate",
-    time: "25 min ago",
-    urgent: false,
-    description:
-      "Need to get to Kizilay for a doctor appointment at 4 PM. Can share gas costs. Will be at the main gate.",
-    posterName: "Elif S.",
-    posterInitials: "ES",
-  },
-  "5": {
-    id: "5",
-    title: "Need Calculator for Exam",
-    category: "academic",
-    location: "Physics Building",
-    time: "32 min ago",
-    urgent: true,
-    description:
-      "Forgot my calculator and have a physics exam in 30 minutes! Need a scientific calculator urgently.",
-    posterName: "Can B.",
-    posterInitials: "CB",
-  },
 };
 
 /**
@@ -157,7 +87,14 @@ export default function RequestDetailScreen({
   if (loading) {
     return (
       <ScreenScrollView>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: Spacing.xl }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: Spacing.xl,
+          }}
+        >
           <ActivityIndicator size="large" color={METUColors.maroon} />
         </View>
       </ScreenScrollView>
@@ -229,9 +166,7 @@ export default function RequestDetailScreen({
               { backgroundColor: isDark ? "#CC3333" : METUColors.maroon },
             ]}
           >
-            <ThemedText style={styles.avatarText}>
-              {posterInitials}
-            </ThemedText>
+            <ThemedText style={styles.avatarText}>{posterInitials}</ThemedText>
           </View>
           <View>
             <ThemedText style={styles.posterName}>

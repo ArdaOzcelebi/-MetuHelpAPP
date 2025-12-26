@@ -2,7 +2,11 @@
  * Type definitions for help requests in the METU Help app
  */
 
-export type HelpRequestCategory = "medical" | "academic" | "transport" | "other";
+export type HelpRequestCategory =
+  | "medical"
+  | "academic"
+  | "transport"
+  | "other";
 
 export interface HelpRequest {
   id: string;

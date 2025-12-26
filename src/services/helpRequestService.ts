@@ -103,17 +103,19 @@ export function subscribeToHelpRequests(
   category?: HelpRequestCategory,
 ): Unsubscribe {
   const db = getFirestoreInstance();
-  let q = query(
-    collection(db, COLLECTION_NAME),
-    where("status", "==", "active"),
-    orderBy("createdAt", "desc"),
-  );
+  let q;
 
-  if (category && category !== "all") {
+  if (category) {
     q = query(
       collection(db, COLLECTION_NAME),
       where("status", "==", "active"),
       where("category", "==", category),
+      orderBy("createdAt", "desc"),
+    );
+  } else {
+    q = query(
+      collection(db, COLLECTION_NAME),
+      where("status", "==", "active"),
       orderBy("createdAt", "desc"),
     );
   }

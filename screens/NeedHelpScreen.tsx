@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Pressable, ScrollView, Alert } from "react-native";
+import { StyleSheet, View, Pressable, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, {
@@ -25,59 +25,6 @@ import type { HelpRequest } from "@/src/types/helpRequest";
 type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
 };
-
-const MOCK_REQUESTS = [
-  {
-    id: "1",
-    titleEn: "Need 1 Bandage",
-    titleTr: "1 Bandaj Lazim",
-    category: "medical",
-    locationEn: "Near Library",
-    locationTr: "Kutuphane Yakininda",
-    time: "5 min",
-    urgent: true,
-  },
-  {
-    id: "2",
-    titleEn: "Need Pain Reliever",
-    titleTr: "Agri Kesici Lazim",
-    category: "medical",
-    locationEn: "Engineering Building",
-    locationTr: "Muhendislik Binasi",
-    time: "12 min",
-    urgent: true,
-  },
-  {
-    id: "3",
-    titleEn: "Need a Phone Charger (USB-C)",
-    titleTr: "Telefon Sarj Aleti (USB-C) Lazim",
-    category: "other",
-    locationEn: "Student Center",
-    locationTr: "Ogrenci Merkezi",
-    time: "18 min",
-    urgent: false,
-  },
-  {
-    id: "4",
-    titleEn: "Looking for Ride to Kizilay",
-    titleTr: "Kizilay'a Arac Ariyorum",
-    category: "transport",
-    locationEn: "Main Gate",
-    locationTr: "Ana Kapi",
-    time: "25 min",
-    urgent: false,
-  },
-  {
-    id: "5",
-    titleEn: "Need Calculator for Exam",
-    titleTr: "Sinav icin Hesap Makinesi Lazim",
-    category: "academic",
-    locationEn: "Physics Building",
-    locationTr: "Fizik Binasi",
-    time: "32 min",
-    urgent: true,
-  },
-];
 
 /**
  * Calculate time difference from now
@@ -271,7 +218,7 @@ function RequestCard({
 
 export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { isDark } = useTheme();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -283,7 +230,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
         setHelpRequests(requests);
         setLoading(false);
       },
-      selectedCategory === "all" ? undefined : selectedCategory as any,
+      selectedCategory === "all" ? undefined : (selectedCategory as any),
     );
 
     return () => unsubscribe();
