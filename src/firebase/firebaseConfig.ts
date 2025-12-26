@@ -3,6 +3,78 @@ import { getAuth, Auth } from "firebase/auth";
 // 1. NEW: Import Firestore
 import { getFirestore, Firestore } from "firebase/firestore";
 
+
+
+// Add Firestore operations for 'helpRequests' collection
+import { collection, addDoc, getDocs, query, onSnapshot } from "firebase/firestore";
+
+/**
+ * Fetch all active Help Requests in real-time.
+ * Uses onSnapshot() for real-time updates.
+ */
+export function fetchHelpRequestsRealTime(callback: (data: any[]) => void) {
+  const db = getDbInstance();
+  const helpRequestsRef = collection(db, "helpRequests");
+
+  // Listen to changes in the helpRequests collection
+  const q = query(helpRequestsRef);
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    callback(data); // Pass fetched data to the callback
+  });
+
+  return unsubscribe; // Return unsubscribing method for cleanup
+}
+
+/**
+ * Add a new Help Request to the Firestore Database.
+ */
+export async function addHelpRequest(helpRequest: {
+  item: string;
+  category: string;
+  description: string;
+  location: string;
+  needReturn: boolean;
+  isAnonymous: boolean;
+}) {
+  const db = getDbInstance();
+  const helpRequestsRef = collection(db, "helpRequests");
+
+  try {
+    await addDoc(helpRequestsRef, {
+      ...helpRequest,
+      createdAt: new Date(),
+      status: "active", // Default status for a new request
+    });
+    console.log("Help request added successfully.");
+  } catch (error) {
+    console.error("Error adding help request:", error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch all Help Requests (non-realtime, for archival or filtering purposes).
+ */
+export async function fetchHelpRequests() {
+  const db = getDbInstance();
+  const helpRequestsRef = collection(db, "helpRequests");
+
+  try {
+    const snapshot = await getDocs(helpRequestsRef);
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    return data;
+  } catch (error) {
+    console.error("Error fetching help requests:", error);
+    throw error;
+  }
+}
 /**
  * Safe firebaseConfig for Expo (web + native):
  * - Does NOT initialize Firebase at module import time.
