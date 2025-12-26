@@ -26,7 +26,11 @@ export interface HelpRequest {
   userName: string;
   createdAt: Date;
   updatedAt: Date;
-  status: "active" | "fulfilled" | "cancelled";
+  status: "active" | "accepted" | "finalized" | "fulfilled" | "cancelled";
+  acceptedBy?: string;
+  acceptedByName?: string;
+  acceptedByEmail?: string;
+  chatId?: string;
 }
 
 export interface CreateHelpRequestData {
