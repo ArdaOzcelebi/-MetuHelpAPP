@@ -21,9 +21,13 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
-import { subscribeToHelpRequests } from "@/src/services/helpRequestService";
+import {
+  subscribeToHelpRequests,
+  finalizeHelpRequest,
+} from "@/src/services/helpRequestService";
 import { getChatByRequestId } from "@/src/services/chatService";
 import type { HelpRequest, HelpRequestCategory } from "@/src/types/helpRequest";
+import { Alert } from "react-native";
 
 type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
@@ -103,6 +107,7 @@ function FilterChip({ label, icon, isSelected, onPress }: FilterChipProps) {
 
 interface RequestCardProps {
   title: string;
+  description: string;
   category: string;
   location: string;
   time: string;
@@ -117,12 +122,16 @@ interface RequestCardProps {
   onHelp: () => void;
   isOwnRequest?: boolean;
   hasActiveChat?: boolean;
+  userHasOfferedHelp?: boolean;
   openChatLabel?: string;
+  resumeChatLabel?: string;
   onOpenChat?: () => void;
+  onMarkComplete?: () => void;
 }
 
 function RequestCard({
   title,
+  description,
   category,
   location,
   time,
@@ -137,8 +146,11 @@ function RequestCard({
   onHelp,
   isOwnRequest = false,
   hasActiveChat = false,
+  userHasOfferedHelp = false,
   openChatLabel = "Open Chat",
+  resumeChatLabel = "Resume Chat",
   onOpenChat,
+  onMarkComplete,
 }: RequestCardProps) {
   const { theme, isDark } = useTheme();
   const scale = useSharedValue(1);
@@ -200,24 +212,34 @@ function RequestCard({
       }}
       style={[
         styles.requestCard,
-        { backgroundColor: theme.cardBackground },
+        {
+          backgroundColor: theme.cardBackground,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDark ? 0.3 : 0.1,
+          shadowRadius: 8,
+          elevation: 3,
+        },
         animatedStyle,
       ]}
     >
-      <View style={styles.requestContent}>
+      {/* Header with icon and title */}
+      <View style={styles.cardHeader}>
         <View
           style={[
             styles.categoryIcon,
             {
               backgroundColor: urgent
                 ? "rgba(220, 38, 38, 0.1)"
-                : theme.backgroundDefault,
+                : isDark
+                  ? "rgba(255, 107, 107, 0.15)"
+                  : "rgba(128, 0, 0, 0.1)",
             },
           ]}
         >
           <Feather
             name={getCategoryIcon()}
-            size={20}
+            size={24}
             color={
               urgent
                 ? METUColors.alertRed
@@ -227,58 +249,153 @@ function RequestCard({
             }
           />
         </View>
-        <View style={styles.requestInfo}>
-          <View style={styles.requestHeader}>
-            <ThemedText style={styles.requestTitle}>{title}</ThemedText>
+        <View style={styles.headerInfo}>
+          <ThemedText style={styles.requestTitle} numberOfLines={1}>
+            {title}
+          </ThemedText>
+          <View style={styles.badgeRow}>
             {getStatusBadge()}
-            {urgent && status === "active" ? (
+            {urgent && status === "active" && (
               <View style={styles.urgentBadge}>
                 <ThemedText style={styles.urgentText}>{urgentLabel}</ThemedText>
               </View>
-            ) : null}
-          </View>
-          <View style={styles.requestMeta}>
-            <Feather name="map-pin" size={12} color={theme.textSecondary} />
-            <ThemedText
-              style={[styles.requestLocation, { color: theme.textSecondary }]}
-            >
-              {location}
-            </ThemedText>
-            <ThemedText
-              style={[styles.requestTime, { color: theme.textSecondary }]}
-            >
-              {time}
-            </ThemedText>
+            )}
           </View>
         </View>
       </View>
-      <Pressable
-        onPress={
-          isOwnRequest && hasActiveChat && onOpenChat ? onOpenChat : onHelp
-        }
-        style={({ pressed }) => [
-          styles.helpButton,
-          {
-            backgroundColor:
-              isOwnRequest && hasActiveChat
-                ? METUColors.maroon
-                : METUColors.actionGreen,
-            opacity: pressed ? 0.8 : 1,
-          },
-        ]}
-      >
-        {isOwnRequest && hasActiveChat && (
-          <Feather
-            name="message-circle"
-            size={14}
-            color="#FFFFFF"
-            style={{ marginRight: Spacing.xs }}
-          />
+
+      {/* Body with location and description */}
+      <View style={styles.cardBody}>
+        <View style={styles.requestMeta}>
+          <Feather name="map-pin" size={14} color={theme.textSecondary} />
+          <ThemedText
+            style={[styles.requestLocation, { color: theme.textSecondary }]}
+          >
+            {location}
+          </ThemedText>
+        </View>
+        {description && (
+          <ThemedText
+            style={[styles.requestDescription, { color: theme.textSecondary }]}
+            numberOfLines={3}
+          >
+            {description}
+          </ThemedText>
         )}
-        <ThemedText style={styles.helpButtonText}>
-          {isOwnRequest && hasActiveChat ? openChatLabel : helpButtonLabel}
+        <ThemedText
+          style={[styles.requestTime, { color: theme.textSecondary }]}
+        >
+          {time} ago
         </ThemedText>
-      </Pressable>
+      </View>
+
+      {/* Footer with action buttons */}
+      <View style={styles.cardFooter}>
+        {/* Show appropriate button based on user relationship to request */}
+        {isOwnRequest ? (
+          // User is the requester
+          <>
+            {hasActiveChat ? (
+              // Chat exists - show "Open Chat" button
+              <Pressable
+                onPress={onOpenChat}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  styles.primaryButton,
+                  {
+                    backgroundColor: METUColors.maroon,
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                <Feather name="message-circle" size={16} color="#FFFFFF" />
+                <ThemedText style={styles.actionButtonText}>
+                  {openChatLabel}
+                </ThemedText>
+              </Pressable>
+            ) : (
+              // No chat yet - show "Waiting for Help" badge
+              <View
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: theme.backgroundSecondary,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                <Feather name="clock" size={16} color={theme.textSecondary} />
+                <ThemedText
+                  style={[styles.waitingText, { color: theme.textSecondary }]}
+                >
+                  Waiting for Help...
+                </ThemedText>
+              </View>
+            )}
+            {/* Show "Mark as Completed" button only if request is accepted and user is the requester */}
+            {status === "accepted" && onMarkComplete && (
+              <Pressable
+                onPress={onMarkComplete}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  styles.secondaryButton,
+                  {
+                    backgroundColor: METUColors.actionGreen,
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                <Feather name="check-circle" size={16} color="#FFFFFF" />
+                <ThemedText style={styles.actionButtonText}>
+                  Mark Complete
+                </ThemedText>
+              </Pressable>
+            )}
+          </>
+        ) : (
+          // User is not the requester
+          <>
+            {userHasOfferedHelp ? (
+              // User has already offered help - show "Resume Chat"
+              <Pressable
+                onPress={onOpenChat}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  styles.primaryButton,
+                  {
+                    backgroundColor: "#3B82F6",
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                <Feather name="message-circle" size={16} color="#FFFFFF" />
+                <ThemedText style={styles.actionButtonText}>
+                  {resumeChatLabel}
+                </ThemedText>
+              </Pressable>
+            ) : status === "active" ? (
+              // User hasn't helped yet and request is still active - show "Offer Help"
+              <Pressable
+                onPress={onHelp}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  styles.primaryButton,
+                  {
+                    backgroundColor: METUColors.actionGreen,
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                <Feather name="heart" size={16} color="#FFFFFF" />
+                <ThemedText style={styles.actionButtonText}>
+                  {helpButtonLabel}
+                </ThemedText>
+              </Pressable>
+            ) : null}
+          </>
+        )}
+      </View>
     </AnimatedPressable>
   );
 }
@@ -292,43 +409,88 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatsMap, setChatsMap] = useState<Map<string, string>>(new Map());
+  const [userOfferedHelpMap, setUserOfferedHelpMap] = useState<
+    Map<string, boolean>
+  >(new Map());
 
   const checkActiveChats = useCallback(
     async (requests: HelpRequest[]) => {
+      if (!user) return;
+
       const newChatsMap = new Map<string, string>();
+      const newUserOfferedHelpMap = new Map<string, boolean>();
 
       for (const request of requests) {
-        // Only check for chats on user's own requests
-        if (user && request.userId === user.uid) {
-          console.log(
-            "[NeedHelpScreen] Checking active chats for Request ID:",
-            request.id,
-          );
-          try {
-            const chat = await getChatByRequestId(request.id);
-            if (chat) {
-              console.log(
-                "[NeedHelpScreen] Found active chat for request:",
-                request.id,
-                "chatId:",
-                chat.id,
-              );
-              newChatsMap.set(request.id, chat.id);
-            }
-          } catch (error) {
-            console.error(
-              "[NeedHelpScreen] Error checking chat for request:",
+        console.log(
+          "[NeedHelpScreen] Checking active chats for Request ID:",
+          request.id,
+        );
+        try {
+          const chat = await getChatByRequestId(request.id);
+          if (chat) {
+            console.log(
+              "[NeedHelpScreen] Found active chat for request:",
               request.id,
-              error,
+              "chatId:",
+              chat.id,
             );
+            newChatsMap.set(request.id, chat.id);
+
+            // Check if current user is the helper in this chat
+            if (chat.helperId === user.uid) {
+              newUserOfferedHelpMap.set(request.id, true);
+            }
           }
+        } catch (error) {
+          console.error(
+            "[NeedHelpScreen] Error checking chat for request:",
+            request.id,
+            error,
+          );
         }
       }
 
       setChatsMap(newChatsMap);
+      setUserOfferedHelpMap(newUserOfferedHelpMap);
     },
     [user],
   );
+
+  const handleMarkComplete = async (
+    requestId: string,
+    requestTitle: string,
+  ) => {
+    Alert.alert(
+      "Mark as Completed",
+      `Are you sure you want to mark "${requestTitle}" as completed? This will finalize the request and archive it.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Mark Complete",
+          style: "default",
+          onPress: async () => {
+            try {
+              await finalizeHelpRequest(requestId);
+              Alert.alert("Success", "Request has been marked as completed!");
+              console.log("[NeedHelpScreen] Request finalized:", requestId);
+            } catch (error) {
+              console.error(
+                "[NeedHelpScreen] Error finalizing request:",
+                error,
+              );
+              Alert.alert(
+                "Error",
+                "Failed to mark request as completed. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
 
   useEffect(() => {
     console.log(
@@ -423,11 +585,14 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
             const isOwnRequest = user?.uid === request.userId;
             const chatId = chatsMap.get(request.id);
             const hasActiveChat = !!chatId;
+            const userHasOfferedHelp =
+              userOfferedHelpMap.get(request.id) || false;
 
             return (
               <RequestCard
                 key={request.id}
                 title={request.title}
+                description={request.description}
                 category={request.category}
                 location={request.location}
                 time={getTimeAgo(request.createdAt)}
@@ -440,7 +605,9 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 statusFinalizedLabel={t.finalized || "Finalized"}
                 isOwnRequest={isOwnRequest}
                 hasActiveChat={hasActiveChat}
+                userHasOfferedHelp={userHasOfferedHelp}
                 openChatLabel="Open Chat"
+                resumeChatLabel="Resume Chat"
                 onPress={() =>
                   navigation.navigate("RequestDetail", {
                     requestId: request.id,
@@ -460,6 +627,11 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                     openChat(chatId);
                   }
                 }}
+                onMarkComplete={
+                  isOwnRequest && request.status === "accepted"
+                    ? () => handleMarkComplete(request.id, request.title)
+                    : undefined
+                }
               />
             );
           })
@@ -507,59 +679,67 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   requestCard: {
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
   },
-  requestContent: {
+  cardHeader: {
     flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: Spacing.md,
+    gap: Spacing.sm,
   },
   categoryIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.md,
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.lg,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.md,
   },
-  requestInfo: {
+  headerInfo: {
     flex: 1,
-  },
-  requestHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: Spacing.xs,
   },
   requestTitle: {
-    fontSize: Typography.body.fontSize,
-    fontWeight: "600",
-    flex: 1,
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: Spacing.xs,
+    lineHeight: 24,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    flexWrap: "wrap",
   },
   urgentBadge: {
     backgroundColor: METUColors.alertRed,
     paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: 4,
     borderRadius: BorderRadius.xs,
-    marginLeft: Spacing.sm,
   },
   urgentText: {
     fontSize: 10,
     fontWeight: "600",
     color: "#FFFFFF",
+    textTransform: "uppercase",
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: 4,
     borderRadius: BorderRadius.xs,
-    marginLeft: Spacing.sm,
-    gap: 2,
+    gap: 4,
   },
   statusBadgeText: {
     fontSize: 10,
     fontWeight: "600",
     color: "#FFFFFF",
+    textTransform: "uppercase",
+  },
+  cardBody: {
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
   },
   requestMeta: {
     flexDirection: "row",
@@ -567,28 +747,53 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   requestLocation: {
-    fontSize: Typography.small.fontSize,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  requestDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: "italic",
   },
   requestTime: {
-    fontSize: Typography.small.fontSize,
-    marginLeft: Spacing.sm,
+    fontSize: 12,
+    fontWeight: "400",
   },
-  helpButton: {
-    backgroundColor: METUColors.actionGreen,
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    flexWrap: "wrap",
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.full,
-    alignSelf: "flex-end",
+    gap: Spacing.xs,
   },
-  helpButtonText: {
+  primaryButton: {
+    minWidth: 120,
+    justifyContent: "center",
+  },
+  secondaryButton: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  actionButtonText: {
     color: "#FFFFFF",
-    fontSize: Typography.small.fontSize,
+    fontSize: 14,
     fontWeight: "600",
+  },
+  waitingText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   fab: {
     position: "absolute",
     bottom: Spacing["6xl"],
-    right: 0,
+    right: Spacing.xl,
     width: 56,
     height: 56,
     borderRadius: 28,
