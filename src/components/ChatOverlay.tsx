@@ -423,8 +423,11 @@ function ConversationView() {
           style: "default",
           onPress: () => {
             console.log("[ConversationView] User confirmed completion");
-            // Execute finalization in a separate call to avoid Alert.alert timing issues
-            performFinalization();
+            // Use setTimeout to ensure execution after Alert closes
+            // This prevents race conditions on React Native Web
+            setTimeout(() => {
+              performFinalization();
+            }, 0);
           },
         },
       ],
