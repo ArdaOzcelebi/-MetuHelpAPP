@@ -1,11 +1,20 @@
 import React, { useState } from "react";
-import { StyleSheet, View, TextInput, Pressable, Alert } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  Pressable,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { createQuestion } from "@/src/services/qaService";
 import {
   Spacing,
   BorderRadius,
@@ -18,35 +27,78 @@ type AskQuestionScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "AskQuestion">;
 };
 
-const CATEGORIES = [
-  { id: "classes", label: "Classes", icon: "book" },
-  { id: "professors", label: "Professors", icon: "user" },
-  { id: "campus-life", label: "Campus Life", icon: "home" },
-] as const;
-
 export default function AskQuestionScreen({
   navigation,
 }: AskQuestionScreenProps) {
   const { theme, isDark } = useTheme();
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [details, setDetails] = useState("");
+  const [isPosting, setIsPosting] = useState(false);
 
-  const isValid = title.length >= 10 && selectedCategory;
+  const isValid = title.trim().length >= 10;
 
-  const handlePost = () => {
-    if (!isValid) return;
+  const handlePost = async () => {
+    console.log("[AskQuestionScreen] handlePost called", {
+      isValid,
+      isPosting,
+      hasUser: !!user,
+    });
 
-    Alert.alert(
-      "Question Posted!",
-      "Your question has been posted. Fellow students will be able to respond.",
-      [
+    if (!isValid || isPosting) {
+      console.log("[AskQuestionScreen] Validation failed or already posting");
+      return;
+    }
+
+    if (!user) {
+      console.log("[AskQuestionScreen] No user found");
+      Alert.alert("Error", "You must be logged in to post a question");
+      return;
+    }
+
+    console.log("[AskQuestionScreen] Starting post submission...");
+    setIsPosting(true);
+
+    try {
+      console.log("[AskQuestionScreen] Calling createQuestion...");
+      const questionId = await createQuestion(
+        title.trim(),
+        details.trim(),
+        user.uid,
+        user.displayName || "Anonymous",
+      );
+
+      console.log(
+        "[AskQuestionScreen] Question created successfully:",
+        questionId,
+      );
+
+      Alert.alert("Success!", "Your question has been posted.", [
         {
           text: "OK",
-          onPress: () => navigation.goBack(),
+          onPress: () => {
+            console.log("[AskQuestionScreen] Navigating back");
+            navigation.goBack();
+          },
         },
-      ],
-    );
+      ]);
+    } catch (error) {
+      console.error("[AskQuestionScreen] Error posting question:", error);
+      console.error("[AskQuestionScreen] Error details:", {
+        name: error?.name,
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack,
+      });
+
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Failed to post question. Please check your internet connection and try again.",
+      );
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -65,58 +117,23 @@ export default function AskQuestionScreen({
         value={title}
         onChangeText={setTitle}
         multiline
+        editable={!isPosting}
       />
       <ThemedText
         style={[
           styles.helperText,
           {
             color:
-              title.length >= 10 ? METUColors.actionGreen : theme.textSecondary,
+              title.trim().length >= 10
+                ? METUColors.actionGreen
+                : theme.textSecondary,
           },
         ]}
       >
-        {title.length >= 10
-          ? "Great question!"
-          : `Minimum 10 characters (${title.length}/10)`}
+        {title.trim().length >= 10
+          ? "✓ Great question!"
+          : `Minimum 10 characters (${title.trim().length}/10)`}
       </ThemedText>
-
-      <ThemedText style={styles.sectionLabel}>Category</ThemedText>
-      <View style={styles.categoriesRow}>
-        {CATEGORIES.map((cat) => (
-          <Pressable
-            key={cat.id}
-            onPress={() => setSelectedCategory(cat.id)}
-            style={[
-              styles.categoryCard,
-              {
-                backgroundColor:
-                  selectedCategory === cat.id
-                    ? isDark
-                      ? "#CC3333"
-                      : METUColors.maroon
-                    : theme.backgroundDefault,
-                flex: 1,
-              },
-            ]}
-          >
-            <Feather
-              name={cat.icon as keyof typeof Feather.glyphMap}
-              size={20}
-              color={selectedCategory === cat.id ? "#FFFFFF" : theme.text}
-            />
-            <ThemedText
-              style={[
-                styles.categoryLabel,
-                {
-                  color: selectedCategory === cat.id ? "#FFFFFF" : theme.text,
-                },
-              ]}
-            >
-              {cat.label}
-            </ThemedText>
-          </Pressable>
-        ))}
-      </View>
 
       <ThemedText style={styles.sectionLabel}>
         Additional Details (Optional)
@@ -129,77 +146,46 @@ export default function AskQuestionScreen({
             color: theme.text,
           },
         ]}
-        placeholder="Provide more context to help others understand your question..."
+        placeholder="Provide more context to help others answer your question..."
         placeholderTextColor={theme.textSecondary}
         value={details}
         onChangeText={setDetails}
         multiline
-        numberOfLines={4}
+        numberOfLines={5}
         textAlignVertical="top"
+        editable={!isPosting}
       />
-
-      <View
-        style={[styles.tipsCard, { backgroundColor: theme.backgroundDefault }]}
-      >
-        <View style={styles.tipsHeader}>
-          <Feather
-            name="info"
-            size={18}
-            color={isDark ? "#FF6B6B" : METUColors.maroon}
-          />
-          <ThemedText style={styles.tipsTitle}>
-            Tips for good questions
-          </ThemedText>
-        </View>
-        <View style={styles.tipsList}>
-          <View style={styles.tipItem}>
-            <Feather name="check" size={14} color={METUColors.actionGreen} />
-            <ThemedText
-              style={[styles.tipText, { color: theme.textSecondary }]}
-            >
-              Be specific and clear
-            </ThemedText>
-          </View>
-          <View style={styles.tipItem}>
-            <Feather name="check" size={14} color={METUColors.actionGreen} />
-            <ThemedText
-              style={[styles.tipText, { color: theme.textSecondary }]}
-            >
-              Choose the right category
-            </ThemedText>
-          </View>
-          <View style={styles.tipItem}>
-            <Feather name="check" size={14} color={METUColors.actionGreen} />
-            <ThemedText
-              style={[styles.tipText, { color: theme.textSecondary }]}
-            >
-              Check if someone already asked
-            </ThemedText>
-          </View>
-        </View>
-      </View>
 
       <Pressable
         onPress={handlePost}
-        disabled={!isValid}
+        disabled={!isValid || isPosting}
         style={({ pressed }) => [
           styles.postButton,
           {
-            backgroundColor: isValid
-              ? METUColors.actionGreen
-              : theme.backgroundSecondary,
-            opacity: pressed && isValid ? 0.9 : 1,
+            backgroundColor:
+              isValid && !isPosting
+                ? isDark
+                  ? "#CC3333"
+                  : METUColors.maroon
+                : theme.backgroundDefault,
+            opacity: pressed && isValid && !isPosting ? 0.9 : 1,
           },
         ]}
       >
-        <ThemedText
-          style={[
-            styles.postButtonText,
-            { color: isValid ? "#FFFFFF" : theme.textSecondary },
-          ]}
-        >
-          Post Question
-        </ThemedText>
+        {isPosting ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <ThemedText
+            style={[
+              styles.postButtonText,
+              {
+                color: isValid && !isPosting ? "#FFFFFF" : theme.textSecondary,
+              },
+            ]}
+          >
+            Post Question
+          </ThemedText>
+        )}
       </Pressable>
     </ScreenKeyboardAwareScrollView>
   );

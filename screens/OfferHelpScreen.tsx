@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Pressable, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  TextInput,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
@@ -17,6 +24,7 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/src/contexts/AuthContext";
 import {
   Spacing,
   BorderRadius,
@@ -26,73 +34,32 @@ import {
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import type { MainTabParamList } from "@/navigation/MainTabNavigator";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
+import { subscribeToQuestions, type Question } from "@/src/services/qaService";
 
 type OfferHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "OfferHelp">;
 };
 
-const MOCK_QUESTIONS = [
-  {
-    id: "1",
-    titleEn: "Best study spots on campus that are open late?",
-    titleTr: "Kampuste gec saatlere kadar acik en iyi calisma yerleri?",
-    categoryEn: "Campus Life",
-    categoryTr: "Kampus Yasami",
-    responses: 8,
-    time: "2h",
-    answered: true,
-  },
-  {
-    id: "2",
-    titleEn: "How is CENG 242 with Prof. Ozyurt?",
-    titleTr: "Prof. Ozyurt ile CENG 242 nasil?",
-    categoryEn: "Professors",
-    categoryTr: "Hocalar",
-    responses: 3,
-    time: "4h",
-    answered: true,
-  },
-  {
-    id: "3",
-    titleEn: "Where can I find past exams for MATH 119?",
-    titleTr: "MATH 119 icin eski sinavlari nerede bulabilirim?",
-    categoryEn: "Classes",
-    categoryTr: "Dersler",
-    responses: 0,
-    time: "5h",
-    answered: false,
-  },
-  {
-    id: "4",
-    titleEn: "Is the gym crowded during lunch hours?",
-    titleTr: "Ogle saatlerinde spor salonu kalabalik mi?",
-    categoryEn: "Campus Life",
-    categoryTr: "Kampus Yasami",
-    responses: 5,
-    time: "6h",
-    answered: true,
-  },
-  {
-    id: "5",
-    titleEn: "Tips for surviving PHYS 105 labs?",
-    titleTr: "PHYS 105 laboratuvarlarindan sag cikma ipuclari?",
-    categoryEn: "Classes",
-    categoryTr: "Dersler",
-    responses: 12,
-    time: "8h",
-    answered: true,
-  },
-  {
-    id: "6",
-    titleEn: "Which dormitory has the best wifi?",
-    titleTr: "Hangi yurtta en iyi wifi var?",
-    categoryEn: "Campus Life",
-    categoryTr: "Kampus Yasami",
-    responses: 0,
-    time: "10h",
-    answered: false,
-  },
-];
+// Helper function to get time ago string
+function getTimeAgo(timestamp: any): string {
+  // Handle both Firestore Timestamp and Date objects
+  let date: Date;
+  if (timestamp && typeof timestamp.toDate === "function") {
+    date = timestamp.toDate();
+  } else if (timestamp instanceof Date) {
+    date = timestamp;
+  } else {
+    return "Just now";
+  }
+
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+  return `${Math.floor(diffInSeconds / 86400)}d ago`;
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -136,22 +103,14 @@ function TabButton({ label, isSelected, onPress }: TabButtonProps) {
 }
 
 interface QuestionCardProps {
-  title: string;
-  category: string;
-  responses: number;
-  time: string;
-  answered: boolean;
+  question: Question;
   responseLabel: string;
   responsesLabel: string;
   onPress: () => void;
 }
 
 function QuestionCard({
-  title,
-  category,
-  responses,
-  time,
-  answered,
+  question,
   responseLabel,
   responsesLabel,
   onPress,
@@ -159,25 +118,13 @@ function QuestionCard({
   const { theme, isDark } = useTheme();
   const scale = useSharedValue(1);
 
-  const getCategoryColor = () => {
-    switch (category) {
-      case "Classes":
-      case "Dersler":
-        return isDark ? "#60A5FA" : "#3B82F6";
-      case "Professors":
-      case "Hocalar":
-        return isDark ? "#A78BFA" : "#8B5CF6";
-      case "Campus Life":
-      case "Kampus Yasami":
-        return isDark ? "#34D399" : "#10B981";
-      default:
-        return theme.textSecondary;
-    }
-  };
-
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  const timeAgo = question.createdAt ? getTimeAgo(question.createdAt) : "Just now";
+  const answerCount = question.answerCount || 0;
+  const hasAnswers = answerCount > 0;
 
   return (
     <AnimatedPressable
@@ -194,39 +141,37 @@ function QuestionCard({
         animatedStyle,
       ]}
     >
-      <ThemedText style={styles.questionTitle}>{title}</ThemedText>
-      <View style={styles.questionMeta}>
-        <View
-          style={[
-            styles.categoryTag,
-            { backgroundColor: `${getCategoryColor()}20` },
-          ]}
+      <ThemedText style={styles.questionTitle}>{question.title}</ThemedText>
+      {question.body ? (
+        <ThemedText
+          style={[styles.questionBody, { color: theme.textSecondary }]}
+          numberOfLines={2}
         >
-          <ThemedText
-            style={[styles.categoryTagText, { color: getCategoryColor() }]}
-          >
-            {category}
-          </ThemedText>
-        </View>
+          {question.body}
+        </ThemedText>
+      ) : null}
+      <View style={styles.questionMeta}>
         <View style={styles.responsesContainer}>
           <Feather
             name="message-circle"
             size={14}
-            color={answered ? METUColors.actionGreen : theme.textSecondary}
+            color={hasAnswers ? METUColors.actionGreen : theme.textSecondary}
           />
           <ThemedText
             style={[
               styles.responsesText,
               {
-                color: answered ? METUColors.actionGreen : theme.textSecondary,
+                color: hasAnswers
+                  ? METUColors.actionGreen
+                  : theme.textSecondary,
               },
             ]}
           >
-            {responses} {responses === 1 ? responseLabel : responsesLabel}
+            {answerCount} {answerCount === 1 ? responseLabel : responsesLabel}
           </ThemedText>
         </View>
         <ThemedText style={[styles.timeText, { color: theme.textSecondary }]}>
-          {time}
+          {timeAgo}
         </ThemedText>
       </View>
     </AnimatedPressable>
@@ -236,10 +181,14 @@ function QuestionCard({
 export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState<
     "recent" | "unanswered" | "popular"
   >("recent");
   const [searchQuery, setSearchQuery] = useState("");
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const browseNavigation =
     useNavigation<
       CompositeNavigationProp<
@@ -254,22 +203,56 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
     { id: "popular", label: t.popular },
   ] as const;
 
-  const filteredQuestions = MOCK_QUESTIONS.filter((q) => {
-    const title = language === "en" ? q.titleEn : q.titleTr;
-    const matchesSearch = title
+  // Subscribe to real-time questions from Firebase
+  useEffect(() => {
+    console.log("[OfferHelpScreen] Setting up questions subscription");
+    setLoading(true);
+
+    const unsubscribe = subscribeToQuestions((fetchedQuestions) => {
+      console.log(
+        `[OfferHelpScreen] Received ${fetchedQuestions.length} questions`,
+      );
+      setQuestions(fetchedQuestions);
+      setLoading(false);
+    });
+
+    return () => {
+      console.log("[OfferHelpScreen] Cleaning up questions subscription");
+      unsubscribe();
+    };
+  }, []);
+
+  const filteredQuestions = questions.filter((q) => {
+    const matchesSearch = q.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     if (selectedTab === "unanswered") {
-      return matchesSearch && !q.answered;
+      return matchesSearch && (!q.answerCount || q.answerCount === 0);
     }
     if (selectedTab === "popular") {
-      return matchesSearch && q.responses >= 5;
+      return matchesSearch && (q.answerCount || 0) >= 5;
     }
     return matchesSearch;
   });
 
+  const handleRefresh = () => {
+    setRefreshing(true);
+    // The subscription will automatically update with new data
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
   return (
-    <ScreenScrollView contentContainerStyle={styles.contentContainer}>
+    <ScreenScrollView 
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={isDark ? "#FF6B6B" : METUColors.maroon}
+          colors={[isDark ? "#FF6B6B" : METUColors.maroon]}
+        />
+      }
+    >
       <View
         style={[
           styles.searchContainer,
@@ -303,17 +286,23 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
       </View>
 
       <View style={styles.questionsList}>
-        {filteredQuestions.length > 0 ? (
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator
+              size="large"
+              color={isDark ? "#FF6B6B" : METUColors.maroon}
+            />
+            <ThemedText
+              style={[styles.loadingText, { color: theme.textSecondary }]}
+            >
+              Loading questions...
+            </ThemedText>
+          </View>
+        ) : filteredQuestions.length > 0 ? (
           filteredQuestions.map((question) => (
             <QuestionCard
               key={question.id}
-              title={language === "en" ? question.titleEn : question.titleTr}
-              category={
-                language === "en" ? question.categoryEn : question.categoryTr
-              }
-              responses={question.responses}
-              time={question.time}
-              answered={question.answered}
+              question={question}
               responseLabel={t.response}
               responsesLabel={t.responses}
               onPress={() => {
@@ -405,7 +394,12 @@ const styles = StyleSheet.create({
   questionTitle: {
     fontSize: Typography.body.fontSize,
     fontWeight: "500",
+    marginBottom: Spacing.xs,
+  },
+  questionBody: {
+    fontSize: Typography.small.fontSize,
     marginBottom: Spacing.md,
+    lineHeight: 20,
   },
   questionMeta: {
     flexDirection: "row",
@@ -444,6 +438,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   emptySubtitle: {
+    fontSize: Typography.body.fontSize,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: Spacing["5xl"],
+    gap: Spacing.md,
+  },
+  loadingText: {
     fontSize: Typography.body.fontSize,
   },
   fab: {
