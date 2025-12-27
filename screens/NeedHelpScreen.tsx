@@ -667,7 +667,6 @@ const styles = StyleSheet.create({
   requestTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1A1A1A",
     marginBottom: Spacing.xs,
     lineHeight: 24,
   },
@@ -715,18 +714,15 @@ const styles = StyleSheet.create({
   requestLocation: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#666666",
   },
   requestDescription: {
     fontSize: 14,
     lineHeight: 20,
     fontStyle: "italic",
-    color: "#666666",
   },
   requestTime: {
     fontSize: 12,
     fontWeight: "400",
-    color: "#666666",
   },
   cardFooter: {
     flexDirection: "row",
