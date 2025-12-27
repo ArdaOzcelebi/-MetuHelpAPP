@@ -45,19 +45,44 @@ export async function createQuestion(
   userId: string,
   userName: string,
 ): Promise<string> {
-  const db = getFirestoreInstance();
-  const questionsRef = collection(db, "questions");
-
-  const docRef = await addDoc(questionsRef, {
-    title,
-    body,
-    authorName: userName,
-    authorId: userId,
-    createdAt: serverTimestamp(),
-    answerCount: 0,
+  console.log("[createQuestion] Starting...", {
+    title: title.substring(0, 30),
+    bodyLength: body.length,
+    userId: userId.substring(0, 10),
+    userName,
   });
 
-  return docRef.id;
+  try {
+    const db = getFirestoreInstance();
+    console.log("[createQuestion] Got Firestore instance");
+
+    const questionsRef = collection(db, "questions");
+    console.log("[createQuestion] Got questions collection reference");
+
+    const questionData = {
+      title,
+      body,
+      authorName: userName,
+      authorId: userId,
+      createdAt: serverTimestamp(),
+      answerCount: 0,
+    };
+
+    console.log("[createQuestion] Adding document to Firestore...");
+    const docRef = await addDoc(questionsRef, questionData);
+
+    console.log("[createQuestion] SUCCESS! Question created with ID:", docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("[createQuestion] FAILED:", error);
+    console.error("[createQuestion] Error details:", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    });
+    throw error;
+  }
 }
 
 /**

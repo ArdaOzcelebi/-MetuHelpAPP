@@ -39,34 +39,63 @@ export default function AskQuestionScreen({
   const isValid = title.trim().length >= 10;
 
   const handlePost = async () => {
-    if (!isValid || isPosting) return;
+    console.log("[AskQuestionScreen] handlePost called", {
+      isValid,
+      isPosting,
+      hasUser: !!user,
+    });
+
+    if (!isValid || isPosting) {
+      console.log("[AskQuestionScreen] Validation failed or already posting");
+      return;
+    }
 
     if (!user) {
+      console.log("[AskQuestionScreen] No user found");
       Alert.alert("Error", "You must be logged in to post a question");
       return;
     }
 
+    console.log("[AskQuestionScreen] Starting post submission...");
     setIsPosting(true);
 
     try {
-      await createQuestion(
+      console.log("[AskQuestionScreen] Calling createQuestion...");
+      const questionId = await createQuestion(
         title.trim(),
         details.trim(),
         user.uid,
         user.displayName || "Anonymous",
       );
 
+      console.log(
+        "[AskQuestionScreen] Question created successfully:",
+        questionId,
+      );
+
       Alert.alert("Success!", "Your question has been posted.", [
         {
           text: "OK",
-          onPress: () => navigation.goBack(),
+          onPress: () => {
+            console.log("[AskQuestionScreen] Navigating back");
+            navigation.goBack();
+          },
         },
       ]);
     } catch (error) {
-      console.error("Error posting question:", error);
+      console.error("[AskQuestionScreen] Error posting question:", error);
+      console.error("[AskQuestionScreen] Error details:", {
+        name: error?.name,
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack,
+      });
+
       Alert.alert(
         "Error",
-        error instanceof Error ? error.message : "Failed to post question",
+        error instanceof Error
+          ? error.message
+          : "Failed to post question. Please check your internet connection and try again.",
       );
       setIsPosting(false);
     }
