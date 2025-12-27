@@ -10,36 +10,34 @@
  *   node scripts/clear-all-requests.js
  */
 
-const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, getDocs, deleteDoc, doc } = require('firebase/firestore');
-
-// Load environment variables from .env.local
-const fs = require('fs');
+const dotenv = require('dotenv');
 const path = require('path');
 
-function loadEnvFile() {
-  const envPath = path.join(__dirname, '..', '.env.local');
-  if (!fs.existsSync(envPath)) {
-    console.error('❌ Error: .env.local file not found');
-    process.exit(1);
-  }
+// Load .env.local file
+const result = dotenv.config({
+  path: path.join(__dirname, '..', '.env.local'),
+});
 
-  const envContent = fs.readFileSync(envPath, 'utf-8');
-  const lines = envContent.split('\n');
-  
-  lines.forEach(line => {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#')) {
-      const [key, ...valueParts] = trimmed.split('=');
-      const value = valueParts.join('=').trim();
-      if (key && value) {
-        process.env[key] = value;
-      }
-    }
-  });
+if (result.error) {
+  console.error('❌ Error loading .env.local file:', result.error.message);
+  console.log('\nMake sure you have a .env.local file in the project root.');
+  process.exit(1);
 }
 
-loadEnvFile();
+// Import Firebase modules dynamically
+let initializeApp, getFirestore, collection, getDocs, deleteDoc, doc;
+
+async function loadFirebase() {
+  const firebase = await import('firebase/app');
+  const firestore = await import('firebase/firestore');
+  
+  initializeApp = firebase.initializeApp;
+  getFirestore = firestore.getFirestore;
+  collection = firestore.collection;
+  getDocs = firestore.getDocs;
+  deleteDoc = firestore.deleteDoc;
+  doc = firestore.doc;
+}
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -62,14 +60,10 @@ if (missingKeys.length > 0) {
   process.exit(1);
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
 /**
  * Delete all documents in a collection
  */
-async function clearCollection(collectionName) {
+async function clearCollection(db, collectionName) {
   console.log(`\n🗑️  Clearing collection: ${collectionName}`);
   
   try {
@@ -118,13 +112,20 @@ async function main() {
   console.log('   - This operation is IRREVERSIBLE\n');
 
   try {
+    // Load Firebase modules
+    await loadFirebase();
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     let totalDeleted = 0;
 
     // Clear help requests
-    totalDeleted += await clearCollection('helpRequests');
+    totalDeleted += await clearCollection(db, 'helpRequests');
     
     // Clear chats (this will also clear subcollection messages automatically)
-    totalDeleted += await clearCollection('chats');
+    totalDeleted += await clearCollection(db, 'chats');
 
     console.log('\n╔════════════════════════════════════════════╗');
     console.log(`║  ✓ SUCCESS: Deleted ${totalDeleted} documents total     ║`);
