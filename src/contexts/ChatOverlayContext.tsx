@@ -83,7 +83,7 @@ export function ChatOverlayProvider({
           helperId: c.helperId,
         })),
       );
-      
+
       setChats(updatedChats);
 
       // TODO: Calculate unread count from messages
@@ -91,7 +91,10 @@ export function ChatOverlayProvider({
       const activeChats = updatedChats.filter(
         (chat) => chat.status !== "finalized",
       );
-      console.log("[ChatOverlayContext] Active chats count:", activeChats.length);
+      console.log(
+        "[ChatOverlayContext] Active chats count:",
+        activeChats.length,
+      );
       setUnreadCount(activeChats.length);
     });
 
