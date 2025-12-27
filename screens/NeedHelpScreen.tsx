@@ -10,6 +10,7 @@ import Animated, {
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
+import { ConfirmationModal } from "@/src/components/ConfirmationModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
@@ -27,7 +28,6 @@ import {
 } from "@/src/services/helpRequestService";
 import { getChatByRequestId } from "@/src/services/chatService";
 import type { HelpRequest, HelpRequestCategory } from "@/src/types/helpRequest";
-import { Alert } from "react-native";
 
 type NeedHelpScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "NeedHelp">;
@@ -412,6 +412,11 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const [userOfferedHelpMap, setUserOfferedHelpMap] = useState<
     Map<string, boolean>
   >(new Map());
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
 
   const checkActiveChats = useCallback(
     async (requests: HelpRequest[]) => {
@@ -421,22 +426,11 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       const newUserOfferedHelpMap = new Map<string, boolean>();
 
       for (const request of requests) {
-        console.log(
-          "[NeedHelpScreen] Checking active chats for Request ID:",
-          request.id,
-        );
         try {
           const chat = await getChatByRequestId(request.id, user.uid);
           if (chat) {
-            console.log(
-              "[NeedHelpScreen] Found active chat for request:",
-              request.id,
-              "chatId:",
-              chat.id,
-            );
             newChatsMap.set(request.id, chat.id);
 
-            // Check if current user is the helper in this chat
             if (chat.helperId === user.uid) {
               newUserOfferedHelpMap.set(request.id, true);
             }
@@ -456,89 +450,43 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
     [user],
   );
 
-  const handleMarkComplete = async (
-    requestId: string,
-    requestTitle: string,
-  ) => {
-    console.log("[NeedHelpScreen] handleMarkComplete called for:", requestId);
-    
-    const performFinalization = async () => {
-      console.log("[NeedHelpScreen] User confirmed - starting finalization");
-      try {
-        await finalizeHelpRequest(requestId);
-        Alert.alert("Success", "Request has been marked as completed and removed from the list!");
-        console.log("[NeedHelpScreen] Request finalized successfully:", requestId);
-      } catch (error) {
-        console.error(
-          "[NeedHelpScreen] Error finalizing request:",
-          error,
-        );
-        Alert.alert(
-          "Error",
-          "Failed to mark request as completed. Please try again.",
-        );
-      }
-    };
+  const handleMarkComplete = (requestId: string, requestTitle: string) => {
+    setSelectedRequest({ id: requestId, title: requestTitle });
+    setShowConfirmModal(true);
+  };
 
-    Alert.alert(
-      "Mark as Completed",
-      `Are you sure you want to mark "${requestTitle}" as completed? This will finalize the request and archive it.`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-          onPress: () => {
-            console.log("[NeedHelpScreen] User cancelled");
-          },
-        },
-        {
-          text: "Mark Complete",
-          style: "default",
-          onPress: () => {
-            console.log("[NeedHelpScreen] Button onPress triggered!");
-            console.log("[NeedHelpScreen] User confirmed completion");
-            // Use setTimeout with longer delay for React Native Web compatibility
-            // React Native Web Alert.alert has timing issues with callbacks
-            setTimeout(() => {
-              console.log("[NeedHelpScreen] setTimeout callback executing");
-              performFinalization();
-            }, 300);
-          },
-        },
-      ],
-    );
+  const performFinalization = async () => {
+    if (!selectedRequest) return;
+
+    setShowConfirmModal(false);
+    
+    try {
+      await finalizeHelpRequest(selectedRequest.id);
+    } catch (error) {
+      console.error("[NeedHelpScreen] Error finalizing request:", error);
+    } finally {
+      setSelectedRequest(null);
+    }
   };
 
   useEffect(() => {
-    console.log(
-      "[NeedHelpScreen] Setting up subscription for category:",
-      selectedCategory,
-    );
     setLoading(true);
 
-    // Type-safe category filtering
     const categoryFilter =
       selectedCategory === "all"
         ? undefined
         : (selectedCategory as HelpRequestCategory);
 
     const unsubscribe = subscribeToHelpRequests((requests) => {
-      console.log(
-        "[NeedHelpScreen] Received requests update, count:",
-        requests.length,
-      );
-      console.log("[NeedHelpScreen] Requests:", requests);
       setHelpRequests(requests);
       setLoading(false);
 
-      // Check for active chats for each request
       if (user) {
         checkActiveChats(requests);
       }
     }, categoryFilter);
 
     return () => {
-      console.log("[NeedHelpScreen] Cleaning up subscription");
       unsubscribe();
     };
   }, [selectedCategory, user, checkActiveChats]);
@@ -556,20 +504,24 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       ? helpRequests
       : helpRequests.filter((req) => req.category === selectedCategory);
 
-  // Debug logging
-  console.log(
-    "[NeedHelpScreen] Render - helpRequests count:",
-    helpRequests.length,
-  );
-  console.log(
-    "[NeedHelpScreen] Render - filteredRequests count:",
-    filteredRequests.length,
-  );
-  console.log("[NeedHelpScreen] Render - loading:", loading);
-  console.log("[NeedHelpScreen] Render - selectedCategory:", selectedCategory);
-
   return (
     <ScreenScrollView>
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        visible={showConfirmModal}
+        title="Mark as Completed"
+        message={`Are you sure you want to mark "${selectedRequest?.title || 'this request'}" as completed? This will finalize the request and archive it.`}
+        confirmText="Mark Complete"
+        cancelText="Cancel"
+        onConfirm={performFinalization}
+        onCancel={() => {
+          setShowConfirmModal(false);
+          setSelectedRequest(null);
+        }}
+        confirmColor={METUColors.actionGreen}
+        icon="check-circle"
+      />
+
       <View style={styles.filterContainer}>
         <ScrollView
           horizontal
@@ -617,9 +569,9 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 status={request.status}
                 urgentLabel={t.urgent}
                 helpButtonLabel={t.iCanHelp}
-                statusOpenLabel={t.open || "Open"}
-                statusAcceptedLabel={t.accepted || "Accepted"}
-                statusFinalizedLabel={t.finalized || "Finalized"}
+                statusOpenLabel={t.statusOpen}
+                statusAcceptedLabel={t.statusAccepted}
+                statusFinalizedLabel={t.statusFinalized}
                 isOwnRequest={isOwnRequest}
                 hasActiveChat={hasActiveChat}
                 userHasOfferedHelp={userHasOfferedHelp}
@@ -637,10 +589,6 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 }}
                 onOpenChat={() => {
                   if (chatId) {
-                    console.log(
-                      "[NeedHelpScreen] Opening chat via overlay:",
-                      chatId,
-                    );
                     openChat(chatId);
                   }
                 }}
