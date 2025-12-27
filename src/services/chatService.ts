@@ -185,25 +185,32 @@ export async function createChat(chatData: CreateChatData): Promise<string> {
 }
 
 /**
- * Get chat by request ID
- * Returns the chat if one exists for this request
+ * Get chat by request ID for a specific user
+ * Returns the chat if one exists for this request AND the user is a participant
  *
  * @param requestId - The help request ID
+ * @param userId - The current user's ID (must be requester or helper)
  * @returns Promise resolving to Chat or null if not found
  */
 export async function getChatByRequestId(
   requestId: string,
+  userId: string,
 ): Promise<Chat | null> {
   try {
     console.log(
       "[getChatByRequestId] Checking for chat with requestId:",
       requestId,
+      "for user:",
+      userId,
     );
 
     const db = getFirestoreInstance();
+    // IMPORTANT: Filter by members array to comply with Firestore security rules
+    // Security rules typically require: request.auth.uid in resource.data.members
     const q = query(
       collection(db, CHATS_COLLECTION),
       where("requestId", "==", requestId),
+      where("members", "array-contains", userId),
     );
 
     const querySnapshot = await getDocs(q);
@@ -214,7 +221,7 @@ export async function getChatByRequestId(
       return null;
     }
 
-    // Return the first chat found (there should only be one per request)
+    // Return the first chat found (there should only be one per request per user)
     const doc = querySnapshot.docs[0];
     const chat = documentToChat(doc.id, doc.data());
     console.log("[getChatByRequestId] Returning chat:", chat?.id);

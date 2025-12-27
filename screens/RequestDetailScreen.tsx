@@ -87,7 +87,7 @@ export default function RequestDetailScreen({
 
         // Check if user has already offered help (chat exists)
         if (user && data) {
-          const existingChat = await getChatByRequestId(requestId);
+          const existingChat = await getChatByRequestId(requestId, user.uid);
           if (existingChat && existingChat.helperId === user.uid) {
             setHasOfferedHelp(true);
           }
@@ -183,7 +183,7 @@ export default function RequestDetailScreen({
 
     try {
       // Check if a chat already exists
-      const existingChat = await getChatByRequestId(requestId);
+      const existingChat = await getChatByRequestId(requestId, user.uid);
 
       let chatId: string;
 

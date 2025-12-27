@@ -426,7 +426,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
           request.id,
         );
         try {
-          const chat = await getChatByRequestId(request.id);
+          const chat = await getChatByRequestId(request.id, user.uid);
           if (chat) {
             console.log(
               "[NeedHelpScreen] Found active chat for request:",
