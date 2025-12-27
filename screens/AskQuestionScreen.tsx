@@ -161,6 +161,8 @@ export default function AskQuestionScreen({
     </ScreenKeyboardAwareScrollView>
   );
 }
+
+const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: Typography.small.fontSize,
     fontWeight: "600",
