@@ -344,9 +344,7 @@ export function subscribeToHelpRequests(
           error.code === "failed-precondition" &&
           error.message.includes("index")
         ) {
-          console.error(
-            "[subscribeToHelpRequests] FIRESTORE INDEX REQUIRED:",
-          );
+          console.error("[subscribeToHelpRequests] FIRESTORE INDEX REQUIRED:");
           console.error(
             "The query requires a composite index. This has been fixed by simplifying the query.",
           );

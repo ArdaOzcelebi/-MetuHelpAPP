@@ -13,6 +13,7 @@ import { RouteProp } from "@react-navigation/native";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useChatOverlay } from "@/src/contexts/ChatOverlayContext";
 import {
@@ -22,13 +23,9 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
-import {
-  getHelpRequest,
-  acceptHelpRequest,
-} from "@/src/services/helpRequestService";
-import { createChat } from "@/src/services/chatService";
-import type { HelpRequest } from "@/src/types/helpRequest";
+import { getHelpRequest } from "@/src/services/helpRequestService";
 import { createChat, getChatByRequestId } from "@/src/services/chatService";
+import type { HelpRequest } from "@/src/types/helpRequest";
 
 type RequestDetailScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "RequestDetail">;
@@ -70,6 +67,7 @@ export default function RequestDetailScreen({
   route,
 }: RequestDetailScreenProps) {
   const { theme, isDark } = useTheme();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { openChat } = useChatOverlay();
   const { requestId } = route.params;
@@ -77,6 +75,7 @@ export default function RequestDetailScreen({
   const [loading, setLoading] = useState(true);
   const [offeringHelp, setOfferingHelp] = useState(false);
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
+  const [accepting, setAccepting] = useState(false);
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -221,6 +220,40 @@ export default function RequestDetailScreen({
       ]);
     } finally {
       setOfferingHelp(false);
+    }
+  };
+
+  // Handler to open chat via overlay
+  const handleOpenChat = async () => {
+    if (!request?.chatId) {
+      console.warn("[RequestDetail] No chat ID available");
+      return;
+    }
+
+    console.log("[RequestDetail] Opening chat via overlay:", request.chatId);
+    openChat(request.chatId);
+  };
+
+  // Handler to accept help request (placeholder - not fully implemented in original)
+  const handleAcceptRequest = async () => {
+    if (!user || !request) {
+      Alert.alert("Error", "Unable to accept request at this time.");
+      return;
+    }
+
+    setAccepting(true);
+    try {
+      // This would call acceptHelpRequest service which seems to not be fully implemented
+      console.log("[RequestDetail] Accept request functionality pending");
+      Alert.alert(
+        "Feature In Progress",
+        "Request acceptance is being implemented.",
+      );
+    } catch (error) {
+      console.error("[RequestDetail] Error accepting request:", error);
+      Alert.alert("Error", "Failed to accept request. Please try again.");
+    } finally {
+      setAccepting(false);
     }
   };
 

@@ -432,8 +432,12 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 location={request.location}
                 time={getTimeAgo(request.createdAt)}
                 urgent={request.urgent}
+                status={request.status}
                 urgentLabel={t.urgent}
                 helpButtonLabel={t.iCanHelp}
+                statusOpenLabel={t.open || "Open"}
+                statusAcceptedLabel={t.accepted || "Accepted"}
+                statusFinalizedLabel={t.finalized || "Finalized"}
                 isOwnRequest={isOwnRequest}
                 hasActiveChat={hasActiveChat}
                 openChatLabel="Open Chat"
@@ -449,7 +453,10 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 }}
                 onOpenChat={() => {
                   if (chatId) {
-                    console.log("[NeedHelpScreen] Opening chat via overlay:", chatId);
+                    console.log(
+                      "[NeedHelpScreen] Opening chat via overlay:",
+                      chatId,
+                    );
                     openChat(chatId);
                   }
                 }}

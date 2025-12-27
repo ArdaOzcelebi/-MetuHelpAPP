@@ -96,10 +96,7 @@ export function ChatOverlayProvider({
   };
 
   const openChatByRequestId = (requestId: string) => {
-    console.log(
-      "[ChatOverlayContext] Opening chat by request ID:",
-      requestId,
-    );
+    console.log("[ChatOverlayContext] Opening chat by request ID:", requestId);
     // Find chat with matching requestId
     const chat = chats.find((c) => c.requestId === requestId);
     if (chat) {
@@ -165,9 +162,7 @@ export function ChatOverlayProvider({
 export function useChatOverlay() {
   const context = useContext(ChatOverlayContext);
   if (context === undefined) {
-    throw new Error(
-      "useChatOverlay must be used within a ChatOverlayProvider",
-    );
+    throw new Error("useChatOverlay must be used within a ChatOverlayProvider");
   }
   return context;
 }

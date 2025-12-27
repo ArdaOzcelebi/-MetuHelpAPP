@@ -31,7 +31,6 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useChatOverlay } from "@/src/contexts/ChatOverlayContext";
@@ -59,7 +58,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
  * Minimized FAB bubble with unread badge
  */
 function MinimizedBubble() {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { toggleMinimize, unreadCount } = useChatOverlay();
   const scale = useSharedValue(1);
 
@@ -134,7 +133,9 @@ function ThreadItem({ chat, onPress, currentUserId }: ThreadItemProps) {
           <ThemedText style={styles.threadTitle} numberOfLines={1}>
             {chat.requestTitle}
           </ThemedText>
-          <ThemedText style={[styles.threadTime, { color: theme.textSecondary }]}>
+          <ThemedText
+            style={[styles.threadTime, { color: theme.textSecondary }]}
+          >
             {timeAgo}
           </ThemedText>
         </View>
@@ -168,8 +169,14 @@ function ThreadListView() {
     <View style={styles.threadListContainer}>
       {chats.length === 0 ? (
         <View style={styles.emptyState}>
-          <Feather name="message-circle" size={48} color={theme.textSecondary} />
-          <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
+          <Feather
+            name="message-circle"
+            size={48}
+            color={theme.textSecondary}
+          />
+          <ThemedText
+            style={[styles.emptyText, { color: theme.textSecondary }]}
+          >
             No active chats yet
           </ThemedText>
         </View>
@@ -358,7 +365,10 @@ function ConversationView() {
             {chat.requestTitle}
           </ThemedText>
           <ThemedText
-            style={[styles.conversationSubtitle, { color: theme.textSecondary }]}
+            style={[
+              styles.conversationSubtitle,
+              { color: theme.textSecondary },
+            ]}
             numberOfLines={1}
           >
             {user?.uid === chat.requesterId
@@ -521,10 +531,7 @@ function ExpandedWindow() {
 
   // On web, use absolute positioning
   return (
-    <KeyboardAvoidingView
-      style={styles.expandedWrapper}
-      behavior="height"
-    >
+    <KeyboardAvoidingView style={styles.expandedWrapper} behavior="height">
       {content}
     </KeyboardAvoidingView>
   );
