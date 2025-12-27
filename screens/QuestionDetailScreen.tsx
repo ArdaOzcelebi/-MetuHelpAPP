@@ -25,7 +25,12 @@ import {
   type QAQuestion,
   type QAAnswer,
 } from "@/src/services/qaService";
-import { Spacing, BorderRadius, METUColors, Typography } from "@/constants/theme";
+import {
+  Spacing,
+  BorderRadius,
+  METUColors,
+  Typography,
+} from "@/constants/theme";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
 
 type QuestionDetailScreenProps = {
@@ -61,9 +66,12 @@ export default function QuestionDetailScreen({
         setQuestion(q);
 
         // Subscribe to answers
-        unsubscribeAnswers = subscribeToAnswers(questionId, (updatedAnswers) => {
-          setAnswers(updatedAnswers);
-        });
+        unsubscribeAnswers = subscribeToAnswers(
+          questionId,
+          (updatedAnswers) => {
+            setAnswers(updatedAnswers);
+          },
+        );
 
         setLoading(false);
       } catch (error) {
@@ -151,7 +159,10 @@ export default function QuestionDetailScreen({
         >
           {/* Question Card */}
           <View
-            style={[styles.questionCard, { backgroundColor: theme.cardBackground }]}
+            style={[
+              styles.questionCard,
+              { backgroundColor: theme.cardBackground },
+            ]}
           >
             <View style={styles.questionHeader}>
               <View
@@ -178,10 +189,14 @@ export default function QuestionDetailScreen({
               </View>
             </View>
 
-            <ThemedText style={styles.questionTitle}>{question.title}</ThemedText>
+            <ThemedText style={styles.questionTitle}>
+              {question.title}
+            </ThemedText>
 
             {question.body ? (
-              <ThemedText style={[styles.questionBody, { color: theme.textSecondary }]}>
+              <ThemedText
+                style={[styles.questionBody, { color: theme.textSecondary }]}
+              >
                 {question.body}
               </ThemedText>
             ) : null}
@@ -196,7 +211,9 @@ export default function QuestionDetailScreen({
             {answers.length === 0 ? (
               <View style={styles.noAnswers}>
                 <Feather name="message-circle" size={48} color="#CCCCCC" />
-                <ThemedText style={[styles.noAnswersText, { color: theme.textSecondary }]}>
+                <ThemedText
+                  style={[styles.noAnswersText, { color: theme.textSecondary }]}
+                >
                   No answers yet. Be the first to help!
                 </ThemedText>
               </View>
@@ -214,7 +231,9 @@ export default function QuestionDetailScreen({
                       style={[
                         styles.avatarSmall,
                         {
-                          backgroundColor: isDark ? "#CC3333" : METUColors.maroon,
+                          backgroundColor: isDark
+                            ? "#CC3333"
+                            : METUColors.maroon,
                         },
                       ]}
                     >
@@ -226,17 +245,25 @@ export default function QuestionDetailScreen({
                       <ThemedText style={styles.answerAuthorName}>
                         {answer.authorName}
                         {answer.authorId === user?.uid && (
-                          <ThemedText style={styles.youBadge}> (You)</ThemedText>
+                          <ThemedText style={styles.youBadge}>
+                            {" "}
+                            (You)
+                          </ThemedText>
                         )}
                       </ThemedText>
                       <ThemedText
-                        style={[styles.timeText, { color: theme.textSecondary }]}
+                        style={[
+                          styles.timeText,
+                          { color: theme.textSecondary },
+                        ]}
                       >
                         {getTimeAgo(answer.createdAt)}
                       </ThemedText>
                     </View>
                   </View>
-                  <ThemedText style={styles.answerBody}>{answer.body}</ThemedText>
+                  <ThemedText style={styles.answerBody}>
+                    {answer.body}
+                  </ThemedText>
                 </View>
               ))
             )}
@@ -247,7 +274,10 @@ export default function QuestionDetailScreen({
         <View
           style={[
             styles.inputContainer,
-            { backgroundColor: theme.cardBackground, borderTopColor: theme.backgroundSecondary },
+            {
+              backgroundColor: theme.cardBackground,
+              borderTopColor: theme.backgroundSecondary,
+            },
           ]}
         >
           <TextInput
