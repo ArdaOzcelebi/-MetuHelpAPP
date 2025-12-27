@@ -1,9 +1,9 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import BrowseScreen from "@/screens/BrowseScreen";
+import QAForumScreen from "@/screens/QAForumScreen";
 import RequestDetailScreen from "@/screens/RequestDetailScreen";
-import QuestionDetailScreen from "@/screens/QuestionDetailScreen";
-import AskQuestionScreen from "@/screens/AskQuestionScreen";
+import SimpleQuestionDetailScreen from "@/screens/SimpleQuestionDetailScreen";
+import SimpleAskQuestionScreen from "@/screens/SimpleAskQuestionScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
@@ -25,9 +25,9 @@ export default function BrowseStackNavigator() {
     <Stack.Navigator screenOptions={getCommonScreenOptions({ theme, isDark })}>
       <Stack.Screen
         name="Browse"
-        component={BrowseScreen}
+        component={QAForumScreen}
         options={{
-          title: t.browse,
+          title: "Q&A Forum",
         }}
       />
       <Stack.Screen
@@ -37,14 +37,14 @@ export default function BrowseStackNavigator() {
       />
       <Stack.Screen
         name="QuestionDetail"
-        component={QuestionDetailScreen}
-        options={{ headerTitle: t.questionDetails }}
+        component={SimpleQuestionDetailScreen}
+        options={{ headerTitle: "Question Details" }}
       />
       <Stack.Screen
         name="AskQuestion"
-        component={AskQuestionScreen}
+        component={SimpleAskQuestionScreen}
         options={{
-          headerTitle: t.askQuestion,
+          headerTitle: "Ask a Question",
           presentation: "modal",
         }}
       />
