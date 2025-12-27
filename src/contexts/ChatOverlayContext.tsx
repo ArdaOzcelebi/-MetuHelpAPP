@@ -136,14 +136,18 @@ export function ChatOverlayProvider({
   const toggleMinimize = () => {
     console.log("[ChatOverlayContext] Toggling minimize state");
     if (isMinimized) {
-      // Expanding - always show thread list initially
-      // User can navigate to a specific conversation from there
+      // Expanding - if there's an active chat, restore it; otherwise show thread list
       setIsMinimized(false);
       setIsOpen(true);
-      setActiveView("threads");
-      setActiveChatId(null);
+      if (activeChatId) {
+        // Restore the conversation that was active before minimizing
+        setActiveView("conversation");
+      } else {
+        // No active conversation, show thread list
+        setActiveView("threads");
+      }
     } else {
-      // Minimizing
+      // Minimizing - keep activeChatId so we can restore the view
       setIsMinimized(true);
     }
   };

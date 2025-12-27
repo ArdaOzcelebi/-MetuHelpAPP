@@ -351,7 +351,9 @@ function ConversationView() {
       await finalizeChat(activeChatId);
       
       // Navigate back to thread list (stay open so user can see the change)
-      // The finalized chat will automatically disappear from the list
+      // The finalized chat will automatically disappear from the list because:
+      // 1. The Firebase onSnapshot listener in ChatOverlayContext will detect the status change
+      // 2. ThreadListView filters chats with status !== "finalized" (line 172)
       goBackToThreads();
     } catch (error) {
       console.error("[ConversationView] Error completing transaction:", error);
