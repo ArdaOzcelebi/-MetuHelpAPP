@@ -345,9 +345,14 @@ function ConversationView() {
     setShowConfirmModal(false);
     
     try {
+      // Update help request status first
       await finalizeHelpRequest(chat.requestId);
+      // Then update chat status - this will trigger the onSnapshot listener
       await finalizeChat(activeChatId);
-      closeChat();
+      
+      // Navigate back to thread list (stay open so user can see the change)
+      // The finalized chat will automatically disappear from the list
+      goBackToThreads();
     } catch (error) {
       console.error("[ConversationView] Error completing transaction:", error);
     } finally {
