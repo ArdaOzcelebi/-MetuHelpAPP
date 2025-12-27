@@ -188,11 +188,27 @@ export default function RequestDetailScreen({
       let chatId: string;
 
       if (existingChat) {
-        // Chat already exists, open it
+        // Chat already exists
         chatId = existingChat.id;
         console.log("[RequestDetailScreen] Using existing chat:", chatId);
 
-        // Check if request needs to be accepted (status might still be "active")
+        // IMPORTANT: Check if the current user is the helper in this chat
+        // If someone else is the helper, prevent this user from accepting
+        if (existingChat.helperId !== user.uid) {
+          console.log(
+            "[RequestDetailScreen] Chat already exists with different helper:",
+            existingChat.helperId,
+          );
+          Alert.alert(
+            "Already Accepted",
+            "This request has already been accepted by another user.",
+            [{ text: "OK" }],
+          );
+          setOfferingHelp(false);
+          return;
+        }
+
+        // User is the helper, check if request needs to be accepted (status might still be "active")
         if (request.status === "active") {
           console.log("[RequestDetailScreen] Accepting existing request");
           await acceptHelpRequest(

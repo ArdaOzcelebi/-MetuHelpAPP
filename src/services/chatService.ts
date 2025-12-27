@@ -168,6 +168,7 @@ export async function createChat(chatData: CreateChatData): Promise<string> {
     const data = {
       ...chatData,
       members: [chatData.requesterId, chatData.helperId], // Required for Firebase security rules
+      status: "active", // Explicitly set status to active
       createdAt: now,
       updatedAt: now,
     };
