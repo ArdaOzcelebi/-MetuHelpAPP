@@ -21,7 +21,11 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
-import { getHelpRequest } from "@/src/services/helpRequestService";
+import {
+  getHelpRequest,
+  acceptHelpRequest,
+} from "@/src/services/helpRequestService";
+import { createChat } from "@/src/services/chatService";
 import type { HelpRequest } from "@/src/types/helpRequest";
 import { createChat, getChatByRequestId } from "@/src/services/chatService";
 
@@ -67,7 +71,6 @@ export default function RequestDetailScreen({
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
   const { requestId } = route.params;
-  const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
   const [request, setRequest] = useState<HelpRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [offeringHelp, setOfferingHelp] = useState(false);
@@ -221,6 +224,56 @@ export default function RequestDetailScreen({
   const displayName = request.isAnonymous ? "Anonymous" : request.userName;
   const displayInitials = request.isAnonymous ? "AN" : posterInitials;
 
+  // Determine button state and action
+  const isOwnRequest = user?.uid === request.userId;
+  const isAccepted = request.status === "accepted";
+  const isFinalized = request.status === "finalized";
+  const canAccept = !isOwnRequest && request.status === "active";
+  const canViewChat =
+    (isOwnRequest || user?.uid === request.acceptedBy) &&
+    (isAccepted || isFinalized) &&
+    request.chatId;
+
+  console.log("[RequestDetail] Button state:", {
+    isOwnRequest,
+    isAccepted,
+    isFinalized,
+    canAccept,
+    canViewChat,
+    status: request.status,
+    userId: user?.uid,
+    requestUserId: request.userId,
+  });
+
+  const getStatusBadge = () => {
+    if (isFinalized) {
+      return (
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: METUColors.actionGreen },
+          ]}
+        >
+          <Feather name="check-circle" size={14} color="#FFFFFF" />
+          <ThemedText style={styles.statusBadgeText}>
+            {t.statusFinalized}
+          </ThemedText>
+        </View>
+      );
+    }
+    if (isAccepted) {
+      return (
+        <View style={[styles.statusBadge, { backgroundColor: "#3B82F6" }]}>
+          <Feather name="user-check" size={14} color="#FFFFFF" />
+          <ThemedText style={styles.statusBadgeText}>
+            {t.statusAccepted}
+          </ThemedText>
+        </View>
+      );
+    }
+    return null;
+  };
+
   return (
     <ScreenScrollView>
       <View style={styles.header}>
@@ -242,12 +295,15 @@ export default function RequestDetailScreen({
             </ThemedText>
           </View>
         </View>
-        {request.urgent ? (
-          <View style={styles.urgentBadge}>
-            <Feather name="alert-circle" size={14} color="#FFFFFF" />
-            <ThemedText style={styles.urgentText}>Urgent</ThemedText>
-          </View>
-        ) : null}
+        <View style={styles.badgeContainer}>
+          {getStatusBadge()}
+          {request.urgent && !isFinalized && !isAccepted ? (
+            <View style={styles.urgentBadge}>
+              <Feather name="alert-circle" size={14} color="#FFFFFF" />
+              <ThemedText style={styles.urgentText}>{t.urgent}</ThemedText>
+            </View>
+          ) : null}
+        </View>
       </View>
 
       <ThemedText type="h3" style={styles.title}>
@@ -328,15 +384,85 @@ export default function RequestDetailScreen({
         </Pressable>
       )}
 
-      <View style={styles.contactNote}>
-        <Feather name="info" size={16} color={theme.textSecondary} />
-        <ThemedText
-          style={[styles.contactNoteText, { color: theme.textSecondary }]}
+      {canViewChat ? (
+        <Pressable
+          onPress={handleOpenChat}
+          style={({ pressed }) => [
+            styles.helpButton,
+            {
+              backgroundColor: METUColors.maroon,
+              opacity: pressed ? 0.9 : 1,
+            },
+          ]}
         >
-          When you offer help, the poster will be notified and can contact you
-          directly.
-        </ThemedText>
-      </View>
+          <Feather name="message-circle" size={20} color="#FFFFFF" />
+          <ThemedText style={[styles.helpButtonText, { color: "#FFFFFF" }]}>
+            {t.chat}
+          </ThemedText>
+        </Pressable>
+      ) : canAccept ? (
+        <Pressable
+          onPress={() => {
+            console.log("[RequestDetail] Accept button clicked!");
+            handleAcceptRequest();
+          }}
+          disabled={accepting}
+          style={({ pressed }) => [
+            styles.helpButton,
+            {
+              backgroundColor: accepting
+                ? theme.backgroundSecondary
+                : METUColors.actionGreen,
+              opacity: pressed ? 0.9 : 1,
+            },
+          ]}
+        >
+          {accepting ? (
+            <>
+              <ActivityIndicator size="small" color={theme.text} />
+              <ThemedText
+                style={[styles.helpButtonText, { color: theme.text }]}
+              >
+                {t.accepting}
+              </ThemedText>
+            </>
+          ) : (
+            <>
+              <Feather name="check-circle" size={20} color="#FFFFFF" />
+              <ThemedText style={[styles.helpButtonText, { color: "#FFFFFF" }]}>
+                {t.acceptRequest}
+              </ThemedText>
+            </>
+          )}
+        </Pressable>
+      ) : isFinalized ? (
+        <View style={styles.finalizedMessage}>
+          <Feather
+            name="check-circle"
+            size={20}
+            color={METUColors.actionGreen}
+          />
+          <ThemedText
+            style={[
+              styles.finalizedMessageText,
+              { color: theme.textSecondary },
+            ]}
+          >
+            {t.requestFinalizedStatus}
+          </ThemedText>
+        </View>
+      ) : null}
+
+      {canAccept && (
+        <View style={styles.contactNote}>
+          <Feather name="info" size={16} color={theme.textSecondary} />
+          <ThemedText
+            style={[styles.contactNoteText, { color: theme.textSecondary }]}
+          >
+            {t.acceptConfirmMessage}
+          </ThemedText>
+        </View>
+      )}
     </ScreenScrollView>
   );
 }
@@ -351,6 +477,11 @@ const styles = StyleSheet.create({
   posterInfo: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+  },
+  badgeContainer: {
+    gap: Spacing.xs,
+    alignItems: "flex-end",
   },
   avatar: {
     width: 48,
@@ -371,6 +502,19 @@ const styles = StyleSheet.create({
   },
   postTime: {
     fontSize: Typography.small.fontSize,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
+  },
+  statusBadgeText: {
+    color: "#FFFFFF",
+    fontSize: Typography.small.fontSize,
+    fontWeight: "600",
   },
   urgentBadge: {
     flexDirection: "row",
@@ -417,7 +561,7 @@ const styles = StyleSheet.create({
   descriptionCard: {
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.lg,
   },
   descriptionLabel: {
     fontSize: Typography.small.fontSize,
@@ -428,6 +572,26 @@ const styles = StyleSheet.create({
   descriptionText: {
     fontSize: Typography.body.fontSize,
     lineHeight: 24,
+  },
+  acceptedByCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  acceptedByInfo: {
+    flex: 1,
+  },
+  acceptedByLabel: {
+    fontSize: Typography.small.fontSize,
+    opacity: 0.7,
+  },
+  acceptedByName: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "600",
+    marginTop: Spacing.xs,
   },
   helpButton: {
     flexDirection: "row",
@@ -441,6 +605,16 @@ const styles = StyleSheet.create({
   helpButtonText: {
     fontSize: Typography.button.fontSize,
     fontWeight: "600",
+  },
+  finalizedMessage: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  finalizedMessageText: {
+    fontSize: Typography.body.fontSize,
   },
   contactNote: {
     flexDirection: "row",

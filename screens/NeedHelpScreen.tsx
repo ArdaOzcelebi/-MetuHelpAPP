@@ -106,8 +106,12 @@ interface RequestCardProps {
   location: string;
   time: string;
   urgent: boolean;
+  status: string;
   urgentLabel: string;
   helpButtonLabel: string;
+  statusOpenLabel: string;
+  statusAcceptedLabel: string;
+  statusFinalizedLabel: string;
   onPress: () => void;
   onHelp: () => void;
   isOwnRequest?: boolean;
@@ -122,8 +126,12 @@ function RequestCard({
   location,
   time,
   urgent,
+  status,
   urgentLabel,
   helpButtonLabel,
+  statusOpenLabel,
+  statusAcceptedLabel,
+  statusFinalizedLabel,
   onPress,
   onHelp,
   isOwnRequest = false,
@@ -145,6 +153,35 @@ function RequestCard({
       default:
         return "help-circle";
     }
+  };
+
+  const getStatusBadge = () => {
+    if (status === "finalized") {
+      return (
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: METUColors.actionGreen },
+          ]}
+        >
+          <Feather name="check-circle" size={10} color="#FFFFFF" />
+          <ThemedText style={styles.statusBadgeText}>
+            {statusFinalizedLabel}
+          </ThemedText>
+        </View>
+      );
+    }
+    if (status === "accepted") {
+      return (
+        <View style={[styles.statusBadge, { backgroundColor: "#3B82F6" }]}>
+          <Feather name="user-check" size={10} color="#FFFFFF" />
+          <ThemedText style={styles.statusBadgeText}>
+            {statusAcceptedLabel}
+          </ThemedText>
+        </View>
+      );
+    }
+    return null;
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -192,7 +229,8 @@ function RequestCard({
         <View style={styles.requestInfo}>
           <View style={styles.requestHeader}>
             <ThemedText style={styles.requestTitle}>{title}</ThemedText>
-            {urgent ? (
+            {getStatusBadge()}
+            {urgent && status === "active" ? (
               <View style={styles.urgentBadge}>
                 <ThemedText style={styles.urgentText}>{urgentLabel}</ThemedText>
               </View>
@@ -496,6 +534,20 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   urgentText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.xs,
+    marginLeft: Spacing.sm,
+    gap: 2,
+  },
+  statusBadgeText: {
     fontSize: 10,
     fontWeight: "600",
     color: "#FFFFFF",
