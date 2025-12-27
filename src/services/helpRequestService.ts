@@ -477,11 +477,19 @@ export async function acceptHelpRequest(
  * Finalize a help request (mark as completed)
  */
 export async function finalizeHelpRequest(requestId: string): Promise<void> {
-  const db = getFirestoreInstance();
-  const docRef = doc(db, COLLECTION_NAME, requestId);
+  try {
+    console.log("[finalizeHelpRequest] Attempting to finalize request:", requestId);
+    const db = getFirestoreInstance();
+    const docRef = doc(db, COLLECTION_NAME, requestId);
 
-  await updateDoc(docRef, {
-    status: "finalized",
-    updatedAt: Timestamp.now(),
-  });
+    await updateDoc(docRef, {
+      status: "finalized",
+      updatedAt: Timestamp.now(),
+    });
+
+    console.log("[finalizeHelpRequest] Request finalized successfully");
+  } catch (error) {
+    console.error("[finalizeHelpRequest] Error occurred:", error);
+    throw error;
+  }
 }

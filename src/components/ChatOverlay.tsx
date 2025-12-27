@@ -348,7 +348,17 @@ function ConversationView() {
   };
 
   const handleCompleteTransaction = async () => {
-    if (!chat || !activeChatId || completing) return;
+    console.log("[ConversationView] handleCompleteTransaction called");
+    console.log("[ConversationView] chat:", chat);
+    console.log("[ConversationView] activeChatId:", activeChatId);
+    console.log("[ConversationView] completing:", completing);
+
+    if (!chat || !activeChatId || completing) {
+      console.log("[ConversationView] Early return - conditions not met");
+      return;
+    }
+
+    console.log("[ConversationView] Showing confirmation dialog");
 
     Alert.alert(
       "Complete Transaction",
@@ -357,27 +367,37 @@ function ConversationView() {
         {
           text: "Cancel",
           style: "cancel",
+          onPress: () => {
+            console.log("[ConversationView] User cancelled completion");
+          },
         },
         {
           text: "Complete",
           style: "default",
           onPress: async () => {
+            console.log("[ConversationView] User confirmed completion");
             setCompleting(true);
             try {
+              console.log("[ConversationView] Starting finalization process");
+              
               // Finalize the help request
+              console.log("[ConversationView] Calling finalizeHelpRequest with:", chat.requestId);
               await finalizeHelpRequest(chat.requestId);
               console.log(
-                "[ConversationView] Request finalized:",
+                "[ConversationView] Request finalized successfully:",
                 chat.requestId,
               );
 
               // Finalize the chat
+              console.log("[ConversationView] Calling finalizeChat with:", activeChatId);
               await finalizeChat(activeChatId);
-              console.log("[ConversationView] Chat finalized:", activeChatId);
+              console.log("[ConversationView] Chat finalized successfully:", activeChatId);
 
               // Close the overlay
+              console.log("[ConversationView] Closing chat overlay");
               closeChat();
 
+              console.log("[ConversationView] Showing success alert");
               Alert.alert(
                 "Transaction Complete",
                 "The help request has been marked as complete and the chat has been closed.",
@@ -389,7 +409,7 @@ function ConversationView() {
               );
               Alert.alert(
                 "Error",
-                "Failed to complete transaction. Please try again.",
+                `Failed to complete transaction: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
               );
             } finally {
               setCompleting(false);
