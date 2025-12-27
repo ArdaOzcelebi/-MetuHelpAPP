@@ -22,7 +22,6 @@ import {
   Modal,
   ActivityIndicator,
   Dimensions,
-  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
@@ -32,6 +31,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
+import { ConfirmationModal } from "@/src/components/ConfirmationModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useChatOverlay } from "@/src/contexts/ChatOverlayContext";
@@ -230,7 +230,7 @@ function MessageBubble({ message, isOwn }: MessageBubbleProps) {
               ? isDark
                 ? "#CC3333"
                 : METUColors.maroon
-              : theme.cardBackground,
+              : "#F0F0F0",
           },
         ]}
       >
@@ -247,7 +247,7 @@ function MessageBubble({ message, isOwn }: MessageBubbleProps) {
         <ThemedText
           style={[
             styles.messageText,
-            { color: isOwn ? "#FFFFFF" : theme.text },
+            { color: isOwn ? "#FFFFFF" : "#1A1A1A" },
           ]}
         >
           {message.text}
@@ -256,7 +256,7 @@ function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           style={[
             styles.messageTime,
             {
-              color: isOwn ? "rgba(255, 255, 255, 0.7)" : theme.textSecondary,
+              color: isOwn ? "rgba(255, 255, 255, 0.7)" : "#666666",
             },
           ]}
         >
@@ -281,6 +281,7 @@ function ConversationView() {
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   // Load chat details
@@ -303,22 +304,12 @@ function ConversationView() {
   useEffect(() => {
     if (!activeChatId) return;
 
-    console.log(
-      "[ConversationView] Setting up message subscription for chat:",
-      activeChatId,
-    );
-
     const unsubscribe = subscribeToMessages(activeChatId, (newMessages) => {
-      console.log(
-        "[ConversationView] Received message update, count:",
-        newMessages.length,
-      );
       setMessages(newMessages);
       setLoading(false);
     });
 
     return () => {
-      console.log("[ConversationView] Cleaning up message subscription");
       unsubscribe();
     };
   }, [activeChatId]);
@@ -337,8 +328,6 @@ function ConversationView() {
         senderName: user.displayName || user.email || "Anonymous",
         senderEmail: user.email || "",
       });
-
-      console.log("[ConversationView] Message sent successfully");
     } catch (error) {
       console.error("[ConversationView] Error sending message:", error);
       setInputText(messageText);
@@ -347,93 +336,30 @@ function ConversationView() {
     }
   };
 
-  // Separate function to perform finalization - avoids Alert.alert timing issues
   const performFinalization = async () => {
     if (!chat || !activeChatId) {
       return;
     }
 
     setCompleting(true);
-    console.log("[ConversationView] Starting finalization");
+    setShowConfirmModal(false);
     
     try {
-      // Finalize the help request
-      console.log("[ConversationView] Calling finalizeHelpRequest with:", chat.requestId);
       await finalizeHelpRequest(chat.requestId);
-      console.log(
-        "[ConversationView] Request finalized successfully:",
-        chat.requestId,
-      );
-
-      // Finalize the chat
-      console.log("[ConversationView] Calling finalizeChat with:", activeChatId);
       await finalizeChat(activeChatId);
-      console.log("[ConversationView] Chat finalized successfully:", activeChatId);
-
-      // Close the overlay
-      console.log("[ConversationView] Closing chat overlay");
       closeChat();
-
-      console.log("[ConversationView] Finalization complete");
-      // Show success message
-      Alert.alert(
-        "Success",
-        "The help request has been completed and removed from the list. Thank you for helping!",
-      );
     } catch (error) {
-      console.error(
-        "[ConversationView] Error completing transaction:",
-        error,
-      );
-      Alert.alert(
-        "Error",
-        `Failed to complete transaction: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
-      );
+      console.error("[ConversationView] Error completing transaction:", error);
     } finally {
       setCompleting(false);
     }
   };
 
   const handleCompleteTransaction = () => {
-    console.log("[ConversationView] handleCompleteTransaction called");
-    console.log("[ConversationView] chat:", chat);
-    console.log("[ConversationView] activeChatId:", activeChatId);
-    console.log("[ConversationView] completing:", completing);
-
     if (!chat || !activeChatId || completing) {
-      console.log("[ConversationView] Early return - conditions not met");
       return;
     }
-
-    console.log("[ConversationView] Showing confirmation dialog");
-
-    Alert.alert(
-      "Complete Transaction",
-      "Are you sure you want to mark this help request as complete? This will close the chat for both users and remove the request from the list.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-          onPress: () => {
-            console.log("[ConversationView] User cancelled completion");
-          },
-        },
-        {
-          text: "Complete",
-          style: "default",
-          onPress: () => {
-            console.log("[ConversationView] Button onPress triggered!");
-            console.log("[ConversationView] User confirmed completion");
-            // Use setTimeout with longer delay for React Native Web compatibility
-            // React Native Web Alert.alert has severe timing issues with callbacks
-            setTimeout(() => {
-              console.log("[ConversationView] setTimeout callback executing");
-              performFinalization();
-            }, 300);
-          },
-        },
-      ],
-    );
+    setShowConfirmModal(true);
   };
 
   if (loading || !chat) {
@@ -446,6 +372,19 @@ function ConversationView() {
 
   return (
     <View style={styles.conversationContainer}>
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        visible={showConfirmModal}
+        title="Complete Transaction"
+        message="Are you sure you want to mark this help request as complete? This will close the chat for both users and remove the request from the list."
+        confirmText="Complete"
+        cancelText="Cancel"
+        onConfirm={performFinalization}
+        onCancel={() => setShowConfirmModal(false)}
+        confirmColor={METUColors.actionGreen}
+        icon="check-circle"
+      />
+
       {/* Chat header */}
       <View
         style={[
@@ -582,7 +521,7 @@ function ConversationView() {
           {sending ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Feather name="send" size={16} color="#FFFFFF" />
+            <Feather name="send" size={18} color="#FFFFFF" />
           )}
         </Pressable>
       </View>
@@ -780,8 +719,8 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   expandedHeaderTitle: {
-    fontSize: Typography.body.fontSize,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
     color: "#FFFFFF",
   },
   expandedHeaderActions: {
@@ -905,8 +844,8 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   messageBubble: {
-    padding: Spacing.sm,
-    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    borderRadius: 16,
   },
   senderName: {
     fontSize: 10,
@@ -932,18 +871,18 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: 36,
+    minHeight: 40,
     maxHeight: 80,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    marginRight: Spacing.xs,
+    borderRadius: 24,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    marginRight: Spacing.sm,
     fontSize: Typography.small.fontSize,
   },
   sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
