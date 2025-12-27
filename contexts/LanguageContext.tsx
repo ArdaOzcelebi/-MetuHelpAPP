@@ -31,6 +31,37 @@ interface Translations {
   response: string;
   noQuestionsFound: string;
   beFirstToAsk: string;
+  answers: string;
+  answer: string;
+  postAnswer: string;
+  writeAnswer: string;
+  acceptAnswer: string;
+  acceptedAnswer: string;
+  editQuestion: string;
+  deleteQuestion: string;
+  editAnswer: string;
+  deleteAnswer: string;
+  questionPosted: string;
+  questionPostedMessage: string;
+  answerPosted: string;
+  answerAccepted: string;
+  failedToPostQuestion: string;
+  failedToPostAnswer: string;
+  failedToVote: string;
+  noAnswersYet: string;
+  beFirstToAnswer: string;
+  tags: string;
+  addTags: string;
+  tagsOptional: string;
+  yourQuestion: string;
+  questionTitle: string;
+  questionBody: string;
+  questionTitlePlaceholder: string;
+  questionBodyPlaceholder: string;
+  tipsForGoodQuestions: string;
+  beSpecific: string;
+  chooseRightCategory: string;
+  checkIfAskedBefore: string;
 
   // Categories for Q&A
   classes: string;
@@ -194,6 +225,37 @@ const translations: Record<Language, Translations> = {
     response: "response",
     noQuestionsFound: "No questions found",
     beFirstToAsk: "Be the first to ask!",
+    answers: "answers",
+    answer: "answer",
+    postAnswer: "Post Answer",
+    writeAnswer: "Write your answer...",
+    acceptAnswer: "Accept Answer",
+    acceptedAnswer: "Accepted Answer",
+    editQuestion: "Edit Question",
+    deleteQuestion: "Delete Question",
+    editAnswer: "Edit Answer",
+    deleteAnswer: "Delete Answer",
+    questionPosted: "Question Posted!",
+    questionPostedMessage: "Your question has been posted successfully.",
+    answerPosted: "Answer Posted!",
+    answerAccepted: "Answer Accepted!",
+    failedToPostQuestion: "Failed to post question",
+    failedToPostAnswer: "Failed to post answer",
+    failedToVote: "Failed to record vote",
+    noAnswersYet: "No answers yet",
+    beFirstToAnswer: "Be the first to answer!",
+    tags: "Tags",
+    addTags: "Add tags (optional)",
+    tagsOptional: "Tags help others find your question",
+    yourQuestion: "Your Question",
+    questionTitle: "Question Title",
+    questionBody: "Additional Details (Optional)",
+    questionTitlePlaceholder: "e.g., Best study spots on campus?",
+    questionBodyPlaceholder: "Provide more context to help others understand your question...",
+    tipsForGoodQuestions: "Tips for good questions",
+    beSpecific: "Be specific and clear",
+    chooseRightCategory: "Choose the right category",
+    checkIfAskedBefore: "Check if someone already asked",
 
     // Categories for Q&A
     classes: "Classes",
@@ -364,6 +426,37 @@ const translations: Record<Language, Translations> = {
     response: "cevap",
     noQuestionsFound: "Soru bulunamadı",
     beFirstToAsk: "İlk soruyu sor!",
+    answers: "cevap",
+    answer: "cevap",
+    postAnswer: "Cevap Gönder",
+    writeAnswer: "Cevabınızı yazın...",
+    acceptAnswer: "Cevabı Kabul Et",
+    acceptedAnswer: "Kabul Edilen Cevap",
+    editQuestion: "Soruyu Düzenle",
+    deleteQuestion: "Soruyu Sil",
+    editAnswer: "Cevabı Düzenle",
+    deleteAnswer: "Cevabı Sil",
+    questionPosted: "Soru Gönderildi!",
+    questionPostedMessage: "Sorunuz başarıyla gönderildi.",
+    answerPosted: "Cevap Gönderildi!",
+    answerAccepted: "Cevap Kabul Edildi!",
+    failedToPostQuestion: "Soru gönderilemedi",
+    failedToPostAnswer: "Cevap gönderilemedi",
+    failedToVote: "Oy kaydedilemedi",
+    noAnswersYet: "Henüz cevap yok",
+    beFirstToAnswer: "İlk cevap veren siz olun!",
+    tags: "Etiketler",
+    addTags: "Etiket ekle (isteğe bağlı)",
+    tagsOptional: "Etiketler başkalarının sorunuzu bulmasına yardımcı olur",
+    yourQuestion: "Sorunuz",
+    questionTitle: "Soru Başlığı",
+    questionBody: "Ek Detaylar (İsteğe bağlı)",
+    questionTitlePlaceholder: "Örn: Kampüste en iyi çalışma yerleri?",
+    questionBodyPlaceholder: "Başkalarının sorunuzu anlamasına yardımcı olmak için daha fazla bağlam sağlayın...",
+    tipsForGoodQuestions: "İyi sorular için ipuçları",
+    beSpecific: "Açık ve net olun",
+    chooseRightCategory: "Doğru kategoriyi seçin",
+    checkIfAskedBefore: "Daha önce sorulup sorulmadığını kontrol edin",
 
     // Categories for Q&A
     classes: "Dersler",
