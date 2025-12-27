@@ -495,11 +495,14 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
           text: "Mark Complete",
           style: "default",
           onPress: () => {
+            console.log("[NeedHelpScreen] Button onPress triggered!");
             console.log("[NeedHelpScreen] User confirmed completion");
-            // Use setTimeout to ensure callback executes on React Native Web
+            // Use setTimeout with longer delay for React Native Web compatibility
+            // React Native Web Alert.alert has timing issues with callbacks
             setTimeout(() => {
+              console.log("[NeedHelpScreen] setTimeout callback executing");
               performFinalization();
-            }, 100);
+            }, 300);
           },
         },
       ],

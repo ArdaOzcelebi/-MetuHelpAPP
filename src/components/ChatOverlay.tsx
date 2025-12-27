@@ -422,12 +422,14 @@ function ConversationView() {
           text: "Complete",
           style: "default",
           onPress: () => {
+            console.log("[ConversationView] Button onPress triggered!");
             console.log("[ConversationView] User confirmed completion");
-            // Use setTimeout with 100ms delay to ensure execution after Alert closes
-            // This prevents race conditions on React Native Web
+            // Use setTimeout with longer delay for React Native Web compatibility
+            // React Native Web Alert.alert has severe timing issues with callbacks
             setTimeout(() => {
+              console.log("[ConversationView] setTimeout callback executing");
               performFinalization();
-            }, 100);
+            }, 300);
           },
         },
       ],
