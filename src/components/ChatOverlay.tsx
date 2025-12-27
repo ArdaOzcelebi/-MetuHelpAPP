@@ -347,7 +347,54 @@ function ConversationView() {
     }
   };
 
-  const handleCompleteTransaction = async () => {
+  // Separate function to perform finalization - avoids Alert.alert timing issues
+  const performFinalization = async () => {
+    if (!chat || !activeChatId) {
+      return;
+    }
+
+    setCompleting(true);
+    console.log("[ConversationView] Starting finalization");
+    
+    try {
+      // Finalize the help request
+      console.log("[ConversationView] Calling finalizeHelpRequest with:", chat.requestId);
+      await finalizeHelpRequest(chat.requestId);
+      console.log(
+        "[ConversationView] Request finalized successfully:",
+        chat.requestId,
+      );
+
+      // Finalize the chat
+      console.log("[ConversationView] Calling finalizeChat with:", activeChatId);
+      await finalizeChat(activeChatId);
+      console.log("[ConversationView] Chat finalized successfully:", activeChatId);
+
+      // Close the overlay
+      console.log("[ConversationView] Closing chat overlay");
+      closeChat();
+
+      console.log("[ConversationView] Finalization complete");
+      // Show success message
+      Alert.alert(
+        "Success",
+        "The help request has been completed and removed from the list. Thank you for helping!",
+      );
+    } catch (error) {
+      console.error(
+        "[ConversationView] Error completing transaction:",
+        error,
+      );
+      Alert.alert(
+        "Error",
+        `Failed to complete transaction: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
+      );
+    } finally {
+      setCompleting(false);
+    }
+  };
+
+  const handleCompleteTransaction = () => {
     console.log("[ConversationView] handleCompleteTransaction called");
     console.log("[ConversationView] chat:", chat);
     console.log("[ConversationView] activeChatId:", activeChatId);
@@ -362,7 +409,7 @@ function ConversationView() {
 
     Alert.alert(
       "Complete Transaction",
-      "Are you sure you want to mark this help request as complete? This will close the chat for both users and archive the request.",
+      "Are you sure you want to mark this help request as complete? This will close the chat for both users and remove the request from the list.",
       [
         {
           text: "Cancel",
@@ -374,46 +421,10 @@ function ConversationView() {
         {
           text: "Complete",
           style: "default",
-          onPress: async () => {
+          onPress: () => {
             console.log("[ConversationView] User confirmed completion");
-            setCompleting(true);
-            try {
-              console.log("[ConversationView] Starting finalization process");
-              
-              // Finalize the help request
-              console.log("[ConversationView] Calling finalizeHelpRequest with:", chat.requestId);
-              await finalizeHelpRequest(chat.requestId);
-              console.log(
-                "[ConversationView] Request finalized successfully:",
-                chat.requestId,
-              );
-
-              // Finalize the chat
-              console.log("[ConversationView] Calling finalizeChat with:", activeChatId);
-              await finalizeChat(activeChatId);
-              console.log("[ConversationView] Chat finalized successfully:", activeChatId);
-
-              // Close the overlay
-              console.log("[ConversationView] Closing chat overlay");
-              closeChat();
-
-              console.log("[ConversationView] Showing success alert");
-              Alert.alert(
-                "Transaction Complete",
-                "The help request has been marked as complete and the chat has been closed.",
-              );
-            } catch (error) {
-              console.error(
-                "[ConversationView] Error completing transaction:",
-                error,
-              );
-              Alert.alert(
-                "Error",
-                `Failed to complete transaction: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
-              );
-            } finally {
-              setCompleting(false);
-            }
+            // Execute finalization in a separate call to avoid Alert.alert timing issues
+            performFinalization();
           },
         },
       ],
