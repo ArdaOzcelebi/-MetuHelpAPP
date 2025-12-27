@@ -74,15 +74,16 @@ export default function QuestionDetailScreen({
             questionId,
             (updatedAnswers) => {
               setAnswers(updatedAnswers);
+
+              // Load user votes when answers are loaded
+              if (user) {
+                const itemIds = [q.id, ...updatedAnswers.map((a) => a.id)];
+                getUserVotes(itemIds, user.uid).then((userVotes) => {
+                  setVotes(userVotes);
+                });
+              }
             },
           );
-
-          // Load user votes
-          if (user) {
-            const itemIds = [q.id, ...updatedAnswers.map((a) => a.id)];
-            const userVotes = await getUserVotes(itemIds, user.uid);
-            setVotes(userVotes);
-          }
         } else {
           Alert.alert(t.error, "Question not found");
           navigation.goBack();
@@ -559,7 +560,7 @@ export default function QuestionDetailScreen({
           <ThemedText
             style={[styles.loadingText, { color: theme.textSecondary }]}
           >
-            Loading question...
+            {t.loadingQuestion}
           </ThemedText>
         </View>
       </ThemedView>

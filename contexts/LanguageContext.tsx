@@ -63,6 +63,8 @@ interface Translations {
   beSpecific: string;
   chooseRightCategory: string;
   checkIfAskedBefore: string;
+  loadingQuestions: string;
+  loadingQuestion: string;
 
   // Categories for Q&A
   classes: string;
@@ -259,6 +261,8 @@ const translations: Record<Language, Translations> = {
     beSpecific: "Be specific and clear",
     chooseRightCategory: "Choose the right category",
     checkIfAskedBefore: "Check if someone already asked",
+    loadingQuestions: "Loading questions...",
+    loadingQuestion: "Loading question...",
 
     // Categories for Q&A
     classes: "Classes",
@@ -462,6 +466,8 @@ const translations: Record<Language, Translations> = {
     beSpecific: "Açık ve net olun",
     chooseRightCategory: "Doğru kategoriyi seçin",
     checkIfAskedBefore: "Daha önce sorulup sorulmadığını kontrol edin",
+    loadingQuestions: "Sorular yükleniyor...",
+    loadingQuestion: "Soru yükleniyor...",
 
     // Categories for Q&A
     classes: "Dersler",

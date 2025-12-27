@@ -439,7 +439,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
           <ThemedText
             style={[styles.loadingText, { color: theme.textSecondary }]}
           >
-            Loading questions...
+            {t.loadingQuestions}
           </ThemedText>
         </View>
       ) : questions.length === 0 ? (
