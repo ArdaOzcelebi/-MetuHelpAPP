@@ -119,6 +119,7 @@ function documentToChat(id: string, data: DocumentData): Chat | null {
       lastMessageAt: data.lastMessageAt
         ? convertTimestamp(data.lastMessageAt)
         : undefined,
+      status: data.status || "active",
     };
   } catch (error) {
     console.error("Error converting document to Chat:", error);

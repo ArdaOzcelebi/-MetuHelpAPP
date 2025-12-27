@@ -188,9 +188,22 @@ export default function RequestDetailScreen({
       let chatId: string;
 
       if (existingChat) {
-        // Chat already exists, just navigate to it
+        // Chat already exists, open it
         chatId = existingChat.id;
         console.log("[RequestDetailScreen] Using existing chat:", chatId);
+
+        // Check if request needs to be accepted (status might still be "active")
+        if (request.status === "active") {
+          console.log("[RequestDetailScreen] Accepting existing request");
+          await acceptHelpRequest(
+            requestId,
+            user.uid,
+            user.displayName || user.email || "Helper",
+            user.email || "",
+            chatId,
+          );
+          console.log("[RequestDetailScreen] Request accepted successfully");
+        }
       } else {
         // Create a new chat
         console.log(
