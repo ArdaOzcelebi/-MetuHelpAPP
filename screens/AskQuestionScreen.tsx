@@ -13,9 +13,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { createQuestion } from "@/src/services/questionService";
+import { createQuestion } from "@/src/services/qaService";
 import {
   Spacing,
   BorderRadius,
@@ -28,91 +27,54 @@ type AskQuestionScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "AskQuestion">;
 };
 
-const CATEGORIES = [
-  { id: "classes", labelEn: "Classes", labelTr: "Dersler", icon: "book" },
-  {
-    id: "professors",
-    labelEn: "Professors",
-    labelTr: "Hocalar",
-    icon: "user",
-  },
-  {
-    id: "campus-life",
-    labelEn: "Campus Life",
-    labelTr: "Kampüs Yaşamı",
-    icon: "home",
-  },
-] as const;
-
 export default function AskQuestionScreen({
   navigation,
 }: AskQuestionScreenProps) {
   const { theme, isDark } = useTheme();
-  const { t, language } = useLanguage();
   const { user } = useAuth();
   const [title, setTitle] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [details, setDetails] = useState("");
-  const [tagsInput, setTagsInput] = useState("");
   const [isPosting, setIsPosting] = useState(false);
 
-  const isValid = title.length >= 10 && selectedCategory;
+  const isValid = title.trim().length >= 10;
 
   const handlePost = async () => {
-    if (!isValid || !user) {
-      Alert.alert(t.error, t.mustBeLoggedIn);
+    if (!isValid || isPosting) return;
+
+    if (!user) {
+      Alert.alert("Error", "You must be logged in to post a question");
       return;
     }
 
     setIsPosting(true);
 
     try {
-      // Parse tags from comma-separated input
-      const tags = tagsInput
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0);
-
-      // Add the selected category as a tag
-      if (selectedCategory) {
-        tags.unshift(selectedCategory);
-      }
-
-      const questionId = await createQuestion(
-        {
-          title,
-          body: details,
-          tags,
-        },
+      await createQuestion(
+        title.trim(),
+        details.trim(),
         user.uid,
-        user.email || "",
         user.displayName || "Anonymous",
       );
 
-      Alert.alert(t.questionPosted, t.questionPostedMessage, [
+      Alert.alert("Success!", "Your question has been posted.", [
         {
-          text: t.ok,
-          onPress: () => {
-            navigation.goBack();
-            // Navigate to the question detail
-            navigation.navigate("QuestionDetail", { questionId });
-          },
+          text: "OK",
+          onPress: () => navigation.goBack(),
         },
       ]);
     } catch (error) {
-      console.error("Failed to post question:", error);
+      console.error("Error posting question:", error);
       Alert.alert(
-        t.failedToPostQuestion,
-        error instanceof Error ? error.message : "Unknown error",
+        "Error",
+        error instanceof Error ? error.message : "Failed to post question",
       );
-    } finally {
       setIsPosting(false);
     }
   };
 
   return (
     <ScreenKeyboardAwareScrollView>
-      <ThemedText style={styles.sectionLabel}>{t.yourQuestion}</ThemedText>
+      <ThemedText style={styles.sectionLabel}>Your Question</ThemedText>
       <TextInput
         style={[
           styles.titleInput,
@@ -121,7 +83,7 @@ export default function AskQuestionScreen({
             color: theme.text,
           },
         ]}
-        placeholder={t.questionTitlePlaceholder}
+        placeholder="e.g., Best study spots on campus?"
         placeholderTextColor={theme.textSecondary}
         value={title}
         onChangeText={setTitle}
@@ -133,58 +95,20 @@ export default function AskQuestionScreen({
           styles.helperText,
           {
             color:
-              title.length >= 10 ? METUColors.actionGreen : theme.textSecondary,
+              title.trim().length >= 10
+                ? METUColors.actionGreen
+                : theme.textSecondary,
           },
         ]}
       >
-        {title.length >= 10
-          ? "Great question!"
-          : `Minimum 10 characters (${title.length}/10)`}
+        {title.trim().length >= 10
+          ? "✓ Great question!"
+          : `Minimum 10 characters (${title.trim().length}/10)`}
       </ThemedText>
 
-      <ThemedText style={styles.sectionLabel}>{t.category}</ThemedText>
-      <View style={styles.categoriesRow}>
-        {CATEGORIES.map((cat) => {
-          const label = language === "en" ? cat.labelEn : cat.labelTr;
-          return (
-            <Pressable
-              key={cat.id}
-              onPress={() => setSelectedCategory(cat.id)}
-              disabled={isPosting}
-              style={[
-                styles.categoryCard,
-                {
-                  backgroundColor:
-                    selectedCategory === cat.id
-                      ? isDark
-                        ? "#CC3333"
-                        : METUColors.maroon
-                      : theme.backgroundDefault,
-                  flex: 1,
-                },
-              ]}
-            >
-              <Feather
-                name={cat.icon as keyof typeof Feather.glyphMap}
-                size={20}
-                color={selectedCategory === cat.id ? "#FFFFFF" : theme.text}
-              />
-              <ThemedText
-                style={[
-                  styles.categoryLabel,
-                  {
-                    color: selectedCategory === cat.id ? "#FFFFFF" : theme.text,
-                  },
-                ]}
-              >
-                {label}
-              </ThemedText>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <ThemedText style={styles.sectionLabel}>{t.questionBody}</ThemedText>
+      <ThemedText style={styles.sectionLabel}>
+        Additional Details (Optional)
+      </ThemedText>
       <TextInput
         style={[
           styles.detailsInput,
@@ -193,75 +117,15 @@ export default function AskQuestionScreen({
             color: theme.text,
           },
         ]}
-        placeholder={t.questionBodyPlaceholder}
+        placeholder="Provide more context to help others answer your question..."
         placeholderTextColor={theme.textSecondary}
         value={details}
         onChangeText={setDetails}
         multiline
-        numberOfLines={4}
+        numberOfLines={5}
         textAlignVertical="top"
         editable={!isPosting}
       />
-
-      <ThemedText style={styles.sectionLabel}>{t.addTags}</ThemedText>
-      <TextInput
-        style={[
-          styles.titleInput,
-          {
-            backgroundColor: theme.backgroundDefault,
-            color: theme.text,
-          },
-        ]}
-        placeholder="housing, study-materials, transportation"
-        placeholderTextColor={theme.textSecondary}
-        value={tagsInput}
-        onChangeText={setTagsInput}
-        editable={!isPosting}
-      />
-      <ThemedText style={[styles.helperText, { color: theme.textSecondary }]}>
-        {t.tagsOptional}
-      </ThemedText>
-
-      <View
-        style={[styles.tipsCard, { backgroundColor: theme.backgroundDefault }]}
-      >
-        <View style={styles.tipsHeader}>
-          <Feather
-            name="info"
-            size={18}
-            color={isDark ? "#FF6B6B" : METUColors.maroon}
-          />
-          <ThemedText style={styles.tipsTitle}>
-            {t.tipsForGoodQuestions}
-          </ThemedText>
-        </View>
-        <View style={styles.tipsList}>
-          <View style={styles.tipItem}>
-            <Feather name="check" size={14} color={METUColors.actionGreen} />
-            <ThemedText
-              style={[styles.tipText, { color: theme.textSecondary }]}
-            >
-              {t.beSpecific}
-            </ThemedText>
-          </View>
-          <View style={styles.tipItem}>
-            <Feather name="check" size={14} color={METUColors.actionGreen} />
-            <ThemedText
-              style={[styles.tipText, { color: theme.textSecondary }]}
-            >
-              {t.chooseRightCategory}
-            </ThemedText>
-          </View>
-          <View style={styles.tipItem}>
-            <Feather name="check" size={14} color={METUColors.actionGreen} />
-            <ThemedText
-              style={[styles.tipText, { color: theme.textSecondary }]}
-            >
-              {t.checkIfAskedBefore}
-            </ThemedText>
-          </View>
-        </View>
-      </View>
 
       <Pressable
         onPress={handlePost}
@@ -271,8 +135,10 @@ export default function AskQuestionScreen({
           {
             backgroundColor:
               isValid && !isPosting
-                ? METUColors.actionGreen
-                : theme.backgroundSecondary,
+                ? isDark
+                  ? "#CC3333"
+                  : METUColors.maroon
+                : theme.backgroundDefault,
             opacity: pressed && isValid && !isPosting ? 0.9 : 1,
           },
         ]}
@@ -288,15 +154,13 @@ export default function AskQuestionScreen({
               },
             ]}
           >
-            {t.postQuestion}
+            Post Question
           </ThemedText>
         )}
       </Pressable>
     </ScreenKeyboardAwareScrollView>
   );
 }
-
-const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: Typography.small.fontSize,
     fontWeight: "600",

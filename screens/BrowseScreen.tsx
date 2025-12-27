@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Pressable, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  TextInput,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, {
@@ -19,6 +26,10 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
+import {
+  subscribeToQuestions,
+  type QAQuestion,
+} from "@/src/services/qaService";
 
 type BrowseScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
@@ -191,22 +202,17 @@ function AnimatedQuestionCard({
   question,
   navigation,
   theme,
-  language,
-  getCategoryColor,
+  getTimeAgo,
 }: {
-  question: (typeof MOCK_QUESTIONS)[0];
+  question: QAQuestion;
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
   theme: ReturnType<typeof useTheme>["theme"];
-  language: string;
-  getCategoryColor: (category: string) => string;
+  getTimeAgo: (date: Date) => string;
 }) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
-
-  const category =
-    language === "en" ? question.categoryEn : question.categoryTr;
 
   return (
     <AnimatedPressable
@@ -231,33 +237,22 @@ function AnimatedQuestionCard({
         animatedStyle,
       ]}
     >
-      <ThemedText style={styles.questionTitle}>
-        {language === "en" ? question.titleEn : question.titleTr}
-      </ThemedText>
-      <View style={styles.questionMeta}>
-        <View
-          style={[
-            styles.categoryTag,
-            {
-              backgroundColor: `${getCategoryColor(category)}20`,
-            },
-          ]}
+      <ThemedText style={styles.questionTitle}>{question.title}</ThemedText>
+      {question.body ? (
+        <ThemedText
+          style={[styles.questionBody, { color: theme.textSecondary }]}
+          numberOfLines={2}
         >
-          <ThemedText
-            style={[
-              styles.categoryTagText,
-              { color: getCategoryColor(category) },
-            ]}
-          >
-            {category}
-          </ThemedText>
-        </View>
+          {question.body}
+        </ThemedText>
+      ) : null}
+      <View style={styles.questionMeta}>
         <View style={styles.responsesContainer}>
           <Feather
             name="message-circle"
             size={14}
             color={
-              question.responses > 0
+              question.answerCount > 0
                 ? METUColors.actionGreen
                 : theme.textSecondary
             }
@@ -267,17 +262,17 @@ function AnimatedQuestionCard({
               styles.responsesText,
               {
                 color:
-                  question.responses > 0
+                  question.answerCount > 0
                     ? METUColors.actionGreen
                     : theme.textSecondary,
               },
             ]}
           >
-            {question.responses}
+            {question.answerCount}
           </ThemedText>
         </View>
         <ThemedText style={[styles.timeText, { color: theme.textSecondary }]}>
-          {question.time}
+          {getTimeAgo(question.createdAt)}
         </ThemedText>
       </View>
     </AnimatedPressable>
@@ -291,6 +286,37 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
     "needs",
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [questions, setQuestions] = useState<QAQuestion[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Subscribe to questions from Firebase
+  useEffect(() => {
+    const unsubscribe = subscribeToQuestions((fetchedQuestions) => {
+      setQuestions(fetchedQuestions);
+      setLoadingQuestions(false);
+      setRefreshing(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    // The subscription will automatically update
+  };
+
+  const getTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+
+    if (diffInMinutes < 1) return t.justNow || "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    if (diffInHours < 24) return `${diffInHours}h`;
+    return `${Math.floor(diffInHours / 24)}d`;
+  };
 
   const TABS = [
     { id: "needs", label: t.needs },
@@ -331,9 +357,12 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const filteredQuestions = MOCK_QUESTIONS.filter((q) => {
-    const title = language === "en" ? q.titleEn : q.titleTr;
-    return title.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredQuestions = questions.filter((q) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      q.title.toLowerCase().includes(searchLower) ||
+      q.body.toLowerCase().includes(searchLower)
+    );
   });
 
   return (
@@ -409,16 +438,34 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
         </View>
       ) : (
         <View style={styles.listContainer}>
-          {filteredQuestions.map((question) => (
-            <AnimatedQuestionCard
-              key={question.id}
-              question={question}
-              navigation={navigation}
-              theme={theme}
-              language={language}
-              getCategoryColor={getCategoryColor}
-            />
-          ))}
+          {loadingQuestions ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={METUColors.maroon} />
+            </View>
+          ) : filteredQuestions.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Feather
+                name="message-circle"
+                size={64}
+                color={theme.textSecondary}
+              />
+              <ThemedText style={styles.emptyText}>
+                {searchQuery
+                  ? t.noQuestionsFound || "No questions found"
+                  : t.noQuestions || "No questions yet. Be the first to ask!"}
+              </ThemedText>
+            </View>
+          ) : (
+            filteredQuestions.map((question) => (
+              <AnimatedQuestionCard
+                key={question.id}
+                question={question}
+                navigation={navigation}
+                theme={theme}
+                getTimeAgo={getTimeAgo}
+              />
+            ))
+          )}
         </View>
       )}
 
@@ -527,8 +574,13 @@ const styles = StyleSheet.create({
   },
   questionTitle: {
     fontSize: Typography.body.fontSize,
-    fontWeight: "500",
-    marginBottom: Spacing.md,
+    fontWeight: "600",
+    marginBottom: Spacing.xs,
+  },
+  questionBody: {
+    fontSize: Typography.small.fontSize,
+    marginBottom: Spacing.sm,
+    lineHeight: 20,
   },
   questionMeta: {
     flexDirection: "row",
@@ -555,6 +607,21 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: Typography.small.fontSize,
     marginLeft: "auto",
+  },
+  loadingContainer: {
+    paddingVertical: Spacing["4xl"],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyContainer: {
+    paddingVertical: Spacing["4xl"],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    marginTop: Spacing.lg,
+    fontSize: Typography.body.fontSize,
+    textAlign: "center",
   },
   fab: {
     position: "absolute",
