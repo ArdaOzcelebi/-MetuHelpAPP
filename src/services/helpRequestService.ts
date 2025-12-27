@@ -274,17 +274,18 @@ export function subscribeToHelpRequests(
 
     // Simplified query without orderBy to avoid requiring composite index
     // We'll sort on the client side instead
+    // Show both "active" and "accepted" requests so users can see ongoing help sessions
     let q;
     if (category) {
       q = query(
         collection(db, COLLECTION_NAME),
-        where("status", "==", "active"),
+        where("status", "in", ["active", "accepted"]),
         where("category", "==", category),
       );
     } else {
       q = query(
         collection(db, COLLECTION_NAME),
-        where("status", "==", "active"),
+        where("status", "in", ["active", "accepted"]),
       );
     }
 

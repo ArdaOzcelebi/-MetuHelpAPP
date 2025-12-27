@@ -111,19 +111,22 @@ export function ChatOverlayProvider({
 
   const closeChat = () => {
     console.log("[ChatOverlayContext] Closing chat overlay");
+    // Keep activeChatId so user can reopen the same chat
+    // Only minimize the overlay
     setIsOpen(false);
     setIsMinimized(true);
-    setActiveChatId(null);
     setActiveView("threads");
   };
 
   const toggleMinimize = () => {
     console.log("[ChatOverlayContext] Toggling minimize state");
     if (isMinimized) {
-      // Expanding - show thread list if no active chat
+      // Expanding - if there's an active chat, show it; otherwise show threads
       setIsMinimized(false);
       setIsOpen(true);
-      if (!activeChatId) {
+      if (activeChatId) {
+        setActiveView("conversation");
+      } else {
         setActiveView("threads");
       }
     } else {

@@ -427,3 +427,29 @@ export function subscribeToUserChats(
     };
   }
 }
+
+/**
+ * Finalize a chat (mark as completed)
+ * This is called when the transaction is complete and chat should be closed
+ *
+ * @param chatId - The chat ID to finalize
+ * @returns Promise that resolves when the chat is finalized
+ */
+export async function finalizeChat(chatId: string): Promise<void> {
+  try {
+    console.log("[finalizeChat] Finalizing chat:", chatId);
+
+    const db = getFirestoreInstance();
+    const chatRef = doc(db, CHATS_COLLECTION, chatId);
+
+    await updateDoc(chatRef, {
+      status: "finalized",
+      updatedAt: Timestamp.now(),
+    });
+
+    console.log("[finalizeChat] Chat finalized successfully");
+  } catch (error) {
+    console.error("[finalizeChat] Error occurred:", error);
+    throw error;
+  }
+}

@@ -23,7 +23,10 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
-import { getHelpRequest } from "@/src/services/helpRequestService";
+import {
+  getHelpRequest,
+  acceptHelpRequest,
+} from "@/src/services/helpRequestService";
 import { createChat, getChatByRequestId } from "@/src/services/chatService";
 import type { HelpRequest } from "@/src/types/helpRequest";
 
@@ -75,7 +78,6 @@ export default function RequestDetailScreen({
   const [loading, setLoading] = useState(true);
   const [offeringHelp, setOfferingHelp] = useState(false);
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
-  const [accepting, setAccepting] = useState(false);
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -206,6 +208,16 @@ export default function RequestDetailScreen({
           helperEmail: user.email || "",
         });
         console.log("[RequestDetailScreen] Chat created successfully:", chatId);
+
+        // Accept the request (update status to "accepted")
+        await acceptHelpRequest(
+          requestId,
+          user.uid,
+          user.displayName || user.email || "Helper",
+          user.email || "",
+          chatId,
+        );
+        console.log("[RequestDetailScreen] Request accepted successfully");
       }
 
       setHasOfferedHelp(true);
@@ -234,29 +246,6 @@ export default function RequestDetailScreen({
     openChat(request.chatId);
   };
 
-  // Handler to accept help request (placeholder - not fully implemented in original)
-  const handleAcceptRequest = async () => {
-    if (!user || !request) {
-      Alert.alert("Error", "Unable to accept request at this time.");
-      return;
-    }
-
-    setAccepting(true);
-    try {
-      // This would call acceptHelpRequest service which seems to not be fully implemented
-      console.log("[RequestDetail] Accept request functionality pending");
-      Alert.alert(
-        "Feature In Progress",
-        "Request acceptance is being implemented.",
-      );
-    } catch (error) {
-      console.error("[RequestDetail] Error accepting request:", error);
-      Alert.alert("Error", "Failed to accept request. Please try again.");
-    } finally {
-      setAccepting(false);
-    }
-  };
-
   const posterInitials = getUserInitials(request.userName, request.userEmail);
   const displayName = request.isAnonymous ? "Anonymous" : request.userName;
   const displayInitials = request.isAnonymous ? "AN" : posterInitials;
@@ -265,7 +254,6 @@ export default function RequestDetailScreen({
   const isOwnRequest = user?.uid === request.userId;
   const isAccepted = request.status === "accepted";
   const isFinalized = request.status === "finalized";
-  const canAccept = !isOwnRequest && request.status === "active";
   const canViewChat =
     (isOwnRequest || user?.uid === request.acceptedBy) &&
     (isAccepted || isFinalized) &&
@@ -275,7 +263,6 @@ export default function RequestDetailScreen({
     isOwnRequest,
     isAccepted,
     isFinalized,
-    canAccept,
     canViewChat,
     status: request.status,
     userId: user?.uid,
@@ -437,41 +424,6 @@ export default function RequestDetailScreen({
             {t.chat}
           </ThemedText>
         </Pressable>
-      ) : canAccept ? (
-        <Pressable
-          onPress={() => {
-            console.log("[RequestDetail] Accept button clicked!");
-            handleAcceptRequest();
-          }}
-          disabled={accepting}
-          style={({ pressed }) => [
-            styles.helpButton,
-            {
-              backgroundColor: accepting
-                ? theme.backgroundSecondary
-                : METUColors.actionGreen,
-              opacity: pressed ? 0.9 : 1,
-            },
-          ]}
-        >
-          {accepting ? (
-            <>
-              <ActivityIndicator size="small" color={theme.text} />
-              <ThemedText
-                style={[styles.helpButtonText, { color: theme.text }]}
-              >
-                {t.accepting}
-              </ThemedText>
-            </>
-          ) : (
-            <>
-              <Feather name="check-circle" size={20} color="#FFFFFF" />
-              <ThemedText style={[styles.helpButtonText, { color: "#FFFFFF" }]}>
-                {t.acceptRequest}
-              </ThemedText>
-            </>
-          )}
-        </Pressable>
       ) : isFinalized ? (
         <View style={styles.finalizedMessage}>
           <Feather
@@ -489,17 +441,6 @@ export default function RequestDetailScreen({
           </ThemedText>
         </View>
       ) : null}
-
-      {canAccept && (
-        <View style={styles.contactNote}>
-          <Feather name="info" size={16} color={theme.textSecondary} />
-          <ThemedText
-            style={[styles.contactNoteText, { color: theme.textSecondary }]}
-          >
-            {t.acceptConfirmMessage}
-          </ThemedText>
-        </View>
-      )}
     </ScreenScrollView>
   );
 }

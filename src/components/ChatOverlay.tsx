@@ -22,6 +22,7 @@ import {
   Modal,
   ActivityIndicator,
   Dimensions,
+  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
@@ -38,7 +39,9 @@ import {
   subscribeToMessages,
   sendMessage,
   getChat,
+  finalizeChat,
 } from "@/src/services/chatService";
+import { finalizeHelpRequest } from "@/src/services/helpRequestService";
 import type { Message, Chat } from "@/src/types/chat";
 import {
   Spacing,
@@ -267,13 +270,14 @@ function MessageBubble({ message, isOwn }: MessageBubbleProps) {
 function ConversationView() {
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
-  const { activeChatId, goBackToThreads } = useChatOverlay();
+  const { activeChatId, goBackToThreads, closeChat } = useChatOverlay();
 
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [completing, setCompleting] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   // Load chat details
@@ -340,6 +344,59 @@ function ConversationView() {
     }
   };
 
+  const handleCompleteTransaction = async () => {
+    if (!chat || !activeChatId || completing) return;
+
+    Alert.alert(
+      "Complete Transaction",
+      "Are you sure you want to mark this help request as complete? This will close the chat for both users and archive the request.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Complete",
+          style: "default",
+          onPress: async () => {
+            setCompleting(true);
+            try {
+              // Finalize the help request
+              await finalizeHelpRequest(chat.requestId);
+              console.log(
+                "[ConversationView] Request finalized:",
+                chat.requestId,
+              );
+
+              // Finalize the chat
+              await finalizeChat(activeChatId);
+              console.log("[ConversationView] Chat finalized:", activeChatId);
+
+              // Close the overlay
+              closeChat();
+
+              Alert.alert(
+                "Transaction Complete",
+                "The help request has been marked as complete and the chat has been closed.",
+              );
+            } catch (error) {
+              console.error(
+                "[ConversationView] Error completing transaction:",
+                error,
+              );
+              Alert.alert(
+                "Error",
+                "Failed to complete transaction. Please try again.",
+              );
+            } finally {
+              setCompleting(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   if (loading || !chat) {
     return (
       <View style={styles.loadingContainer}>
@@ -376,6 +433,21 @@ function ConversationView() {
               : chat.requesterName}
           </ThemedText>
         </View>
+        <Pressable
+          onPress={handleCompleteTransaction}
+          disabled={completing}
+          style={[styles.completeButton, { opacity: completing ? 0.5 : 1 }]}
+        >
+          {completing ? (
+            <ActivityIndicator size="small" color={METUColors.actionGreen} />
+          ) : (
+            <Feather
+              name="check-circle"
+              size={20}
+              color={METUColors.actionGreen}
+            />
+          )}
+        </Pressable>
       </View>
 
       {/* Messages list */}
@@ -749,6 +821,10 @@ const styles = StyleSheet.create({
   backButton: {
     padding: Spacing.xs,
     marginRight: Spacing.sm,
+  },
+  completeButton: {
+    padding: Spacing.xs,
+    marginLeft: Spacing.sm,
   },
   conversationTitle: {
     fontSize: Typography.small.fontSize,
