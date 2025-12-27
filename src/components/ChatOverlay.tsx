@@ -159,7 +159,7 @@ function ThreadItem({ chat, onPress, currentUserId }: ThreadItemProps) {
 }
 
 /**
- * Thread list view - shows all active chats
+ * Thread list view - shows all active chats (excludes finalized)
  */
 function ThreadListView() {
   const { theme } = useTheme();
@@ -168,9 +168,12 @@ function ThreadListView() {
 
   if (!user) return null;
 
+  // Filter out finalized chats - only show active chats
+  const activeChats = chats.filter((chat) => chat.status !== "finalized");
+
   return (
     <View style={styles.threadListContainer}>
-      {chats.length === 0 ? (
+      {activeChats.length === 0 ? (
         <View style={styles.emptyState}>
           <Feather
             name="message-circle"
@@ -185,7 +188,7 @@ function ThreadListView() {
         </View>
       ) : (
         <FlatList
-          data={chats}
+          data={activeChats}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ThreadItem
@@ -441,11 +444,21 @@ function ConversationView() {
           {completing ? (
             <ActivityIndicator size="small" color={METUColors.actionGreen} />
           ) : (
-            <Feather
-              name="check-circle"
-              size={20}
-              color={METUColors.actionGreen}
-            />
+            <>
+              <Feather
+                name="check-circle"
+                size={18}
+                color={METUColors.actionGreen}
+              />
+              <ThemedText
+                style={[
+                  styles.completeButtonText,
+                  { color: METUColors.actionGreen },
+                ]}
+              >
+                Complete
+              </ThemedText>
+            </>
           )}
         </Pressable>
       </View>
@@ -823,8 +836,16 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   completeButton: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
     marginLeft: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  completeButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
   conversationTitle: {
     fontSize: Typography.small.fontSize,

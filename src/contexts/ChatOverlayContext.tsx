@@ -76,8 +76,11 @@ export function ChatOverlayProvider({
       setChats(updatedChats);
 
       // TODO: Calculate unread count from messages
-      // For now, just show the number of chats as a placeholder
-      setUnreadCount(updatedChats.length);
+      // For now, show the number of active (non-finalized) chats as a placeholder
+      const activeChats = updatedChats.filter(
+        (chat) => chat.status !== "finalized",
+      );
+      setUnreadCount(activeChats.length);
     });
 
     return () => {

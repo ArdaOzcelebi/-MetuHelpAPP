@@ -397,20 +397,24 @@ export function subscribeToUserChats(
 
     // Subscribe to both queries
     const unsubscribe1 = onSnapshot(q1, (snapshot) => {
-      snapshot.forEach((doc) => {
-        const chat = documentToChat(doc.id, doc.data());
-        if (chat) {
-          chatsMap.set(doc.id, chat);
+      snapshot.docChanges().forEach((change) => {
+        const chat = documentToChat(change.doc.id, change.doc.data());
+        if (change.type === "removed") {
+          chatsMap.delete(change.doc.id);
+        } else if (chat) {
+          chatsMap.set(change.doc.id, chat);
         }
       });
       updateChats();
     });
 
     const unsubscribe2 = onSnapshot(q2, (snapshot) => {
-      snapshot.forEach((doc) => {
-        const chat = documentToChat(doc.id, doc.data());
-        if (chat) {
-          chatsMap.set(doc.id, chat);
+      snapshot.docChanges().forEach((change) => {
+        const chat = documentToChat(change.doc.id, change.doc.data());
+        if (change.type === "removed") {
+          chatsMap.delete(change.doc.id);
+        } else if (chat) {
+          chatsMap.set(change.doc.id, chat);
         }
       });
       updateChats();
