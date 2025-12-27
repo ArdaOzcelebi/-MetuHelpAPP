@@ -460,6 +460,26 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
     requestId: string,
     requestTitle: string,
   ) => {
+    console.log("[NeedHelpScreen] handleMarkComplete called for:", requestId);
+    
+    const performFinalization = async () => {
+      console.log("[NeedHelpScreen] User confirmed - starting finalization");
+      try {
+        await finalizeHelpRequest(requestId);
+        Alert.alert("Success", "Request has been marked as completed and removed from the list!");
+        console.log("[NeedHelpScreen] Request finalized successfully:", requestId);
+      } catch (error) {
+        console.error(
+          "[NeedHelpScreen] Error finalizing request:",
+          error,
+        );
+        Alert.alert(
+          "Error",
+          "Failed to mark request as completed. Please try again.",
+        );
+      }
+    };
+
     Alert.alert(
       "Mark as Completed",
       `Are you sure you want to mark "${requestTitle}" as completed? This will finalize the request and archive it.`,
@@ -467,25 +487,19 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
         {
           text: "Cancel",
           style: "cancel",
+          onPress: () => {
+            console.log("[NeedHelpScreen] User cancelled");
+          },
         },
         {
           text: "Mark Complete",
           style: "default",
-          onPress: async () => {
-            try {
-              await finalizeHelpRequest(requestId);
-              Alert.alert("Success", "Request has been marked as completed!");
-              console.log("[NeedHelpScreen] Request finalized:", requestId);
-            } catch (error) {
-              console.error(
-                "[NeedHelpScreen] Error finalizing request:",
-                error,
-              );
-              Alert.alert(
-                "Error",
-                "Failed to mark request as completed. Please try again.",
-              );
-            }
+          onPress: () => {
+            console.log("[NeedHelpScreen] User confirmed completion");
+            // Use setTimeout to ensure callback executes on React Native Web
+            setTimeout(() => {
+              performFinalization();
+            }, 100);
           },
         },
       ],
