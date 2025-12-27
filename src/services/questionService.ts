@@ -53,7 +53,6 @@ import {
   collection,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   query,
   where,
@@ -67,8 +66,6 @@ import {
   Unsubscribe,
   increment,
   writeBatch,
-  setDoc,
-  limit,
 } from "firebase/firestore";
 import { getFirestoreInstance } from "@/src/firebase/firebaseConfig";
 import type {
@@ -76,7 +73,6 @@ import type {
   CreateQuestionData,
   Answer,
   CreateAnswerData,
-  Vote,
   VoteType,
   QuestionFilters,
 } from "@/src/types/question";
@@ -556,7 +552,10 @@ export function subscribeToAnswers(
     const questionRef = doc(db, QUESTIONS_COLLECTION, questionId);
     const answersRef = collection(questionRef, ANSWERS_COLLECTION);
 
-    console.log("[subscribeToAnswers] Setting up subscription for:", questionId);
+    console.log(
+      "[subscribeToAnswers] Setting up subscription for:",
+      questionId,
+    );
 
     const q = query(answersRef, orderBy("createdAt", "asc"));
 

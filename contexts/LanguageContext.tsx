@@ -34,6 +34,7 @@ interface Translations {
   answers: string;
   answer: string;
   postAnswer: string;
+  postQuestion: string;
   writeAnswer: string;
   acceptAnswer: string;
   acceptedAnswer: string;
@@ -228,6 +229,7 @@ const translations: Record<Language, Translations> = {
     answers: "answers",
     answer: "answer",
     postAnswer: "Post Answer",
+    postQuestion: "Post Question",
     writeAnswer: "Write your answer...",
     acceptAnswer: "Accept Answer",
     acceptedAnswer: "Accepted Answer",
@@ -251,7 +253,8 @@ const translations: Record<Language, Translations> = {
     questionTitle: "Question Title",
     questionBody: "Additional Details (Optional)",
     questionTitlePlaceholder: "e.g., Best study spots on campus?",
-    questionBodyPlaceholder: "Provide more context to help others understand your question...",
+    questionBodyPlaceholder:
+      "Provide more context to help others understand your question...",
     tipsForGoodQuestions: "Tips for good questions",
     beSpecific: "Be specific and clear",
     chooseRightCategory: "Choose the right category",
@@ -429,6 +432,7 @@ const translations: Record<Language, Translations> = {
     answers: "cevap",
     answer: "cevap",
     postAnswer: "Cevap Gönder",
+    postQuestion: "Soru Gönder",
     writeAnswer: "Cevabınızı yazın...",
     acceptAnswer: "Cevabı Kabul Et",
     acceptedAnswer: "Kabul Edilen Cevap",
@@ -452,7 +456,8 @@ const translations: Record<Language, Translations> = {
     questionTitle: "Soru Başlığı",
     questionBody: "Ek Detaylar (İsteğe bağlı)",
     questionTitlePlaceholder: "Örn: Kampüste en iyi çalışma yerleri?",
-    questionBodyPlaceholder: "Başkalarının sorunuzu anlamasına yardımcı olmak için daha fazla bağlam sağlayın...",
+    questionBodyPlaceholder:
+      "Başkalarının sorunuzu anlamasına yardımcı olmak için daha fazla bağlam sağlayın...",
     tipsForGoodQuestions: "İyi sorular için ipuçları",
     beSpecific: "Açık ve net olun",
     chooseRightCategory: "Doğru kategoriyi seçin",

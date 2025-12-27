@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Pressable, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  TextInput,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, {
@@ -12,6 +18,8 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { subscribeToQuestions } from "@/src/services/questionService";
+import type { Question } from "@/src/types/question";
 import {
   Spacing,
   BorderRadius,
@@ -54,36 +62,6 @@ const MOCK_NEEDS = [
     locationTr: "Ogrenci Merkezi",
     time: "18 min",
     urgent: false,
-  },
-];
-
-const MOCK_QUESTIONS = [
-  {
-    id: "1",
-    titleEn: "Best study spots on campus that are open late?",
-    titleTr: "Kampuste gec saatlere kadar acik en iyi calisma yerleri?",
-    categoryEn: "Campus Life",
-    categoryTr: "Kampus Yasami",
-    responses: 8,
-    time: "2h",
-  },
-  {
-    id: "2",
-    titleEn: "How is CENG 242 with Prof. Ozyurt?",
-    titleTr: "Prof. Ozyurt ile CENG 242 nasil?",
-    categoryEn: "Professors",
-    categoryTr: "Hocalar",
-    responses: 3,
-    time: "4h",
-  },
-  {
-    id: "3",
-    titleEn: "Where can I find past exams for MATH 119?",
-    titleTr: "MATH 119 icin eski sinavlari nerede bulabilirim?",
-    categoryEn: "Classes",
-    categoryTr: "Dersler",
-    responses: 0,
-    time: "5h",
   },
 ];
 
@@ -191,22 +169,22 @@ function AnimatedQuestionCard({
   question,
   navigation,
   theme,
-  language,
   getCategoryColor,
+  getTimeAgo,
 }: {
-  question: (typeof MOCK_QUESTIONS)[0];
+  question: Question;
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
   theme: ReturnType<typeof useTheme>["theme"];
-  language: string;
-  getCategoryColor: (category: string) => string;
+  getCategoryColor: (tag: string) => string;
+  getTimeAgo: (date: Date) => string;
 }) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  const category =
-    language === "en" ? question.categoryEn : question.categoryTr;
+  // Get first tag as category display
+  const categoryTag = question.tags[0] || "";
 
   return (
     <AnimatedPressable
@@ -231,33 +209,33 @@ function AnimatedQuestionCard({
         animatedStyle,
       ]}
     >
-      <ThemedText style={styles.questionTitle}>
-        {language === "en" ? question.titleEn : question.titleTr}
-      </ThemedText>
+      <ThemedText style={styles.questionTitle}>{question.title}</ThemedText>
       <View style={styles.questionMeta}>
-        <View
-          style={[
-            styles.categoryTag,
-            {
-              backgroundColor: `${getCategoryColor(category)}20`,
-            },
-          ]}
-        >
-          <ThemedText
+        {categoryTag ? (
+          <View
             style={[
-              styles.categoryTagText,
-              { color: getCategoryColor(category) },
+              styles.categoryTag,
+              {
+                backgroundColor: `${getCategoryColor(categoryTag)}20`,
+              },
             ]}
           >
-            {category}
-          </ThemedText>
-        </View>
+            <ThemedText
+              style={[
+                styles.categoryTagText,
+                { color: getCategoryColor(categoryTag) },
+              ]}
+            >
+              {categoryTag}
+            </ThemedText>
+          </View>
+        ) : null}
         <View style={styles.responsesContainer}>
           <Feather
             name="message-circle"
             size={14}
             color={
-              question.responses > 0
+              question.answerCount > 0
                 ? METUColors.actionGreen
                 : theme.textSecondary
             }
@@ -267,17 +245,17 @@ function AnimatedQuestionCard({
               styles.responsesText,
               {
                 color:
-                  question.responses > 0
+                  question.answerCount > 0
                     ? METUColors.actionGreen
                     : theme.textSecondary,
               },
             ]}
           >
-            {question.responses}
+            {question.answerCount}
           </ThemedText>
         </View>
         <ThemedText style={[styles.timeText, { color: theme.textSecondary }]}>
-          {question.time}
+          {getTimeAgo(question.createdAt)}
         </ThemedText>
       </View>
     </AnimatedPressable>
@@ -291,6 +269,28 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
     "needs",
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+
+  // Subscribe to questions from Firebase
+  useEffect(() => {
+    if (selectedTab === "questions") {
+      setLoadingQuestions(true);
+      const unsubscribe = subscribeToQuestions(
+        (updatedQuestions) => {
+          setQuestions(updatedQuestions);
+          setLoadingQuestions(false);
+        },
+        {
+          status: "open",
+          searchQuery: searchQuery.length > 0 ? searchQuery : undefined,
+          sortBy: "recent",
+        },
+      );
+
+      return () => unsubscribe();
+    }
+  }, [selectedTab, searchQuery]);
 
   const TABS = [
     { id: "needs", label: t.needs },
@@ -310,29 +310,52 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Classes":
-      case "Dersler":
-        return isDark ? "#60A5FA" : "#3B82F6";
-      case "Professors":
-      case "Hocalar":
-        return isDark ? "#A78BFA" : "#8B5CF6";
-      case "Campus Life":
-      case "Kampus Yasami":
-        return isDark ? "#34D399" : "#10B981";
-      default:
-        return theme.textSecondary;
+  const getCategoryColor = (tag: string) => {
+    const tagLower = tag.toLowerCase();
+    if (
+      tagLower.includes("class") ||
+      tagLower.includes("ders") ||
+      tagLower.includes("course")
+    ) {
+      return isDark ? "#60A5FA" : "#3B82F6";
+    }
+    if (
+      tagLower.includes("professor") ||
+      tagLower.includes("hoca") ||
+      tagLower.includes("teacher")
+    ) {
+      return isDark ? "#A78BFA" : "#8B5CF6";
+    }
+    if (
+      tagLower.includes("campus") ||
+      tagLower.includes("kampus") ||
+      tagLower.includes("life")
+    ) {
+      return isDark ? "#34D399" : "#10B981";
+    }
+    return theme.textSecondary;
+  };
+
+  const getTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 1) {
+      return "Just now";
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes}m`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h`;
+    } else {
+      return `${diffInDays}d`;
     }
   };
 
   const filteredNeeds = MOCK_NEEDS.filter((need) => {
     const title = language === "en" ? need.titleEn : need.titleTr;
-    return title.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  const filteredQuestions = MOCK_QUESTIONS.filter((q) => {
-    const title = language === "en" ? q.titleEn : q.titleTr;
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -407,16 +430,46 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
             />
           ))}
         </View>
+      ) : loadingQuestions ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator
+            size="large"
+            color={isDark ? "#FF6B6B" : METUColors.maroon}
+          />
+          <ThemedText
+            style={[styles.loadingText, { color: theme.textSecondary }]}
+          >
+            Loading questions...
+          </ThemedText>
+        </View>
+      ) : questions.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Feather
+            name="message-circle"
+            size={48}
+            color={theme.textSecondary}
+          />
+          <ThemedText
+            style={[styles.emptyText, { color: theme.textSecondary }]}
+          >
+            {t.noQuestionsFound}
+          </ThemedText>
+          <ThemedText
+            style={[styles.emptySubtext, { color: theme.textSecondary }]}
+          >
+            {t.beFirstToAsk}
+          </ThemedText>
+        </View>
       ) : (
         <View style={styles.listContainer}>
-          {filteredQuestions.map((question) => (
+          {questions.map((question) => (
             <AnimatedQuestionCard
               key={question.id}
               question={question}
               navigation={navigation}
               theme={theme}
-              language={language}
               getCategoryColor={getCategoryColor}
+              getTimeAgo={getTimeAgo}
             />
           ))}
         </View>
@@ -555,6 +608,28 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: Typography.small.fontSize,
     marginLeft: "auto",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing["4xl"],
+    gap: Spacing.md,
+  },
+  loadingText: {
+    fontSize: Typography.body.fontSize,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing["4xl"],
+    gap: Spacing.sm,
+  },
+  emptyText: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "500",
+  },
+  emptySubtext: {
+    fontSize: Typography.small.fontSize,
   },
   fab: {
     position: "absolute",

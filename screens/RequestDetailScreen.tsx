@@ -25,9 +25,8 @@ import {
   getHelpRequest,
   acceptHelpRequest,
 } from "@/src/services/helpRequestService";
-import { createChat } from "@/src/services/chatService";
-import type { HelpRequest } from "@/src/types/helpRequest";
 import { createChat, getChatByRequestId } from "@/src/services/chatService";
+import type { HelpRequest } from "@/src/types/helpRequest";
 
 type RequestDetailScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "RequestDetail">;
