@@ -569,9 +569,9 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 status={request.status}
                 urgentLabel={t.urgent}
                 helpButtonLabel={t.iCanHelp}
-                statusOpenLabel={t.open || "Open"}
-                statusAcceptedLabel={t.accepted || "Accepted"}
-                statusFinalizedLabel={t.finalized || "Finalized"}
+                statusOpenLabel={t.statusOpen}
+                statusAcceptedLabel={t.statusAccepted}
+                statusFinalizedLabel={t.statusFinalized}
                 isOwnRequest={isOwnRequest}
                 hasActiveChat={hasActiveChat}
                 userHasOfferedHelp={userHasOfferedHelp}
