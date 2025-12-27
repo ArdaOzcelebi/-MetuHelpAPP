@@ -93,6 +93,14 @@ export const Typography = {
     fontSize: 20,
     fontWeight: "600" as const,
   },
+  title: {
+    fontSize: 20,
+    fontWeight: "600" as const,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+  },
   body: {
     fontSize: 16,
     fontWeight: "400" as const,
