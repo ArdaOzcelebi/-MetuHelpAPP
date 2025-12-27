@@ -4,28 +4,29 @@
 
 export interface Message {
   id: string;
+  chatId: string;
   senderId: string;
   senderName: string;
   senderEmail: string;
-  message: string;
-  timestamp: Date;
+  text: string;
+  createdAt: Date;
 }
 
 export interface Chat {
   id: string;
   requestId: string;
   requestTitle: string;
-  members: string[]; // Array of user IDs [requesterId, accepterId]
-  memberNames: {
-    [userId: string]: string;
-  };
-  memberEmails: {
-    [userId: string]: string;
-  };
-  messages: Message[];
-  status: "active" | "finalized";
+  requesterId: string;
+  requesterName: string;
+  requesterEmail: string;
+  helperId: string;
+  helperName: string;
+  helperEmail: string;
+  members: string[]; // Array of user IDs who can access this chat
   createdAt: Date;
   updatedAt: Date;
+  lastMessage?: string;
+  lastMessageAt?: Date;
 }
 
 export interface CreateChatData {
@@ -34,11 +35,14 @@ export interface CreateChatData {
   requesterId: string;
   requesterName: string;
   requesterEmail: string;
-  accepterId: string;
-  accepterName: string;
-  accepterEmail: string;
+  helperId: string;
+  helperName: string;
+  helperEmail: string;
 }
 
 export interface SendMessageData {
-  message: string;
+  text: string;
+  senderId: string;
+  senderName: string;
+  senderEmail: string;
 }

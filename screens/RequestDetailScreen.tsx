@@ -13,7 +13,6 @@ import { RouteProp } from "@react-navigation/native";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
 import {
   Spacing,
@@ -28,6 +27,7 @@ import {
 } from "@/src/services/helpRequestService";
 import { createChat } from "@/src/services/chatService";
 import type { HelpRequest } from "@/src/types/helpRequest";
+import { createChat, getChatByRequestId } from "@/src/services/chatService";
 
 type RequestDetailScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "RequestDetail">;
@@ -69,20 +69,25 @@ export default function RequestDetailScreen({
   route,
 }: RequestDetailScreenProps) {
   const { theme, isDark } = useTheme();
-  const { t } = useLanguage();
   const { user } = useAuth();
   const { requestId } = route.params;
   const [request, setRequest] = useState<HelpRequest | null>(null);
   const [loading, setLoading] = useState(true);
-  const [accepting, setAccepting] = useState(false);
-
-  console.log("[RequestDetail] Component rendered, user:", user?.uid, "requestId:", requestId);
+  const [offeringHelp, setOfferingHelp] = useState(false);
 
   useEffect(() => {
     const loadRequest = async () => {
       try {
         const data = await getHelpRequest(requestId);
         setRequest(data);
+
+        // Check if user has already offered help (chat exists)
+        if (user && data) {
+          const existingChat = await getChatByRequestId(requestId);
+          if (existingChat && existingChat.helperId === user.uid) {
+            setHasOfferedHelp(true);
+          }
+        }
       } catch (error) {
         console.error("Error loading request:", error);
         Alert.alert("Error", "Failed to load request details.");
@@ -92,7 +97,7 @@ export default function RequestDetailScreen({
     };
 
     loadRequest();
-  }, [requestId]);
+  }, [requestId, user]);
 
   if (loading) {
     return (
@@ -147,171 +152,72 @@ export default function RequestDetailScreen({
     }
   };
 
-  const handleAcceptRequest = async () => {
-    console.log("[RequestDetail] handleAcceptRequest called");
-    
+  const handleOfferHelp = async () => {
     if (!user || !request) {
-      console.log("[RequestDetail] Cannot accept: user or request is null", {
-        hasUser: !!user,
-        hasRequest: !!request,
-      });
+      Alert.alert("Error", "Unable to offer help at this time.");
       return;
     }
 
-    console.log("[RequestDetail] Validation checks...", {
-      userUid: user.uid,
-      requestUserId: request.userId,
-      requestStatus: request.status,
-    });
-
-    // Check if user is trying to accept their own request
-    if (user.uid === request.userId) {
-      console.log("[RequestDetail] User is trying to accept own request");
-      Alert.alert(t.error, t.cannotAcceptOwnRequest);
-      return;
-    }
-
-    // Check if request is already accepted
-    if (request.status === "accepted" || request.status === "finalized") {
-      console.log("[RequestDetail] Request already accepted/finalized");
-      Alert.alert(t.error, t.requestAlreadyAccepted);
-      return;
-    }
-
-    console.log("[RequestDetail] Showing confirmation dialog...");
-    
-    // For web compatibility: use window.confirm instead of Alert.alert with buttons
-    if (typeof window !== "undefined" && window.confirm) {
-      const confirmed = window.confirm(
-        `${t.acceptConfirm}\n\n${t.acceptConfirmMessage}`,
+    if (hasOfferedHelp) {
+      Alert.alert(
+        "Already Offered",
+        "You've already offered to help with this request.",
+        [{ text: "OK" }],
       );
-      
-      if (!confirmed) {
-        console.log("[RequestDetail] User cancelled acceptance");
-        return;
-      }
-      
-      console.log("[RequestDetail] User confirmed, proceeding with acceptance");
-      setAccepting(true);
-      
-      try {
-        console.log("[RequestDetail] Creating chat for request:", request.id);
+      return;
+    }
 
-        // Create chat first
-        const chatId = await createChat({
+    // Check if user is trying to help their own request
+    if (request.userId === user.uid) {
+      Alert.alert("Cannot Help", "You cannot offer help on your own request.", [
+        { text: "OK" },
+      ]);
+      return;
+    }
+
+    setOfferingHelp(true);
+
+    try {
+      // Check if a chat already exists
+      const existingChat = await getChatByRequestId(requestId);
+
+      let chatId: string;
+
+      if (existingChat) {
+        // Chat already exists, just navigate to it
+        chatId = existingChat.id;
+        console.log("[RequestDetailScreen] Using existing chat:", chatId);
+      } else {
+        // Create a new chat
+        console.log(
+          "[RequestDetailScreen] Creating new chat for request:",
+          requestId,
+        );
+        chatId = await createChat({
           requestId: request.id,
           requestTitle: request.title,
           requesterId: request.userId,
           requesterName: request.userName,
           requesterEmail: request.userEmail,
-          accepterId: user.uid,
-          accepterName: user.displayName || user.email || "Unknown",
-          accepterEmail: user.email || "",
+          helperId: user.uid,
+          helperName: user.displayName || user.email || "Helper",
+          helperEmail: user.email || "",
         });
-
-        console.log("[RequestDetail] Chat created with ID:", chatId);
-
-        // Update the help request with acceptance info
-        await acceptHelpRequest(
-          request.id,
-          user.uid,
-          user.displayName || user.email || "Unknown",
-          user.email || "",
-          chatId,
-        );
-
-        console.log("[RequestDetail] Request accepted, navigating to chat");
-
-        // Navigate directly to chat
-        navigation.navigate("Chat", {
-          chatId,
-          requestId: request.id,
-        });
-      } catch (error) {
-        console.error("[RequestDetail] Error accepting request:", error);
-        // Show detailed error for debugging
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        alert(`${t.failedToAcceptRequest}\n\nDebug info: ${errorMessage}`);
-      } finally {
-        setAccepting(false);
+        console.log("[RequestDetailScreen] Chat created successfully:", chatId);
       }
-    } else {
-      // Fallback for mobile: use Alert.alert
-      Alert.alert(t.acceptConfirm, t.acceptConfirmMessage, [
-        {
-          text: t.cancel,
-          style: "cancel",
-          onPress: () => {
-            console.log("[RequestDetail] User cancelled acceptance");
-          },
-        },
-        {
-          text: t.acceptRequest,
-          onPress: async () => {
-            console.log("[RequestDetail] User confirmed, proceeding with acceptance");
-            setAccepting(true);
-            try {
-              console.log(
-                "[RequestDetail] Creating chat for request:",
-                request.id,
-              );
 
-              // Create chat first
-              const chatId = await createChat({
-                requestId: request.id,
-                requestTitle: request.title,
-                requesterId: request.userId,
-                requesterName: request.userName,
-                requesterEmail: request.userEmail,
-                accepterId: user.uid,
-                accepterName: user.displayName || user.email || "Unknown",
-                accepterEmail: user.email || "",
-              });
+      setHasOfferedHelp(true);
 
-              console.log("[RequestDetail] Chat created with ID:", chatId);
-
-              // Update the help request with acceptance info
-              await acceptHelpRequest(
-                request.id,
-                user.uid,
-                user.displayName || user.email || "Unknown",
-                user.email || "",
-                chatId,
-              );
-
-              console.log("[RequestDetail] Request accepted, navigating to chat");
-
-              // Navigate directly to chat without showing intermediate alert
-              navigation.navigate("Chat", {
-                chatId,
-                requestId: request.id,
-              });
-            } catch (error) {
-              console.error("[RequestDetail] Error accepting request:", error);
-              // Show detailed error for debugging
-              const errorMessage =
-                error instanceof Error ? error.message : String(error);
-              Alert.alert(
-                t.error,
-                `${t.failedToAcceptRequest}\n\nDebug info: ${errorMessage}`,
-              );
-            } finally {
-              setAccepting(false);
-            }
-          },
-        },
+      // Navigate to the chat screen
+      navigation.navigate("Chat", { chatId });
+    } catch (error) {
+      console.error("[RequestDetailScreen] Error offering help:", error);
+      Alert.alert("Error", "Failed to create chat. Please try again.", [
+        { text: "OK" },
       ]);
+    } finally {
+      setOfferingHelp(false);
     }
-  };
-
-  const handleOpenChat = async () => {
-    if (!request || !request.chatId) return;
-
-    navigation.navigate("Chat", {
-      chatId: request.chatId,
-      requestId: request.id,
-    });
   };
 
   const posterInitials = getUserInitials(request.userName, request.userEmail);
@@ -443,23 +349,39 @@ export default function RequestDetailScreen({
         </ThemedText>
       </View>
 
-      {isAccepted && request.acceptedByName && !isOwnRequest && (
-        <View
-          style={[
-            styles.acceptedByCard,
-            { backgroundColor: theme.cardBackground },
+      {/* Only show "I Can Help" button if user is not the requester */}
+      {user && request.userId !== user.uid && (
+        <Pressable
+          onPress={handleOfferHelp}
+          disabled={offeringHelp}
+          style={({ pressed }) => [
+            styles.helpButton,
+            {
+              backgroundColor: hasOfferedHelp
+                ? theme.backgroundSecondary
+                : METUColors.actionGreen,
+              opacity: pressed || offeringHelp ? 0.9 : 1,
+            },
           ]}
         >
-          <Feather name="user-check" size={20} color={METUColors.actionGreen} />
-          <View style={styles.acceptedByInfo}>
-            <ThemedText style={styles.acceptedByLabel}>
-              {t.acceptedBy}
-            </ThemedText>
-            <ThemedText style={styles.acceptedByName}>
-              {request.acceptedByName}
-            </ThemedText>
-          </View>
-        </View>
+          {offeringHelp ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Feather
+              name={hasOfferedHelp ? "check" : "heart"}
+              size={20}
+              color={hasOfferedHelp ? theme.text : "#FFFFFF"}
+            />
+          )}
+          <ThemedText
+            style={[
+              styles.helpButtonText,
+              { color: hasOfferedHelp ? theme.text : "#FFFFFF" },
+            ]}
+          >
+            {hasOfferedHelp ? "Help Offered" : "I Can Help"}
+          </ThemedText>
+        </Pressable>
       )}
 
       {canViewChat ? (

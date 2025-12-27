@@ -5,19 +5,19 @@ import {
   TextInput,
   Pressable,
   FlatList,
-  Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
 import {
   Spacing,
@@ -27,212 +27,200 @@ import {
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
-  subscribeToChat,
+  subscribeToMessages,
   sendMessage,
-  finalizeChat,
+  getChat,
 } from "@/src/services/chatService";
-import { finalizeHelpRequest } from "@/src/services/helpRequestService";
-import type { Chat, Message } from "@/src/types/chat";
+import type { Message, Chat } from "@/src/types/chat";
 
 type ChatScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "Chat">;
   route: RouteProp<HomeStackParamList, "Chat">;
 };
 
+interface MessageBubbleProps {
+  message: Message;
+  isOwn: boolean;
+}
+
+function MessageBubble({ message, isOwn }: MessageBubbleProps) {
+  const { theme, isDark } = useTheme();
+
+  return (
+    <Animated.View
+      entering={isOwn ? FadeInUp.duration(300) : FadeInDown.duration(300)}
+      style={[
+        styles.messageBubbleContainer,
+        isOwn ? styles.ownMessageContainer : styles.otherMessageContainer,
+      ]}
+    >
+      <View
+        style={[
+          styles.messageBubble,
+          {
+            backgroundColor: isOwn
+              ? isDark
+                ? "#CC3333"
+                : METUColors.maroon
+              : theme.cardBackground,
+          },
+        ]}
+      >
+        {!isOwn && (
+          <ThemedText
+            style={[
+              styles.senderName,
+              { color: isDark ? "#FF6B6B" : METUColors.maroon },
+            ]}
+          >
+            {message.senderName}
+          </ThemedText>
+        )}
+        <ThemedText
+          style={[
+            styles.messageText,
+            { color: isOwn ? "#FFFFFF" : theme.text },
+          ]}
+        >
+          {message.text}
+        </ThemedText>
+        <ThemedText
+          style={[
+            styles.messageTime,
+            {
+              color: isOwn ? "rgba(255, 255, 255, 0.7)" : theme.textSecondary,
+            },
+          ]}
+        >
+          {formatMessageTime(message.createdAt)}
+        </ThemedText>
+      </View>
+    </Animated.View>
+  );
+}
+
+function formatMessageTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  // Format as date if older than 24 hours
+  return date.toLocaleDateString();
+}
+
 export default function ChatScreen({ navigation, route }: ChatScreenProps) {
   const { theme, isDark } = useTheme();
-  const { t } = useLanguage();
   const { user } = useAuth();
-  const { chatId, requestId } = route.params;
+  const { chatId } = route.params;
+  const tabBarHeight = useBottomTabBarHeight();
 
-  const [chat, setChat] = useState<Chat | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [finalizing, setFinalizing] = useState(false);
+  const [chat, setChat] = useState<Chat | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
+  // Load chat details
   useEffect(() => {
-    if (!chatId) {
-      console.error("[ChatScreen] Chat ID is missing");
-      Alert.alert(t.error, "Chat ID is missing");
-      navigation.goBack();
-      return;
-    }
+    if (!chatId) return;
 
-    console.log("[ChatScreen] Subscribing to chat:", chatId);
-
-    const unsubscribe = subscribeToChat(chatId, (chatData) => {
-      if (chatData) {
-        console.log("[ChatScreen] Chat data received:", {
-          id: chatData.id,
-          messageCount: chatData.messages.length,
-          status: chatData.status,
-        });
-      } else {
-        console.warn("[ChatScreen] Chat data is null");
+    const loadChat = async () => {
+      try {
+        const chatData = await getChat(chatId);
+        setChat(chatData);
+      } catch (error) {
+        console.error("[ChatScreen] Error loading chat:", error);
       }
-      
-      setChat(chatData);
+    };
+
+    loadChat();
+  }, [chatId]);
+
+  // Subscribe to messages with real-time updates using onSnapshot
+  useEffect(() => {
+    if (!chatId) return;
+
+    console.log(
+      "[ChatScreen] Setting up message subscription for chat:",
+      chatId,
+    );
+
+    const unsubscribe = subscribeToMessages(chatId, (newMessages) => {
+      console.log(
+        "[ChatScreen] Received message update, count:",
+        newMessages.length,
+      );
+      setMessages(newMessages);
       setLoading(false);
-
-      // Scroll to bottom when new messages arrive
-      if (chatData && chatData.messages.length > 0) {
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-      }
     });
 
     return () => {
-      console.log("[ChatScreen] Unsubscribing from chat");
+      console.log("[ChatScreen] Cleaning up message subscription");
       unsubscribe();
     };
-  }, [chatId, navigation, t.error]);
+  }, [chatId]);
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !user || !chat) return;
+  // Safeguard: Check if chatId is missing
+  if (!chatId) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Feather name="alert-circle" size={48} color={METUColors.alertRed} />
+          <ThemedText style={styles.errorText}>Chat ID not found</ThemedText>
+          <ThemedText
+            style={[styles.errorSubtext, { color: theme.textSecondary }]}
+          >
+            Unable to load this conversation. Please try again.
+          </ThemedText>
+        </View>
+      </ThemedView>
+    );
+  }
 
-    const messageText = message.trim();
-    setMessage("");
+  const handleSend = async () => {
+    if (!inputText.trim() || !user || sending) return;
+
+    const messageText = inputText.trim();
+    setInputText("");
     setSending(true);
 
     try {
-      await sendMessage(
-        chatId,
-        { message: messageText },
-        user.uid,
-        user.displayName || user.email || "Unknown",
-        user.email || "",
-      );
+      await sendMessage(chatId, {
+        text: messageText,
+        senderId: user.uid,
+        senderName: user.displayName || user.email || "Anonymous",
+        senderEmail: user.email || "",
+      });
+
+      console.log("[ChatScreen] Message sent successfully");
     } catch (error) {
-      console.error("Error sending message:", error);
-      Alert.alert(t.error, t.failedToSendMessage);
-      setMessage(messageText); // Restore message on error
+      console.error("[ChatScreen] Error sending message:", error);
+      // Restore the message text on error
+      setInputText(messageText);
     } finally {
       setSending(false);
     }
   };
 
-  const handleFinalizeRequest = () => {
-    Alert.alert(t.finalizeConfirm, t.finalizeConfirmMessage, [
-      {
-        text: t.cancel,
-        style: "cancel",
-      },
-      {
-        text: t.finalizeRequest,
-        onPress: async () => {
-          setFinalizing(true);
-          try {
-            // Finalize both chat and help request
-            await Promise.all([
-              finalizeChat(chatId),
-              finalizeHelpRequest(requestId),
-            ]);
-
-            Alert.alert(
-              t.requestFinalized,
-              t.requestFinalizedMessage,
-              [
-                {
-                  text: t.ok,
-                  onPress: () => {
-                    // Navigate back to home
-                    navigation.navigate("Home");
-                  },
-                },
-              ],
-              { cancelable: false },
-            );
-          } catch (error) {
-            console.error("Error finalizing request:", error);
-            Alert.alert(t.error, t.failedToFinalizeRequest);
-          } finally {
-            setFinalizing(false);
-          }
-        },
-      },
-    ]);
-  };
-
-  const renderMessage = ({ item }: { item: Message }) => {
-    const isCurrentUser = user?.uid === item.senderId;
-
-    return (
-      <View
-        style={[
-          styles.messageContainer,
-          isCurrentUser ? styles.messageRight : styles.messageLeft,
-        ]}
-      >
-        <View
-          style={[
-            styles.messageBubble,
-            {
-              backgroundColor: isCurrentUser
-                ? isDark
-                  ? METUColors.maroon
-                  : METUColors.maroon
-                : theme.cardBackground,
-            },
-          ]}
-        >
-          {!isCurrentUser && (
-            <ThemedText
-              style={[
-                styles.senderName,
-                { color: isDark ? METUColors.actionGreen : METUColors.maroon },
-              ]}
-            >
-              {item.senderName}
-            </ThemedText>
-          )}
-          <ThemedText
-            style={[
-              styles.messageText,
-              { color: isCurrentUser ? "#FFFFFF" : theme.text },
-            ]}
-          >
-            {item.message}
-          </ThemedText>
-          <ThemedText
-            style={[
-              styles.messageTime,
-              {
-                color: isCurrentUser
-                  ? "rgba(255, 255, 255, 0.7)"
-                  : theme.textSecondary,
-              },
-            ]}
-          >
-            {new Date(item.timestamp).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </ThemedText>
-        </View>
-      </View>
-    );
-  };
-
   if (loading) {
     return (
-      <ThemedView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={METUColors.maroon} />
-      </ThemedView>
-    );
-  }
-
-  if (!chat) {
-    return (
       <ThemedView style={styles.container}>
-        <ThemedText style={styles.errorText}>Chat not found</ThemedText>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={METUColors.maroon} />
+          <ThemedText style={{ marginTop: Spacing.md }}>
+            Loading chat...
+          </ThemedText>
+        </View>
       </ThemedView>
     );
   }
-
-  const isFinalized = chat.status === "finalized";
 
   return (
     <KeyboardAvoidingView
@@ -241,124 +229,150 @@ export default function ChatScreen({ navigation, route }: ChatScreenProps) {
       keyboardVerticalOffset={90}
     >
       <ThemedView style={styles.container}>
-        {/* Chat Header with request title */}
-        <View
-          style={[styles.chatHeader, { backgroundColor: theme.cardBackground }]}
-        >
-          <ThemedText style={styles.chatTitle}>{chat.requestTitle}</ThemedText>
-          {isFinalized && (
-            <View style={styles.finalizedBadge}>
-              <Feather name="check-circle" size={14} color="#FFFFFF" />
-              <ThemedText style={styles.finalizedText}>
-                {t.statusFinalized}
+        {/* Chat header with request info */}
+        {chat && (
+          <View
+            style={[
+              styles.chatHeader,
+              { backgroundColor: theme.backgroundDefault },
+            ]}
+          >
+            <View style={{ flex: 1 }}>
+              <ThemedText style={styles.chatHeaderTitle}>
+                {chat.requestTitle}
               </ThemedText>
+              <View style={styles.chatHeaderSubtitleContainer}>
+                <View
+                  style={[
+                    styles.onlineIndicator,
+                    { backgroundColor: METUColors.actionGreen },
+                  ]}
+                />
+                <ThemedText
+                  style={[
+                    styles.chatHeaderSubtitle,
+                    { color: theme.textSecondary },
+                  ]}
+                >
+                  Chat with{" "}
+                  {user?.uid === chat.requesterId
+                    ? chat.helperName
+                    : chat.requesterName}
+                </ThemedText>
+              </View>
             </View>
-          )}
-        </View>
-
-        {/* Messages List */}
-        {chat.messages.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Feather
-              name="message-circle"
-              size={48}
-              color={theme.textSecondary}
-            />
-            <ThemedText
-              style={[styles.emptyText, { color: theme.textSecondary }]}
-            >
-              {t.noMessages}
-            </ThemedText>
-            <ThemedText
-              style={[styles.emptySubtext, { color: theme.textSecondary }]}
-            >
-              {t.startConversation}
-            </ThemedText>
           </View>
-        ) : (
-          <FlatList
-            ref={flatListRef}
-            data={chat.messages}
-            renderItem={renderMessage}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.messagesList}
-            onContentSizeChange={() =>
-              flatListRef.current?.scrollToEnd({ animated: true })
-            }
-          />
         )}
 
-        {/* Input Area */}
-        {!isFinalized && (
-          <>
-            <View
-              style={[
-                styles.inputContainer,
-                { backgroundColor: theme.cardBackground },
-              ]}
-            >
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
-                    backgroundColor: theme.backgroundDefault,
-                  },
-                ]}
-                placeholder={t.typeMessage}
-                placeholderTextColor={theme.textSecondary}
-                value={message}
-                onChangeText={setMessage}
-                multiline
-                maxLength={500}
+        {/* Messages list */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <MessageBubble message={item} isOwn={item.senderId === user?.uid} />
+          )}
+          contentContainerStyle={styles.messagesList}
+          onContentSizeChange={() => {
+            // Scroll to bottom when content size changes (new messages)
+            if (messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }
+          }}
+          onLayout={() => {
+            // Initial scroll to bottom when list is first laid out
+            if (messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }
+          }}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Feather
+                name="message-circle"
+                size={48}
+                color={theme.textSecondary}
               />
-              <Pressable
-                onPress={handleSendMessage}
-                disabled={!message.trim() || sending}
-                style={({ pressed }) => [
-                  styles.sendButton,
+              <ThemedText
+                style={[styles.emptyText, { color: theme.textSecondary }]}
+              >
+                No messages yet. Start the conversation!
+              </ThemedText>
+            </View>
+          }
+        />
+
+        {/* Input area */}
+        <View
+          style={[
+            styles.inputContainer,
+            {
+              backgroundColor: theme.backgroundDefault,
+              paddingBottom: tabBarHeight + Spacing.md,
+            },
+          ]}
+        >
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.cardBackground,
+                  color: theme.text,
+                },
+              ]}
+              placeholder="Type a message..."
+              placeholderTextColor={theme.textSecondary}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              maxLength={500}
+              returnKeyType="send"
+              onSubmitEditing={() => {
+                if (inputText.trim() && !sending) {
+                  handleSend();
+                }
+              }}
+              blurOnSubmit={false}
+            />
+            {inputText.length > 400 && (
+              <ThemedText
+                style={[
+                  styles.charCounter,
                   {
-                    backgroundColor:
-                      !message.trim() || sending
-                        ? theme.backgroundSecondary
-                        : METUColors.maroon,
-                    opacity: pressed ? 0.8 : 1,
+                    color:
+                      inputText.length >= 500
+                        ? METUColors.alertRed
+                        : theme.textSecondary,
                   },
                 ]}
               >
-                {sending ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Feather name="send" size={20} color="#FFFFFF" />
-                )}
-              </Pressable>
-            </View>
-
-            {/* Finalize Button */}
-            <Pressable
-              onPress={handleFinalizeRequest}
-              disabled={finalizing}
-              style={({ pressed }) => [
-                styles.finalizeButton,
-                {
-                  backgroundColor: METUColors.actionGreen,
-                  opacity: pressed || finalizing ? 0.8 : 1,
-                },
-              ]}
-            >
-              {finalizing ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <>
-                  <Feather name="check-circle" size={20} color="#FFFFFF" />
-                  <ThemedText style={styles.finalizeButtonText}>
-                    {t.finalizeRequest}
-                  </ThemedText>
-                </>
-              )}
-            </Pressable>
-          </>
-        )}
+                {inputText.length}/500
+              </ThemedText>
+            )}
+          </View>
+          <Pressable
+            onPress={handleSend}
+            disabled={!inputText.trim() || sending}
+            style={({ pressed }) => [
+              styles.sendButton,
+              {
+                backgroundColor:
+                  !inputText.trim() || sending
+                    ? theme.backgroundSecondary
+                    : isDark
+                      ? "#CC3333"
+                      : METUColors.maroon,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            {sending ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Feather name="send" size={20} color="#FFFFFF" />
+            )}
+          </Pressable>
+        </View>
       </ThemedView>
     </KeyboardAvoidingView>
   );
@@ -373,65 +387,59 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  errorText: {
-    textAlign: "center",
-    marginTop: Spacing.xl,
-  },
-  chatHeader: {
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(128, 128, 128, 0.2)",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  chatTitle: {
-    fontSize: Typography.body.fontSize,
-    fontWeight: "600",
-    flex: 1,
-  },
-  finalizedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: METUColors.actionGreen,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    gap: Spacing.xs,
-  },
-  finalizedText: {
-    color: "#FFFFFF",
-    fontSize: Typography.small.fontSize,
-    fontWeight: "600",
-  },
-  emptyContainer: {
+  errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.xl,
   },
-  emptyText: {
+  errorText: {
     fontSize: Typography.h3.fontSize,
     fontWeight: "600",
     marginTop: Spacing.lg,
+    textAlign: "center",
   },
-  emptySubtext: {
+  errorSubtext: {
     fontSize: Typography.body.fontSize,
     marginTop: Spacing.sm,
+    textAlign: "center",
+  },
+  chatHeader: {
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.1)",
+  },
+  chatHeaderTitle: {
+    fontSize: Typography.body.fontSize,
+    fontWeight: "600",
+  },
+  chatHeaderSubtitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2,
+  },
+  onlineIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: Spacing.xs,
+  },
+  chatHeaderSubtitle: {
+    fontSize: Typography.small.fontSize,
   },
   messagesList: {
     padding: Spacing.md,
     flexGrow: 1,
   },
-  messageContainer: {
-    marginBottom: Spacing.md,
+  messageBubbleContainer: {
+    marginVertical: Spacing.xs,
     maxWidth: "80%",
   },
-  messageLeft: {
-    alignSelf: "flex-start",
-  },
-  messageRight: {
+  ownMessageContainer: {
     alignSelf: "flex-end",
+  },
+  otherMessageContainer: {
+    alignSelf: "flex-start",
   },
   messageBubble: {
     padding: Spacing.md,
@@ -447,42 +455,53 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   messageTime: {
-    fontSize: Typography.caption.fontSize,
+    fontSize: 10,
     marginTop: Spacing.xs,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: Spacing["4xl"],
+  },
+  emptyText: {
+    fontSize: Typography.body.fontSize,
+    marginTop: Spacing.md,
+    textAlign: "center",
   },
   inputContainer: {
     flexDirection: "row",
+    alignItems: "flex-end",
     padding: Spacing.md,
-    gap: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: "rgba(128, 128, 128, 0.2)",
+    borderTopColor: "rgba(0, 0, 0, 0.1)",
+  },
+  inputWrapper: {
+    flex: 1,
+    position: "relative",
   },
   input: {
     flex: 1,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    fontSize: Typography.body.fontSize,
+    minHeight: 40,
     maxHeight: 100,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginRight: Spacing.sm,
+    fontSize: Typography.body.fontSize,
+  },
+  charCounter: {
+    position: "absolute",
+    bottom: 4,
+    right: Spacing.md + Spacing.sm,
+    fontSize: 10,
+    fontWeight: "500",
   },
   sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.full,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  finalizeButton: {
-    flexDirection: "row",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    padding: Spacing.md,
-    margin: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.sm,
-  },
-  finalizeButtonText: {
-    color: "#FFFFFF",
-    fontSize: Typography.button.fontSize,
-    fontWeight: "600",
   },
 });

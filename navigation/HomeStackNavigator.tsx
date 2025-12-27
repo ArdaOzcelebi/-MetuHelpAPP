@@ -18,7 +18,7 @@ export type HomeStackParamList = {
   OfferHelp: undefined;
   RequestDetail: { requestId: string };
   PostNeed: undefined;
-  Chat: { chatId: string; requestId: string };
+  Chat: { chatId: string };
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -67,7 +67,7 @@ export default function HomeStackNavigator() {
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
-        options={{ headerTitle: t.chat }}
+        options={{ headerTitle: "Chat" }}
       />
     </Stack.Navigator>
   );
