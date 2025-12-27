@@ -27,6 +27,7 @@ export interface Chat {
   updatedAt: Date;
   lastMessage?: string;
   lastMessageAt?: Date;
+  status?: string; // Chat status: 'active', 'finalized'
 }
 
 export interface CreateChatData {

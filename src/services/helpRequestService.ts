@@ -274,17 +274,18 @@ export function subscribeToHelpRequests(
 
     // Simplified query without orderBy to avoid requiring composite index
     // We'll sort on the client side instead
+    // Show both "active" and "accepted" requests so users can see ongoing help sessions
     let q;
     if (category) {
       q = query(
         collection(db, COLLECTION_NAME),
-        where("status", "==", "active"),
+        where("status", "in", ["active", "accepted"]),
         where("category", "==", category),
       );
     } else {
       q = query(
         collection(db, COLLECTION_NAME),
-        where("status", "==", "active"),
+        where("status", "in", ["active", "accepted"]),
       );
     }
 
@@ -344,9 +345,7 @@ export function subscribeToHelpRequests(
           error.code === "failed-precondition" &&
           error.message.includes("index")
         ) {
-          console.error(
-            "[subscribeToHelpRequests] FIRESTORE INDEX REQUIRED:",
-          );
+          console.error("[subscribeToHelpRequests] FIRESTORE INDEX REQUIRED:");
           console.error(
             "The query requires a composite index. This has been fixed by simplifying the query.",
           );
@@ -478,11 +477,19 @@ export async function acceptHelpRequest(
  * Finalize a help request (mark as completed)
  */
 export async function finalizeHelpRequest(requestId: string): Promise<void> {
-  const db = getFirestoreInstance();
-  const docRef = doc(db, COLLECTION_NAME, requestId);
+  try {
+    console.log("[finalizeHelpRequest] Attempting to finalize request:", requestId);
+    const db = getFirestoreInstance();
+    const docRef = doc(db, COLLECTION_NAME, requestId);
 
-  await updateDoc(docRef, {
-    status: "finalized",
-    updatedAt: Timestamp.now(),
-  });
+    await updateDoc(docRef, {
+      status: "finalized",
+      updatedAt: Timestamp.now(),
+    });
+
+    console.log("[finalizeHelpRequest] Request finalized successfully");
+  } catch (error) {
+    console.error("[finalizeHelpRequest] Error occurred:", error);
+    throw error;
+  }
 }

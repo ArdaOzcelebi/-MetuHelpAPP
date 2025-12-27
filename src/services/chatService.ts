@@ -119,6 +119,7 @@ function documentToChat(id: string, data: DocumentData): Chat | null {
       lastMessageAt: data.lastMessageAt
         ? convertTimestamp(data.lastMessageAt)
         : undefined,
+      status: data.status || "active",
     };
   } catch (error) {
     console.error("Error converting document to Chat:", error);
@@ -167,6 +168,7 @@ export async function createChat(chatData: CreateChatData): Promise<string> {
     const data = {
       ...chatData,
       members: [chatData.requesterId, chatData.helperId], // Required for Firebase security rules
+      status: "active", // Explicitly set status to active
       createdAt: now,
       updatedAt: now,
     };
@@ -183,25 +185,32 @@ export async function createChat(chatData: CreateChatData): Promise<string> {
 }
 
 /**
- * Get chat by request ID
- * Returns the chat if one exists for this request
+ * Get chat by request ID for a specific user
+ * Returns the chat if one exists for this request AND the user is a participant
  *
  * @param requestId - The help request ID
+ * @param userId - The current user's ID (must be requester or helper)
  * @returns Promise resolving to Chat or null if not found
  */
 export async function getChatByRequestId(
   requestId: string,
+  userId: string,
 ): Promise<Chat | null> {
   try {
     console.log(
       "[getChatByRequestId] Checking for chat with requestId:",
       requestId,
+      "for user:",
+      userId,
     );
 
     const db = getFirestoreInstance();
+    // IMPORTANT: Filter by members array to comply with Firestore security rules
+    // Security rules typically require: request.auth.uid in resource.data.members
     const q = query(
       collection(db, CHATS_COLLECTION),
       where("requestId", "==", requestId),
+      where("members", "array-contains", userId),
     );
 
     const querySnapshot = await getDocs(q);
@@ -212,7 +221,7 @@ export async function getChatByRequestId(
       return null;
     }
 
-    // Return the first chat found (there should only be one per request)
+    // Return the first chat found (there should only be one per request per user)
     const doc = querySnapshot.docs[0];
     const chat = documentToChat(doc.id, doc.data());
     console.log("[getChatByRequestId] Returning chat:", chat?.id);
@@ -395,25 +404,73 @@ export function subscribeToUserChats(
     };
 
     // Subscribe to both queries
-    const unsubscribe1 = onSnapshot(q1, (snapshot) => {
-      snapshot.forEach((doc) => {
-        const chat = documentToChat(doc.id, doc.data());
-        if (chat) {
-          chatsMap.set(doc.id, chat);
-        }
-      });
-      updateChats();
-    });
+    const unsubscribe1 = onSnapshot(
+      q1,
+      (snapshot) => {
+        console.log(
+          "[subscribeToUserChats] Query1 (requesterId) snapshot:",
+          snapshot.size,
+          "documents",
+        );
+        snapshot.docChanges().forEach((change) => {
+          console.log(
+            "[subscribeToUserChats] Query1 change:",
+            change.type,
+            change.doc.id,
+          );
+          const chat = documentToChat(change.doc.id, change.doc.data());
+          if (change.type === "removed") {
+            chatsMap.delete(change.doc.id);
+          } else if (chat) {
+            console.log(
+              "[subscribeToUserChats] Query1 adding chat:",
+              chat.id,
+              "status:",
+              chat.status,
+            );
+            chatsMap.set(change.doc.id, chat);
+          }
+        });
+        updateChats();
+      },
+      (error) => {
+        console.error("[subscribeToUserChats] Query1 error:", error);
+      },
+    );
 
-    const unsubscribe2 = onSnapshot(q2, (snapshot) => {
-      snapshot.forEach((doc) => {
-        const chat = documentToChat(doc.id, doc.data());
-        if (chat) {
-          chatsMap.set(doc.id, chat);
-        }
-      });
-      updateChats();
-    });
+    const unsubscribe2 = onSnapshot(
+      q2,
+      (snapshot) => {
+        console.log(
+          "[subscribeToUserChats] Query2 (helperId) snapshot:",
+          snapshot.size,
+          "documents",
+        );
+        snapshot.docChanges().forEach((change) => {
+          console.log(
+            "[subscribeToUserChats] Query2 change:",
+            change.type,
+            change.doc.id,
+          );
+          const chat = documentToChat(change.doc.id, change.doc.data());
+          if (change.type === "removed") {
+            chatsMap.delete(change.doc.id);
+          } else if (chat) {
+            console.log(
+              "[subscribeToUserChats] Query2 adding chat:",
+              chat.id,
+              "status:",
+              chat.status,
+            );
+            chatsMap.set(change.doc.id, chat);
+          }
+        });
+        updateChats();
+      },
+      (error) => {
+        console.error("[subscribeToUserChats] Query2 error:", error);
+      },
+    );
 
     // Return combined unsubscribe function
     return () => {
@@ -425,5 +482,31 @@ export function subscribeToUserChats(
     return () => {
       console.log("[subscribeToUserChats] No-op unsubscribe called");
     };
+  }
+}
+
+/**
+ * Finalize a chat (mark as completed)
+ * This is called when the transaction is complete and chat should be closed
+ *
+ * @param chatId - The chat ID to finalize
+ * @returns Promise that resolves when the chat is finalized
+ */
+export async function finalizeChat(chatId: string): Promise<void> {
+  try {
+    console.log("[finalizeChat] Finalizing chat:", chatId);
+
+    const db = getFirestoreInstance();
+    const chatRef = doc(db, CHATS_COLLECTION, chatId);
+
+    await updateDoc(chatRef, {
+      status: "finalized",
+      updatedAt: Timestamp.now(),
+    });
+
+    console.log("[finalizeChat] Chat finalized successfully");
+  } catch (error) {
+    console.error("[finalizeChat] Error occurred:", error);
+    throw error;
   }
 }

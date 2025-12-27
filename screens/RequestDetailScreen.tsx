@@ -13,7 +13,9 @@ import { RouteProp } from "@react-navigation/native";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useChatOverlay } from "@/src/contexts/ChatOverlayContext";
 import {
   Spacing,
   BorderRadius,
@@ -25,9 +27,8 @@ import {
   getHelpRequest,
   acceptHelpRequest,
 } from "@/src/services/helpRequestService";
-import { createChat } from "@/src/services/chatService";
-import type { HelpRequest } from "@/src/types/helpRequest";
 import { createChat, getChatByRequestId } from "@/src/services/chatService";
+import type { HelpRequest } from "@/src/types/helpRequest";
 
 type RequestDetailScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "RequestDetail">;
@@ -69,11 +70,14 @@ export default function RequestDetailScreen({
   route,
 }: RequestDetailScreenProps) {
   const { theme, isDark } = useTheme();
+  const { t } = useLanguage();
   const { user } = useAuth();
+  const { openChat } = useChatOverlay();
   const { requestId } = route.params;
   const [request, setRequest] = useState<HelpRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [offeringHelp, setOfferingHelp] = useState(false);
+  const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -83,7 +87,7 @@ export default function RequestDetailScreen({
 
         // Check if user has already offered help (chat exists)
         if (user && data) {
-          const existingChat = await getChatByRequestId(requestId);
+          const existingChat = await getChatByRequestId(requestId, user.uid);
           if (existingChat && existingChat.helperId === user.uid) {
             setHasOfferedHelp(true);
           }
@@ -179,14 +183,43 @@ export default function RequestDetailScreen({
 
     try {
       // Check if a chat already exists
-      const existingChat = await getChatByRequestId(requestId);
+      const existingChat = await getChatByRequestId(requestId, user.uid);
 
       let chatId: string;
 
       if (existingChat) {
-        // Chat already exists, just navigate to it
+        // Chat already exists
         chatId = existingChat.id;
         console.log("[RequestDetailScreen] Using existing chat:", chatId);
+
+        // IMPORTANT: Check if the current user is the helper in this chat
+        // If someone else is the helper, prevent this user from accepting
+        if (existingChat.helperId !== user.uid) {
+          console.log(
+            "[RequestDetailScreen] Chat already exists with different helper:",
+            existingChat.helperId,
+          );
+          Alert.alert(
+            "Already Accepted",
+            "This request has already been accepted by another user.",
+            [{ text: "OK" }],
+          );
+          setOfferingHelp(false);
+          return;
+        }
+
+        // User is the helper, check if request needs to be accepted (status might still be "active")
+        if (request.status === "active") {
+          console.log("[RequestDetailScreen] Accepting existing request");
+          await acceptHelpRequest(
+            requestId,
+            user.uid,
+            user.displayName || user.email || "Helper",
+            user.email || "",
+            chatId,
+          );
+          console.log("[RequestDetailScreen] Request accepted successfully");
+        }
       } else {
         // Create a new chat
         console.log(
@@ -204,12 +237,23 @@ export default function RequestDetailScreen({
           helperEmail: user.email || "",
         });
         console.log("[RequestDetailScreen] Chat created successfully:", chatId);
+
+        // Accept the request (update status to "accepted")
+        await acceptHelpRequest(
+          requestId,
+          user.uid,
+          user.displayName || user.email || "Helper",
+          user.email || "",
+          chatId,
+        );
+        console.log("[RequestDetailScreen] Request accepted successfully");
       }
 
       setHasOfferedHelp(true);
 
-      // Navigate to the chat screen
-      navigation.navigate("Chat", { chatId });
+      // Open chat in the global overlay instead of navigating
+      console.log("[RequestDetailScreen] Opening chat via overlay:", chatId);
+      openChat(chatId);
     } catch (error) {
       console.error("[RequestDetailScreen] Error offering help:", error);
       Alert.alert("Error", "Failed to create chat. Please try again.", [
@@ -220,6 +264,17 @@ export default function RequestDetailScreen({
     }
   };
 
+  // Handler to open chat via overlay
+  const handleOpenChat = async () => {
+    if (!request?.chatId) {
+      console.warn("[RequestDetail] No chat ID available");
+      return;
+    }
+
+    console.log("[RequestDetail] Opening chat via overlay:", request.chatId);
+    openChat(request.chatId);
+  };
+
   const posterInitials = getUserInitials(request.userName, request.userEmail);
   const displayName = request.isAnonymous ? "Anonymous" : request.userName;
   const displayInitials = request.isAnonymous ? "AN" : posterInitials;
@@ -228,7 +283,6 @@ export default function RequestDetailScreen({
   const isOwnRequest = user?.uid === request.userId;
   const isAccepted = request.status === "accepted";
   const isFinalized = request.status === "finalized";
-  const canAccept = !isOwnRequest && request.status === "active";
   const canViewChat =
     (isOwnRequest || user?.uid === request.acceptedBy) &&
     (isAccepted || isFinalized) &&
@@ -238,7 +292,6 @@ export default function RequestDetailScreen({
     isOwnRequest,
     isAccepted,
     isFinalized,
-    canAccept,
     canViewChat,
     status: request.status,
     userId: user?.uid,
@@ -400,41 +453,6 @@ export default function RequestDetailScreen({
             {t.chat}
           </ThemedText>
         </Pressable>
-      ) : canAccept ? (
-        <Pressable
-          onPress={() => {
-            console.log("[RequestDetail] Accept button clicked!");
-            handleAcceptRequest();
-          }}
-          disabled={accepting}
-          style={({ pressed }) => [
-            styles.helpButton,
-            {
-              backgroundColor: accepting
-                ? theme.backgroundSecondary
-                : METUColors.actionGreen,
-              opacity: pressed ? 0.9 : 1,
-            },
-          ]}
-        >
-          {accepting ? (
-            <>
-              <ActivityIndicator size="small" color={theme.text} />
-              <ThemedText
-                style={[styles.helpButtonText, { color: theme.text }]}
-              >
-                {t.accepting}
-              </ThemedText>
-            </>
-          ) : (
-            <>
-              <Feather name="check-circle" size={20} color="#FFFFFF" />
-              <ThemedText style={[styles.helpButtonText, { color: "#FFFFFF" }]}>
-                {t.acceptRequest}
-              </ThemedText>
-            </>
-          )}
-        </Pressable>
       ) : isFinalized ? (
         <View style={styles.finalizedMessage}>
           <Feather
@@ -452,17 +470,6 @@ export default function RequestDetailScreen({
           </ThemedText>
         </View>
       ) : null}
-
-      {canAccept && (
-        <View style={styles.contactNote}>
-          <Feather name="info" size={16} color={theme.textSecondary} />
-          <ThemedText
-            style={[styles.contactNoteText, { color: theme.textSecondary }]}
-          >
-            {t.acceptConfirmMessage}
-          </ThemedText>
-        </View>
-      )}
     </ScreenScrollView>
   );
 }

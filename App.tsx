@@ -11,6 +11,8 @@ import AuthStackNavigator from "@/navigation/AuthStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
+import { ChatOverlayProvider } from "@/src/contexts/ChatOverlayContext";
+import { ChatOverlay } from "@/src/components/ChatOverlay";
 
 const NAVIGATION_KEYS = {
   AUTHENTICATED: "main",
@@ -41,9 +43,13 @@ function AppContent() {
   console.log("[AppContent] NavigationContainer key:", navigationKey);
 
   return (
-    <NavigationContainer key={navigationKey}>
-      {user ? <MainTabNavigator /> : <AuthStackNavigator />}
-    </NavigationContainer>
+    <>
+      <NavigationContainer key={navigationKey}>
+        {user ? <MainTabNavigator /> : <AuthStackNavigator />}
+      </NavigationContainer>
+      {/* Global chat overlay - always rendered but only visible when authenticated */}
+      <ChatOverlay />
+    </>
   );
 }
 
@@ -52,14 +58,16 @@ export default function App() {
     <ErrorBoundary>
       <LanguageProvider>
         <AuthProvider>
-          <SafeAreaProvider>
-            <GestureHandlerRootView style={styles.root}>
-              <KeyboardProvider>
-                <AppContent />
-                <StatusBar style="auto" />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
-          </SafeAreaProvider>
+          <ChatOverlayProvider>
+            <SafeAreaProvider>
+              <GestureHandlerRootView style={styles.root}>
+                <KeyboardProvider>
+                  <AppContent />
+                  <StatusBar style="auto" />
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </SafeAreaProvider>
+          </ChatOverlayProvider>
         </AuthProvider>
       </LanguageProvider>
     </ErrorBoundary>
