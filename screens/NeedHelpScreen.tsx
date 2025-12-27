@@ -13,6 +13,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useChatOverlay } from "@/src/contexts/ChatOverlayContext";
 import {
   Spacing,
   BorderRadius,
@@ -286,6 +287,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { isDark } = useTheme();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { openChat } = useChatOverlay();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -447,8 +449,8 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 }}
                 onOpenChat={() => {
                   if (chatId) {
-                    console.log("[NeedHelpScreen] Opening chat:", chatId);
-                    navigation.navigate("Chat", { chatId });
+                    console.log("[NeedHelpScreen] Opening chat via overlay:", chatId);
+                    openChat(chatId);
                   }
                 }}
               />

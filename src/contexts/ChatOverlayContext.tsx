@@ -1,0 +1,173 @@
+/**
+ * ChatOverlayContext - Global state management for floating chat widget
+ *
+ * This context manages the global chat overlay state, including:
+ * - Opening/closing the overlay
+ * - Managing active chat threads
+ * - Tracking unread message counts
+ * - Navigating between thread list and conversation views
+ */
+
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { subscribeToUserChats } from "@/src/services/chatService";
+import type { Chat } from "@/src/types/chat";
+
+interface ChatOverlayContextValue {
+  // UI state
+  isOpen: boolean;
+  isMinimized: boolean;
+  activeView: "threads" | "conversation";
+  activeChatId: string | null;
+
+  // Data
+  chats: Chat[];
+  unreadCount: number;
+
+  // Actions
+  openChat: (chatId: string) => void;
+  openChatByRequestId: (requestId: string) => void;
+  closeChat: () => void;
+  toggleMinimize: () => void;
+  goBackToThreads: () => void;
+}
+
+const ChatOverlayContext = createContext<ChatOverlayContextValue | undefined>(
+  undefined,
+);
+
+export function ChatOverlayProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { user } = useAuth();
+
+  // UI state
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
+  const [activeView, setActiveView] = useState<"threads" | "conversation">(
+    "threads",
+  );
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+
+  // Data state
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Subscribe to user's chats
+  useEffect(() => {
+    if (!user) {
+      setChats([]);
+      setUnreadCount(0);
+      return;
+    }
+
+    console.log(
+      "[ChatOverlayContext] Setting up chat subscription for user:",
+      user.uid,
+    );
+
+    const unsubscribe = subscribeToUserChats(user.uid, (updatedChats) => {
+      console.log(
+        "[ChatOverlayContext] Received chat updates:",
+        updatedChats.length,
+      );
+      setChats(updatedChats);
+
+      // TODO: Calculate unread count from messages
+      // For now, just show the number of chats as a placeholder
+      setUnreadCount(updatedChats.length);
+    });
+
+    return () => {
+      console.log("[ChatOverlayContext] Cleaning up chat subscription");
+      unsubscribe();
+    };
+  }, [user]);
+
+  // Actions
+  const openChat = (chatId: string) => {
+    console.log("[ChatOverlayContext] Opening chat:", chatId);
+    setActiveChatId(chatId);
+    setActiveView("conversation");
+    setIsMinimized(false);
+    setIsOpen(true);
+  };
+
+  const openChatByRequestId = (requestId: string) => {
+    console.log(
+      "[ChatOverlayContext] Opening chat by request ID:",
+      requestId,
+    );
+    // Find chat with matching requestId
+    const chat = chats.find((c) => c.requestId === requestId);
+    if (chat) {
+      openChat(chat.id);
+    } else {
+      console.warn(
+        "[ChatOverlayContext] No chat found for request ID:",
+        requestId,
+      );
+    }
+  };
+
+  const closeChat = () => {
+    console.log("[ChatOverlayContext] Closing chat overlay");
+    setIsOpen(false);
+    setIsMinimized(true);
+    setActiveChatId(null);
+    setActiveView("threads");
+  };
+
+  const toggleMinimize = () => {
+    console.log("[ChatOverlayContext] Toggling minimize state");
+    if (isMinimized) {
+      // Expanding - show thread list if no active chat
+      setIsMinimized(false);
+      setIsOpen(true);
+      if (!activeChatId) {
+        setActiveView("threads");
+      }
+    } else {
+      // Minimizing
+      setIsMinimized(true);
+    }
+  };
+
+  const goBackToThreads = () => {
+    console.log("[ChatOverlayContext] Going back to thread list");
+    setActiveView("threads");
+    setActiveChatId(null);
+  };
+
+  const value: ChatOverlayContextValue = {
+    isOpen,
+    isMinimized,
+    activeView,
+    activeChatId,
+    chats,
+    unreadCount,
+    openChat,
+    openChatByRequestId,
+    closeChat,
+    toggleMinimize,
+    goBackToThreads,
+  };
+
+  return (
+    <ChatOverlayContext.Provider value={value}>
+      {children}
+    </ChatOverlayContext.Provider>
+  );
+}
+
+export function useChatOverlay() {
+  const context = useContext(ChatOverlayContext);
+  if (context === undefined) {
+    throw new Error(
+      "useChatOverlay must be used within a ChatOverlayProvider",
+    );
+  }
+  return context;
+}

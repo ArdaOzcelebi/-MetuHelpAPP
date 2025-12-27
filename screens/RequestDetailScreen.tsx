@@ -14,6 +14,7 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useChatOverlay } from "@/src/contexts/ChatOverlayContext";
 import {
   Spacing,
   BorderRadius,
@@ -70,10 +71,12 @@ export default function RequestDetailScreen({
 }: RequestDetailScreenProps) {
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
+  const { openChat } = useChatOverlay();
   const { requestId } = route.params;
   const [request, setRequest] = useState<HelpRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [offeringHelp, setOfferingHelp] = useState(false);
+  const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -208,8 +211,9 @@ export default function RequestDetailScreen({
 
       setHasOfferedHelp(true);
 
-      // Navigate to the chat screen
-      navigation.navigate("Chat", { chatId });
+      // Open chat in the global overlay instead of navigating
+      console.log("[RequestDetailScreen] Opening chat via overlay:", chatId);
+      openChat(chatId);
     } catch (error) {
       console.error("[RequestDetailScreen] Error offering help:", error);
       Alert.alert("Error", "Failed to create chat. Please try again.", [
