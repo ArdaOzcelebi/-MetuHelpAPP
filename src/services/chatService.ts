@@ -397,29 +397,73 @@ export function subscribeToUserChats(
     };
 
     // Subscribe to both queries
-    const unsubscribe1 = onSnapshot(q1, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        const chat = documentToChat(change.doc.id, change.doc.data());
-        if (change.type === "removed") {
-          chatsMap.delete(change.doc.id);
-        } else if (chat) {
-          chatsMap.set(change.doc.id, chat);
-        }
-      });
-      updateChats();
-    });
+    const unsubscribe1 = onSnapshot(
+      q1,
+      (snapshot) => {
+        console.log(
+          "[subscribeToUserChats] Query1 (requesterId) snapshot:",
+          snapshot.size,
+          "documents",
+        );
+        snapshot.docChanges().forEach((change) => {
+          console.log(
+            "[subscribeToUserChats] Query1 change:",
+            change.type,
+            change.doc.id,
+          );
+          const chat = documentToChat(change.doc.id, change.doc.data());
+          if (change.type === "removed") {
+            chatsMap.delete(change.doc.id);
+          } else if (chat) {
+            console.log(
+              "[subscribeToUserChats] Query1 adding chat:",
+              chat.id,
+              "status:",
+              chat.status,
+            );
+            chatsMap.set(change.doc.id, chat);
+          }
+        });
+        updateChats();
+      },
+      (error) => {
+        console.error("[subscribeToUserChats] Query1 error:", error);
+      },
+    );
 
-    const unsubscribe2 = onSnapshot(q2, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        const chat = documentToChat(change.doc.id, change.doc.data());
-        if (change.type === "removed") {
-          chatsMap.delete(change.doc.id);
-        } else if (chat) {
-          chatsMap.set(change.doc.id, chat);
-        }
-      });
-      updateChats();
-    });
+    const unsubscribe2 = onSnapshot(
+      q2,
+      (snapshot) => {
+        console.log(
+          "[subscribeToUserChats] Query2 (helperId) snapshot:",
+          snapshot.size,
+          "documents",
+        );
+        snapshot.docChanges().forEach((change) => {
+          console.log(
+            "[subscribeToUserChats] Query2 change:",
+            change.type,
+            change.doc.id,
+          );
+          const chat = documentToChat(change.doc.id, change.doc.data());
+          if (change.type === "removed") {
+            chatsMap.delete(change.doc.id);
+          } else if (chat) {
+            console.log(
+              "[subscribeToUserChats] Query2 adding chat:",
+              chat.id,
+              "status:",
+              chat.status,
+            );
+            chatsMap.set(change.doc.id, chat);
+          }
+        });
+        updateChats();
+      },
+      (error) => {
+        console.error("[subscribeToUserChats] Query2 error:", error);
+      },
+    );
 
     // Return combined unsubscribe function
     return () => {

@@ -70,9 +70,20 @@ export function ChatOverlayProvider({
 
     const unsubscribe = subscribeToUserChats(user.uid, (updatedChats) => {
       console.log(
-        "[ChatOverlayContext] Received chat updates:",
+        "[ChatOverlayContext] Received chat updates, total count:",
         updatedChats.length,
       );
+      console.log(
+        "[ChatOverlayContext] Chat details:",
+        updatedChats.map((c) => ({
+          id: c.id,
+          requestId: c.requestId,
+          status: c.status,
+          requesterId: c.requesterId,
+          helperId: c.helperId,
+        })),
+      );
+      
       setChats(updatedChats);
 
       // TODO: Calculate unread count from messages
@@ -80,6 +91,7 @@ export function ChatOverlayProvider({
       const activeChats = updatedChats.filter(
         (chat) => chat.status !== "finalized",
       );
+      console.log("[ChatOverlayContext] Active chats count:", activeChats.length);
       setUnreadCount(activeChats.length);
     });
 
