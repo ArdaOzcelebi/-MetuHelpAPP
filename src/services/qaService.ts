@@ -91,6 +91,7 @@ export async function createQuestion(
 export function subscribeToQuestions(
   callback: (questions: QAQuestion[]) => void,
 ): () => void {
+  console.log("[subscribeToQuestions] Setting up real-time listener");
   const db = getFirestoreInstance();
   const questionsRef = collection(db, "questions");
   const q = query(questionsRef, orderBy("createdAt", "desc"));
@@ -98,9 +99,17 @@ export function subscribeToQuestions(
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
+      console.log(
+        `[subscribeToQuestions] Received ${snapshot.docs.length} documents`,
+      );
       const questions: QAQuestion[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
+        console.log(`[subscribeToQuestions] Document ${doc.id}:`, {
+          title: data.title,
+          createdAt: data.createdAt,
+          hasTimestamp: !!data.createdAt,
+        });
         questions.push({
           id: doc.id,
           title: data.title || "",
@@ -111,10 +120,18 @@ export function subscribeToQuestions(
           answerCount: data.answerCount || 0,
         });
       });
+      console.log(
+        `[subscribeToQuestions] Calling callback with ${questions.length} questions`,
+      );
       callback(questions);
     },
     (error) => {
-      console.error("Error fetching questions:", error);
+      console.error("[subscribeToQuestions] ERROR:", {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+      });
       callback([]);
     },
   );

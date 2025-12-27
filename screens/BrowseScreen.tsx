@@ -292,13 +292,20 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
 
   // Subscribe to questions from Firebase
   useEffect(() => {
+    console.log("[BrowseScreen] Setting up questions subscription");
     const unsubscribe = subscribeToQuestions((fetchedQuestions) => {
+      console.log(
+        `[BrowseScreen] Received ${fetchedQuestions.length} questions from subscription`,
+      );
       setQuestions(fetchedQuestions);
       setLoadingQuestions(false);
       setRefreshing(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log("[BrowseScreen] Cleaning up questions subscription");
+      unsubscribe();
+    };
   }, []);
 
   const onRefresh = () => {
