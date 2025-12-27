@@ -5,6 +5,7 @@ import {
   Pressable,
   TextInput,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -40,11 +41,19 @@ type OfferHelpScreenProps = {
 };
 
 // Helper function to get time ago string
-function getTimeAgo(timestamp: Date): string {
+function getTimeAgo(timestamp: any): string {
+  // Handle both Firestore Timestamp and Date objects
+  let date: Date;
+  if (timestamp && typeof timestamp.toDate === "function") {
+    date = timestamp.toDate();
+  } else if (timestamp instanceof Date) {
+    date = timestamp;
+  } else {
+    return "Just now";
+  }
+
   const now = new Date();
-  const diffInSeconds = Math.floor(
-    (now.getTime() - timestamp.getTime()) / 1000,
-  );
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) return "Just now";
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
@@ -113,9 +122,7 @@ function QuestionCard({
     transform: [{ scale: scale.value }],
   }));
 
-  const timeAgo = question.createdAt
-    ? getTimeAgo(question.createdAt.toDate())
-    : "Just now";
+  const timeAgo = question.createdAt ? getTimeAgo(question.createdAt) : "Just now";
   const answerCount = question.answerCount || 0;
   const hasAnswers = answerCount > 0;
 
@@ -181,6 +188,7 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const browseNavigation =
     useNavigation<
       CompositeNavigationProp<
@@ -227,8 +235,24 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
     return matchesSearch;
   });
 
+  const handleRefresh = () => {
+    setRefreshing(true);
+    // The subscription will automatically update with new data
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
   return (
-    <ScreenScrollView contentContainerStyle={styles.contentContainer}>
+    <ScreenScrollView 
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={isDark ? "#FF6B6B" : METUColors.maroon}
+          colors={[isDark ? "#FF6B6B" : METUColors.maroon]}
+        />
+      }
+    >
       <View
         style={[
           styles.searchContainer,

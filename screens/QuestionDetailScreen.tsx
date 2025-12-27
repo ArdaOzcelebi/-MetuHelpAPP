@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     position: "absolute",
-    bottom: 0,
+    bottom: Platform.OS === "web" ? 60 : 0, // Add space for bottom navigation on web
     left: 0,
     right: 0,
     flexDirection: "row",

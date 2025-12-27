@@ -373,7 +373,16 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
   });
 
   return (
-    <ScreenScrollView>
+    <ScreenScrollView
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={isDark ? "#FF6B6B" : METUColors.maroon}
+          colors={[isDark ? "#FF6B6B" : METUColors.maroon]}
+        />
+      }
+    >
       <View
         style={[
           styles.searchContainer,
