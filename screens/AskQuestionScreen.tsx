@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import {
   StyleSheet,
-  View,
   TextInput,
   Pressable,
   Alert,
   ActivityIndicator,
   Keyboard,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
@@ -40,61 +38,39 @@ export default function AskQuestionScreen({
   const isValid = title.trim().length >= 10;
 
   const handlePost = async () => {
-    console.log("[AskQuestionScreen] handlePost called", {
-      isValid,
-      isPosting,
-      hasUser: !!user,
-    });
-
     if (!isValid || isPosting) {
-      console.log("[AskQuestionScreen] Validation failed or already posting");
       return;
     }
 
     if (!user) {
-      console.log("[AskQuestionScreen] No user found");
       Alert.alert("Error", "You must be logged in to post a question");
       return;
     }
 
-    console.log("[AskQuestionScreen] Starting post submission...");
     setIsPosting(true);
 
     try {
-      console.log("[AskQuestionScreen] Calling createQuestion...");
-      const questionId = await createQuestion(
+      await createQuestion(
         title.trim(),
         details.trim(),
         user.uid,
         user.displayName || "Anonymous",
       );
 
-      console.log(
-        "[AskQuestionScreen] Question created successfully:",
-        questionId,
-      );
-
       // Clear form state
       setTitle("");
       setDetails("");
-      
+
       // Dismiss keyboard
       Keyboard.dismiss();
-      
+
       // Reset posting state
       setIsPosting(false);
-      
+
       // Navigate to Browse with questions tab selected
-      console.log("[AskQuestionScreen] Navigating to Browse with questions tab");
       navigation.navigate("Browse", { initialTab: "questions" });
     } catch (error) {
       console.error("[AskQuestionScreen] Error posting question:", error);
-      console.error("[AskQuestionScreen] Error details:", {
-        name: error?.name,
-        message: error?.message,
-        code: error?.code,
-        stack: error?.stack,
-      });
 
       Alert.alert(
         "Error",

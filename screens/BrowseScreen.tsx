@@ -70,36 +70,6 @@ const MOCK_NEEDS = [
   },
 ];
 
-const MOCK_QUESTIONS = [
-  {
-    id: "1",
-    titleEn: "Best study spots on campus that are open late?",
-    titleTr: "Kampuste gec saatlere kadar acik en iyi calisma yerleri?",
-    categoryEn: "Campus Life",
-    categoryTr: "Kampus Yasami",
-    responses: 8,
-    time: "2h",
-  },
-  {
-    id: "2",
-    titleEn: "How is CENG 242 with Prof. Ozyurt?",
-    titleTr: "Prof. Ozyurt ile CENG 242 nasil?",
-    categoryEn: "Professors",
-    categoryTr: "Hocalar",
-    responses: 3,
-    time: "4h",
-  },
-  {
-    id: "3",
-    titleEn: "Where can I find past exams for MATH 119?",
-    titleTr: "MATH 119 icin eski sinavlari nerede bulabilirim?",
-    categoryEn: "Classes",
-    categoryTr: "Dersler",
-    responses: 0,
-    time: "5h",
-  },
-];
-
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // Helper component for animated need cards
@@ -292,20 +262,24 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Handle initialTab route parameter - clear after use to prevent zombie loops
+  useEffect(() => {
+    if (route.params?.initialTab) {
+      setSelectedTab(route.params.initialTab);
+      // CRITICAL: Clear the param so it doesn't run again on next focus
+      navigation.setParams({ initialTab: undefined });
+    }
+  }, [route.params?.initialTab, navigation]);
+
   // Subscribe to questions from Firebase
   useEffect(() => {
-    console.log("[BrowseScreen] Setting up questions subscription");
     const unsubscribe = subscribeToQuestions((fetchedQuestions) => {
-      console.log(
-        `[BrowseScreen] Received ${fetchedQuestions.length} questions from subscription`,
-      );
       setQuestions(fetchedQuestions);
       setLoadingQuestions(false);
       setRefreshing(false);
     });
 
     return () => {
-      console.log("[BrowseScreen] Cleaning up questions subscription");
       unsubscribe();
     };
   }, []);
@@ -342,22 +316,6 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
         return "navigation";
       default:
         return "help-circle";
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Classes":
-      case "Dersler":
-        return isDark ? "#60A5FA" : "#3B82F6";
-      case "Professors":
-      case "Hocalar":
-        return isDark ? "#A78BFA" : "#8B5CF6";
-      case "Campus Life":
-      case "Kampus Yasami":
-        return isDark ? "#34D399" : "#10B981";
-      default:
-        return theme.textSecondary;
     }
   };
 

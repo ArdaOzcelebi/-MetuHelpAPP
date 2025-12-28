@@ -16,7 +16,6 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/src/contexts/AuthContext";
@@ -44,7 +43,7 @@ export default function QuestionDetailScreen({
   route,
   navigation,
 }: QuestionDetailScreenProps) {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { user } = useAuth();
   const { questionId } = route.params;
   const insets = useSafeAreaInsets();
