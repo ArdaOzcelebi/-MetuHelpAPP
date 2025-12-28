@@ -88,15 +88,12 @@ export default function AskQuestionScreen({
       // Dismiss keyboard immediately
       Keyboard.dismiss();
 
-      // Show success message
-      setSuccessMessage("Question posted successfully!");
+      // Reset posting state immediately
+      setIsPosting(false);
 
-      // Navigate back immediately - no delay needed
+      // Navigate back immediately - no success message to avoid blocking
       console.log("[AskQuestionScreen] Navigating back immediately");
       navigation.goBack();
-
-      // Reset posting state after navigation
-      setIsPosting(false);
     } catch (error) {
       console.error("[AskQuestionScreen] Error posting question:", error);
       console.error("[AskQuestionScreen] Error details:", {
