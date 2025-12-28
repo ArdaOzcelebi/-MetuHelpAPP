@@ -81,12 +81,12 @@ export async function createQuestion(
     return docRef.id;
   } catch (error) {
     console.error("[createQuestion] FAILED:", error);
-    console.error("[createQuestion] Error details:", {
-      name: error.name,
-      message: error.message,
-      code: error.code,
-      stack: error.stack,
-    });
+    if (error instanceof Error) {
+      console.error("[createQuestion] Error details:", {
+        name: error.name,
+        message: error.message,
+      });
+    }
     throw error;
   }
 }

@@ -307,7 +307,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
     const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
 
-    if (diffInMinutes < 1) return t.justNow || "Just now";
+    if (diffInMinutes < 1) return "Just now";
     if (diffInMinutes < 60) return `${diffInMinutes}m`;
     if (diffInHours < 24) return `${diffInHours}h`;
     return `${Math.floor(diffInHours / 24)}d`;
@@ -438,8 +438,8 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
               />
               <ThemedText style={styles.emptyText}>
                 {searchQuery
-                  ? t.noQuestionsFound || "No questions found"
-                  : t.noQuestions || "No questions yet. Be the first to ask!"}
+                  ? t.noQuestionsFound
+                  : "No questions yet. Be the first to ask!"}
               </ThemedText>
             </View>
           ) : (
