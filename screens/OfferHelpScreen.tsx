@@ -12,8 +12,6 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   useNavigation,
   CompositeNavigationProp,
-  useRoute,
-  RouteProp,
 } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import Animated, {
@@ -186,14 +184,9 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const route = useRoute<RouteProp<HomeStackParamList, "OfferHelp">>();
-
-  // Get initialTab from route params, default to "recent"
-  const initialTab = route.params?.initialTab || "recent";
-
   const [selectedTab, setSelectedTab] = useState<
     "recent" | "unanswered" | "popular"
-  >(initialTab);
+  >("recent");
   const [searchQuery, setSearchQuery] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);

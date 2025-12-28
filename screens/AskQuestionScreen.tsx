@@ -10,11 +10,6 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import {
-  useNavigation,
-  CompositeNavigationProp,
-} from "@react-navigation/native";
-import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -28,8 +23,6 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
-import type { MainTabParamList } from "@/navigation/MainTabNavigator";
-import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 
 type AskQuestionScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "AskQuestion">;
@@ -43,15 +36,6 @@ export default function AskQuestionScreen({
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [isPosting, setIsPosting] = useState(false);
-
-  // Use composite navigation to navigate across stacks
-  const rootNavigation =
-    useNavigation<
-      CompositeNavigationProp<
-        BottomTabNavigationProp<MainTabParamList>,
-        NativeStackNavigationProp<HomeStackParamList>
-      >
-    >();
 
   const isValid = title.trim().length >= 10;
 
@@ -93,21 +77,16 @@ export default function AskQuestionScreen({
       // Clear form state
       setTitle("");
       setDetails("");
-
+      
       // Dismiss keyboard
       Keyboard.dismiss();
-
+      
       // Reset posting state
       setIsPosting(false);
-
-      // Navigate to Home tab > OfferHelp screen with "recent" tab selected
-      console.log(
-        "[AskQuestionScreen] Navigating to HomeTab > OfferHelp with recent tab",
-      );
-      rootNavigation.navigate("HomeTab", {
-        screen: "OfferHelp",
-        params: { initialTab: "recent" },
-      });
+      
+      // Navigate to Browse with questions tab selected
+      console.log("[AskQuestionScreen] Navigating to Browse with questions tab");
+      navigation.navigate("Browse", { initialTab: "questions" });
     } catch (error) {
       console.error("[AskQuestionScreen] Error posting question:", error);
       console.error("[AskQuestionScreen] Error details:", {
