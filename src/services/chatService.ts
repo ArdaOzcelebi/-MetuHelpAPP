@@ -92,20 +92,23 @@ function convertTimestamp(timestamp: FirestoreTimestamp): Date {
  */
 function documentToChat(id: string, data: DocumentData): Chat | null {
   try {
-    if (
-      !data.requestId ||
-      !data.requesterId ||
-      !data.helperId ||
-      !data.requestTitle
-    ) {
-      console.warn(`Missing required fields in chat document ${id}`);
+    // For backwards compatibility with existing data, only require essential fields
+    // Log warning but still return the chat object with defaults
+    if (!data.requestId || !data.requesterId || !data.helperId) {
+      console.warn(
+        `Chat document ${id} missing some fields (requestId: ${!!data.requestId}, requesterId: ${!!data.requesterId}, helperId: ${!!data.helperId}, requestTitle: ${!!data.requestTitle})`,
+      );
+    }
+
+    // If truly critical fields are missing, return null
+    if (!data.requestId || !data.requesterId || !data.helperId) {
       return null;
     }
 
     return {
       id,
       requestId: data.requestId,
-      requestTitle: data.requestTitle,
+      requestTitle: data.requestTitle || "Untitled Request", // Default for legacy data
       requesterId: data.requesterId,
       requesterName: data.requesterName || "Anonymous",
       requesterEmail: data.requesterEmail || "",
