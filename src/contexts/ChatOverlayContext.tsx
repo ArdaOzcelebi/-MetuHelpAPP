@@ -83,7 +83,7 @@ export function ChatOverlayProvider({
           helperId: c.helperId,
         })),
       );
-      
+
       setChats(updatedChats);
 
       // TODO: Calculate unread count from messages
@@ -91,7 +91,10 @@ export function ChatOverlayProvider({
       const activeChats = updatedChats.filter(
         (chat) => chat.status !== "finalized",
       );
-      console.log("[ChatOverlayContext] Active chats count:", activeChats.length);
+      console.log(
+        "[ChatOverlayContext] Active chats count:",
+        activeChats.length,
+      );
       setUnreadCount(activeChats.length);
     });
 
@@ -126,26 +129,28 @@ export function ChatOverlayProvider({
 
   const closeChat = () => {
     console.log("[ChatOverlayContext] Closing chat overlay");
-    // Keep activeChatId so user can reopen the same chat
-    // Only minimize the overlay
+    // Close and reset to initial state
     setIsOpen(false);
     setIsMinimized(true);
     setActiveView("threads");
+    setActiveChatId(null);
   };
 
   const toggleMinimize = () => {
     console.log("[ChatOverlayContext] Toggling minimize state");
     if (isMinimized) {
-      // Expanding - if there's an active chat, show it; otherwise show threads
+      // Expanding - if there's an active chat, restore it; otherwise show thread list
       setIsMinimized(false);
       setIsOpen(true);
       if (activeChatId) {
+        // Restore the conversation that was active before minimizing
         setActiveView("conversation");
       } else {
+        // No active conversation, show thread list
         setActiveView("threads");
       }
     } else {
-      // Minimizing
+      // Minimizing - keep activeChatId so we can restore the view
       setIsMinimized(true);
     }
   };

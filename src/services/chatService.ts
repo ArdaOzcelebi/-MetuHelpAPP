@@ -92,27 +92,51 @@ function convertTimestamp(timestamp: FirestoreTimestamp): Date {
  */
 function documentToChat(id: string, data: DocumentData): Chat | null {
   try {
+    // Critical field: requestId must always exist
+    if (!data.requestId) {
+      console.warn(`Chat document ${id} missing requestId - cannot process`);
+      return null;
+    }
+
+    // Try to extract user IDs from members array if individual fields are missing
+    // This handles legacy data where members array exists but individual fields don't
+    let requesterId = data.requesterId;
+    let helperId = data.helperId;
+
     if (
-      !data.requestId ||
-      !data.requesterId ||
-      !data.helperId ||
-      !data.requestTitle
+      (!requesterId || !helperId) &&
+      data.members &&
+      Array.isArray(data.members)
     ) {
-      console.warn(`Missing required fields in chat document ${id}`);
+      // Attempt to extract from members array
+      if (data.members.length >= 2) {
+        requesterId = requesterId || data.members[0];
+        helperId = helperId || data.members[1];
+        console.log(
+          `[documentToChat] Extracted user IDs from members array for chat ${id}`,
+        );
+      }
+    }
+
+    // If we still don't have both user IDs, we cannot process this chat
+    if (!requesterId || !helperId) {
+      console.warn(
+        `Chat document ${id} missing critical user IDs (requesterId: ${!!requesterId}, helperId: ${!!helperId}) - cannot process`,
+      );
       return null;
     }
 
     return {
       id,
       requestId: data.requestId,
-      requestTitle: data.requestTitle,
-      requesterId: data.requesterId,
+      requestTitle: data.requestTitle || "Untitled Request", // Default for legacy data
+      requesterId,
       requesterName: data.requesterName || "Anonymous",
       requesterEmail: data.requesterEmail || "",
-      helperId: data.helperId,
+      helperId,
       helperName: data.helperName || "Anonymous",
       helperEmail: data.helperEmail || "",
-      members: data.members || [data.requesterId, data.helperId],
+      members: data.members || [requesterId, helperId],
       createdAt: convertTimestamp(data.createdAt),
       updatedAt: convertTimestamp(data.updatedAt),
       lastMessage: data.lastMessage,

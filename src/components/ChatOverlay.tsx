@@ -245,10 +245,7 @@ function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           </ThemedText>
         )}
         <ThemedText
-          style={[
-            styles.messageText,
-            { color: isOwn ? "#FFFFFF" : "#1A1A1A" },
-          ]}
+          style={[styles.messageText, { color: isOwn ? "#FFFFFF" : "#1A1A1A" }]}
         >
           {message.text}
         </ThemedText>
@@ -273,7 +270,7 @@ function MessageBubble({ message, isOwn }: MessageBubbleProps) {
 function ConversationView() {
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
-  const { activeChatId, goBackToThreads, closeChat } = useChatOverlay();
+  const { activeChatId, goBackToThreads } = useChatOverlay();
 
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -343,11 +340,18 @@ function ConversationView() {
 
     setCompleting(true);
     setShowConfirmModal(false);
-    
+
     try {
+      // Update help request status first
       await finalizeHelpRequest(chat.requestId);
+      // Then update chat status - this will trigger the onSnapshot listener
       await finalizeChat(activeChatId);
-      closeChat();
+
+      // Navigate back to thread list (stay open so user can see the change)
+      // The finalized chat will automatically disappear from the list because:
+      // 1. The Firebase onSnapshot listener in ChatOverlayContext will detect the status change
+      // 2. ThreadListView filters chats using: chats.filter(chat => chat.status !== "finalized")
+      goBackToThreads();
     } catch (error) {
       console.error("[ConversationView] Error completing transaction:", error);
     } finally {
