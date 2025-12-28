@@ -1,6 +1,5 @@
 import React from "react";
 import { Modal, View, Pressable, StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -15,17 +14,20 @@ import {
   Typography,
 } from "@/constants/theme";
 
-export const RegistrationSuccessModal: React.FC = () => {
+interface RegistrationSuccessModalProps {
+  onNavigateToLogin: () => void;
+}
+
+export const RegistrationSuccessModal: React.FC<
+  RegistrationSuccessModalProps
+> = ({ onNavigateToLogin }) => {
   const { theme, isDark } = useTheme();
   const { t } = useLanguage();
   const { isVisible, hideModal } = useRegistrationModal();
-  const navigation = useNavigation();
 
   const handleGoToLogin = () => {
     hideModal();
-    // Navigate to Login screen
-    // @ts-ignore - navigation type issue with cross-navigator navigation
-    navigation.navigate("Login");
+    onNavigateToLogin();
   };
 
   return (

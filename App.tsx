@@ -14,7 +14,6 @@ import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
 import { ChatOverlayProvider } from "@/src/contexts/ChatOverlayContext";
 import { ChatOverlay } from "@/src/components/ChatOverlay";
 import { RegistrationModalProvider } from "@/src/contexts/RegistrationModalContext";
-import { RegistrationSuccessModal } from "@/src/components/RegistrationSuccessModal";
 
 const NAVIGATION_KEYS = {
   AUTHENTICATED: "main",
@@ -51,8 +50,6 @@ function AppContent() {
       </NavigationContainer>
       {/* Global chat overlay - always rendered but only visible when authenticated */}
       <ChatOverlay />
-      {/* Global registration success modal - persists across navigation changes */}
-      <RegistrationSuccessModal />
     </>
   );
 }
