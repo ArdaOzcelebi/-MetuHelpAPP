@@ -38,7 +38,9 @@ export default function BrowseStackNavigator() {
       <Stack.Screen
         name="QuestionDetail"
         component={QuestionDetailScreen}
-        options={{ headerTitle: t.questionDetails }}
+        options={{
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="AskQuestion"

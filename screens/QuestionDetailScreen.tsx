@@ -9,10 +9,12 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -45,6 +47,7 @@ export default function QuestionDetailScreen({
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
   const { questionId } = route.params;
+  const insets = useSafeAreaInsets();
 
   const [question, setQuestion] = useState<QAQuestion | null>(null);
   const [answers, setAnswers] = useState<QAAnswer[]>([]);
@@ -135,22 +138,43 @@ export default function QuestionDetailScreen({
 
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
+      <View style={[styles.container, { backgroundColor: "#000000" }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={METUColors.maroon} />
         </View>
-      </ThemedView>
+      </View>
     );
   }
 
   if (!question) return null;
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={[styles.container, { backgroundColor: "#000000" }]}>
+      {/* Custom Header with Back Button */}
+      <View
+        style={[
+          styles.customHeader,
+          {
+            paddingTop: insets.top,
+            backgroundColor: isDark ? "#1E1E1E" : "#000000",
+          },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <ThemedText style={styles.headerTitle}>Question Details</ThemedText>
+        <View style={styles.headerRight} />
+      </View>
+
+      {/* Main Content Area */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
-        keyboardVerticalOffset={90}
+        keyboardVerticalOffset={0}
       >
         <ScrollView
           style={styles.scrollView}
@@ -158,12 +182,7 @@ export default function QuestionDetailScreen({
           showsVerticalScrollIndicator={false}
         >
           {/* Question Card */}
-          <View
-            style={[
-              styles.questionCard,
-              { backgroundColor: theme.cardBackground },
-            ]}
-          >
+          <View style={[styles.questionCard, { backgroundColor: "#1E1E1E" }]}>
             <View style={styles.questionHeader}>
               <View
                 style={[
@@ -178,25 +197,21 @@ export default function QuestionDetailScreen({
                 </ThemedText>
               </View>
               <View style={styles.authorInfo}>
-                <ThemedText style={styles.authorName}>
+                <ThemedText style={[styles.authorName, { color: "#FFFFFF" }]}>
                   {question.authorName}
                 </ThemedText>
-                <ThemedText
-                  style={[styles.timeText, { color: theme.textSecondary }]}
-                >
+                <ThemedText style={[styles.timeText, { color: "#9BA1A6" }]}>
                   {getTimeAgo(question.createdAt)}
                 </ThemedText>
               </View>
             </View>
 
-            <ThemedText style={styles.questionTitle}>
+            <ThemedText style={[styles.questionTitle, { color: "#FFFFFF" }]}>
               {question.title}
             </ThemedText>
 
             {question.body ? (
-              <ThemedText
-                style={[styles.questionBody, { color: theme.textSecondary }]}
-              >
+              <ThemedText style={[styles.questionBody, { color: "#9BA1A6" }]}>
                 {question.body}
               </ThemedText>
             ) : null}
@@ -204,7 +219,7 @@ export default function QuestionDetailScreen({
 
           {/* Answers Section */}
           <View style={styles.answersSection}>
-            <ThemedText style={styles.answersHeader}>
+            <ThemedText style={[styles.answersHeader, { color: "#FFFFFF" }]}>
               {answers.length} {answers.length === 1 ? "Answer" : "Answers"}
             </ThemedText>
 
@@ -212,7 +227,7 @@ export default function QuestionDetailScreen({
               <View style={styles.noAnswers}>
                 <Feather name="message-circle" size={48} color="#CCCCCC" />
                 <ThemedText
-                  style={[styles.noAnswersText, { color: theme.textSecondary }]}
+                  style={[styles.noAnswersText, { color: "#9BA1A6" }]}
                 >
                   No answers yet. Be the first to help!
                 </ThemedText>
@@ -221,10 +236,7 @@ export default function QuestionDetailScreen({
               answers.map((answer) => (
                 <View
                   key={answer.id}
-                  style={[
-                    styles.answerCard,
-                    { backgroundColor: theme.cardBackground },
-                  ]}
+                  style={[styles.answerCard, { backgroundColor: "#1E1E1E" }]}
                 >
                   <View style={styles.answerHeader}>
                     <View
@@ -242,7 +254,9 @@ export default function QuestionDetailScreen({
                       </ThemedText>
                     </View>
                     <View style={styles.answerAuthorInfo}>
-                      <ThemedText style={styles.answerAuthorName}>
+                      <ThemedText
+                        style={[styles.answerAuthorName, { color: "#FFFFFF" }]}
+                      >
                         {answer.authorName}
                         {answer.authorId === user?.uid && (
                           <ThemedText style={styles.youBadge}>
@@ -252,16 +266,13 @@ export default function QuestionDetailScreen({
                         )}
                       </ThemedText>
                       <ThemedText
-                        style={[
-                          styles.timeText,
-                          { color: theme.textSecondary },
-                        ]}
+                        style={[styles.timeText, { color: "#9BA1A6" }]}
                       >
                         {getTimeAgo(answer.createdAt)}
                       </ThemedText>
                     </View>
                   </View>
-                  <ThemedText style={styles.answerBody}>
+                  <ThemedText style={[styles.answerBody, { color: "#FFFFFF" }]}>
                     {answer.body}
                   </ThemedText>
                 </View>
@@ -271,25 +282,17 @@ export default function QuestionDetailScreen({
         </ScrollView>
 
         {/* Answer Input */}
-        <View
-          style={[
-            styles.inputContainer,
-            {
-              backgroundColor: theme.cardBackground,
-              borderTopColor: theme.backgroundSecondary,
-            },
-          ]}
-        >
+        <View style={styles.inputContainer}>
           <TextInput
             style={[
               styles.answerInput,
               {
-                backgroundColor: theme.backgroundDefault,
-                color: theme.text,
+                backgroundColor: "#2A2A2A",
+                color: "#FFFFFF",
               },
             ]}
             placeholder="Write your answer..."
-            placeholderTextColor={theme.textSecondary}
+            placeholderTextColor="#9BA1A6"
             value={answerText}
             onChangeText={setAnswerText}
             multiline
@@ -302,11 +305,7 @@ export default function QuestionDetailScreen({
               styles.sendButton,
               {
                 backgroundColor:
-                  answerText.trim() && !isPosting
-                    ? isDark
-                      ? "#CC3333"
-                      : METUColors.maroon
-                    : theme.backgroundSecondary,
+                  answerText.trim() && !isPosting ? "#CC3333" : "#333333",
                 opacity: pressed && answerText.trim() && !isPosting ? 0.9 : 1,
               },
             ]}
@@ -317,19 +316,44 @@ export default function QuestionDetailScreen({
               <Feather
                 name="send"
                 size={20}
-                color={answerText.trim() ? "#FFFFFF" : theme.textSecondary}
+                color={answerText.trim() ? "#FFFFFF" : "#9BA1A6"}
               />
             )}
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  customHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333333",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: Typography.subtitle.fontSize,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    flex: 1,
+    textAlign: "center",
+  },
+  headerRight: {
+    width: 40,
   },
   keyboardView: {
     flex: 1,
@@ -340,6 +364,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: Spacing.md,
     paddingBottom: 100,
+    flexGrow: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -444,15 +469,13 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   inputContainer: {
-    position: "absolute",
-    bottom: Platform.OS === "web" ? 60 : 0, // Add space for bottom navigation on web
-    left: 0,
-    right: 0,
     flexDirection: "row",
     padding: Spacing.md,
     borderTopWidth: 1,
     gap: Spacing.sm,
     alignItems: "flex-end",
+    backgroundColor: "#1E1E1E",
+    borderTopColor: "#333333",
   },
   answerInput: {
     flex: 1,
