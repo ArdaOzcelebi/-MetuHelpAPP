@@ -169,6 +169,7 @@ function documentToMessage(id: string, data: DocumentData): Message | null {
       senderEmail: data.senderEmail || "",
       text: data.text,
       createdAt: convertTimestamp(data.createdAt),
+      system: data.system || false,
     };
   } catch (error) {
     console.error("Error converting document to Message:", error);
@@ -383,6 +384,50 @@ export async function sendMessage(
     console.log("[sendMessage] Message sent successfully");
   } catch (error) {
     console.error("[sendMessage] Error occurred:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send a system message in a chat (e.g., "Chat started!")
+ * System messages are displayed differently and don't have a real sender
+ *
+ * @param chatId - The chat ID to send the system message to
+ * @param text - The system message text
+ * @returns Promise that resolves when the message is sent
+ */
+export async function sendSystemMessage(
+  chatId: string,
+  text: string,
+): Promise<void> {
+  try {
+    console.log("[sendSystemMessage] Sending system message to chat:", chatId);
+
+    const db = getFirestoreInstance();
+    const now = Timestamp.now();
+
+    const message = {
+      chatId,
+      senderId: "system",
+      senderName: "System",
+      senderEmail: "",
+      text,
+      system: true,
+      createdAt: now,
+    };
+
+    // Add message to subcollection
+    const messagesRef = collection(
+      db,
+      CHATS_COLLECTION,
+      chatId,
+      MESSAGES_SUBCOLLECTION,
+    );
+    await addDoc(messagesRef, message);
+
+    console.log("[sendSystemMessage] System message sent successfully");
+  } catch (error) {
+    console.error("[sendSystemMessage] Error occurred:", error);
     throw error;
   }
 }

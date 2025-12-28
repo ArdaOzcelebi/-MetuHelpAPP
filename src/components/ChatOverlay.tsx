@@ -215,6 +215,19 @@ interface MessageBubbleProps {
 function MessageBubble({ message, isOwn }: MessageBubbleProps) {
   const { theme, isDark } = useTheme();
 
+  // Render system messages differently
+  if (message.system) {
+    return (
+      <View style={styles.systemMessageContainer}>
+        <ThemedText
+          style={[styles.systemMessageText, { color: theme.textSecondary }]}
+        >
+          {message.text}
+        </ThemedText>
+      </View>
+    );
+  }
+
   return (
     <View
       style={[
@@ -411,8 +424,8 @@ function ConversationView() {
             numberOfLines={1}
           >
             {user?.uid === chat.requesterId
-              ? chat.helperName
-              : chat.requesterName}
+              ? chat.helperName || "Verified Student"
+              : chat.requesterName || "Verified Student"}
           </ThemedText>
         </View>
         <Pressable
@@ -838,7 +851,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   messageBubbleContainer: {
-    marginVertical: Spacing.xs,
+    marginBottom: 8,
     maxWidth: "80%",
   },
   ownMessageContainer: {
@@ -848,7 +861,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   messageBubble: {
-    padding: Spacing.md,
+    padding: 12,
     borderRadius: 16,
   },
   senderName: {
@@ -864,6 +877,16 @@ const styles = StyleSheet.create({
     fontSize: 9,
     marginTop: 2,
   },
+  systemMessageContainer: {
+    alignSelf: "center",
+    marginVertical: 8,
+    paddingHorizontal: Spacing.md,
+  },
+  systemMessageText: {
+    fontSize: 12,
+    fontStyle: "italic",
+    textAlign: "center",
+  },
 
   // Input styles
   inputContainer: {
@@ -875,7 +898,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 44,
     maxHeight: 80,
     borderRadius: 24,
     paddingHorizontal: Spacing.lg,

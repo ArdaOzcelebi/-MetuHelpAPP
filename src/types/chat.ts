@@ -10,6 +10,7 @@ export interface Message {
   senderEmail: string;
   text: string;
   createdAt: Date;
+  system?: boolean; // Optional flag for system messages
 }
 
 export interface Chat {

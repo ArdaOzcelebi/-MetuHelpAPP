@@ -1,6 +1,6 @@
 /**
  * ConfirmationModal - Custom confirmation dialog component
- * 
+ *
  * This replaces React Native's Alert.alert for better Web compatibility.
  * Provides a clean, modern confirmation dialog that works consistently
  * across all platforms (iOS, Android, Web).
@@ -17,7 +17,12 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useTheme";
-import { METUColors, Spacing, BorderRadius, Typography } from "@/constants/theme";
+import {
+  METUColors,
+  Spacing,
+  BorderRadius,
+  Typography,
+} from "@/constants/theme";
 
 interface ConfirmationModalProps {
   visible: boolean;
@@ -53,10 +58,7 @@ export function ConfirmationModal({
     >
       <View style={styles.overlay}>
         <View
-          style={[
-            styles.container,
-            { backgroundColor: theme.cardBackground },
-          ]}
+          style={[styles.container, { backgroundColor: theme.cardBackground }]}
         >
           {/* Icon */}
           <View
@@ -69,22 +71,10 @@ export function ConfirmationModal({
           </View>
 
           {/* Title */}
-          <Text
-            style={[
-              styles.title,
-              { color: theme.text },
-            ]}
-          >
-            {title}
-          </Text>
+          <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
 
           {/* Message */}
-          <Text
-            style={[
-              styles.message,
-              { color: theme.textSecondary },
-            ]}
-          >
+          <Text style={[styles.message, { color: theme.textSecondary }]}>
             {message}
           </Text>
 
@@ -101,12 +91,7 @@ export function ConfirmationModal({
                 },
               ]}
             >
-              <Text
-                style={[
-                  styles.buttonText,
-                  { color: theme.text },
-                ]}
-              >
+              <Text style={[styles.buttonText, { color: theme.text }]}>
                 {cancelText}
               </Text>
             </Pressable>

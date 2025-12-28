@@ -1,26 +1,26 @@
 /**
  * Clear All Help Requests - Development Script
- * 
+ *
  * This script deletes all documents from the helpRequests and chats collections
  * in Firestore. Use this to start fresh with clean data.
- * 
+ *
  * ⚠️ WARNING: This operation is irreversible!
- * 
+ *
  * Usage:
  *   node scripts/clear-all-requests.js
  */
 
-const dotenv = require('dotenv');
-const path = require('path');
+const dotenv = require("dotenv");
+const path = require("path");
 
 // Load .env.local file
 const result = dotenv.config({
-  path: path.join(__dirname, '..', '.env.local'),
+  path: path.join(__dirname, "..", ".env.local"),
 });
 
 if (result.error) {
-  console.error('❌ Error loading .env.local file:', result.error.message);
-  console.log('\nMake sure you have a .env.local file in the project root.');
+  console.error("❌ Error loading .env.local file:", result.error.message);
+  console.log("\nMake sure you have a .env.local file in the project root.");
   process.exit(1);
 }
 
@@ -28,9 +28,9 @@ if (result.error) {
 let initializeApp, getFirestore, collection, getDocs, deleteDoc, doc;
 
 async function loadFirebase() {
-  const firebase = await import('firebase/app');
-  const firestore = await import('firebase/firestore');
-  
+  const firebase = await import("firebase/app");
+  const firestore = await import("firebase/firestore");
+
   initializeApp = firebase.initializeApp;
   getFirestore = firestore.getFirestore;
   collection = firestore.collection;
@@ -55,8 +55,8 @@ const missingKeys = Object.entries(firebaseConfig)
   .map(([key]) => key);
 
 if (missingKeys.length > 0) {
-  console.error('❌ Missing Firebase configuration:');
-  missingKeys.forEach(key => console.error(`   - ${key}`));
+  console.error("❌ Missing Firebase configuration:");
+  missingKeys.forEach((key) => console.error(`   - ${key}`));
   process.exit(1);
 }
 
@@ -65,28 +65,27 @@ if (missingKeys.length > 0) {
  */
 async function clearCollection(db, collectionName) {
   console.log(`\n🗑️  Clearing collection: ${collectionName}`);
-  
+
   try {
     const collectionRef = collection(db, collectionName);
     const snapshot = await getDocs(collectionRef);
-    
+
     console.log(`   Found ${snapshot.size} documents`);
-    
+
     if (snapshot.size === 0) {
-      console.log('   ✓ Collection is already empty');
+      console.log("   ✓ Collection is already empty");
       return 0;
     }
 
     let deleted = 0;
     const deletePromises = [];
-    
+
     snapshot.forEach((document) => {
       deletePromises.push(
-        deleteDoc(doc(db, collectionName, document.id))
-          .then(() => {
-            deleted++;
-            process.stdout.write(`\r   Deleting... ${deleted}/${snapshot.size}`);
-          })
+        deleteDoc(doc(db, collectionName, document.id)).then(() => {
+          deleted++;
+          process.stdout.write(`\r   Deleting... ${deleted}/${snapshot.size}`);
+        }),
       );
     });
 
@@ -103,18 +102,18 @@ async function clearCollection(db, collectionName) {
  * Main execution
  */
 async function main() {
-  console.log('╔════════════════════════════════════════════╗');
-  console.log('║  Clear All Help Requests & Chats Data     ║');
-  console.log('╚════════════════════════════════════════════╝');
-  console.log('\n⚠️  WARNING: This will delete ALL data!');
-  console.log('   - All help requests will be deleted');
-  console.log('   - All chats and messages will be deleted');
-  console.log('   - This operation is IRREVERSIBLE\n');
+  console.log("╔════════════════════════════════════════════╗");
+  console.log("║  Clear All Help Requests & Chats Data     ║");
+  console.log("╚════════════════════════════════════════════╝");
+  console.log("\n⚠️  WARNING: This will delete ALL data!");
+  console.log("   - All help requests will be deleted");
+  console.log("   - All chats and messages will be deleted");
+  console.log("   - This operation is IRREVERSIBLE\n");
 
   try {
     // Load Firebase modules
     await loadFirebase();
-    
+
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -122,19 +121,19 @@ async function main() {
     let totalDeleted = 0;
 
     // Clear help requests
-    totalDeleted += await clearCollection(db, 'helpRequests');
-    
-    // Clear chats (this will also clear subcollection messages automatically)
-    totalDeleted += await clearCollection(db, 'chats');
+    totalDeleted += await clearCollection(db, "helpRequests");
 
-    console.log('\n╔════════════════════════════════════════════╗');
+    // Clear chats (this will also clear subcollection messages automatically)
+    totalDeleted += await clearCollection(db, "chats");
+
+    console.log("\n╔════════════════════════════════════════════╗");
     console.log(`║  ✓ SUCCESS: Deleted ${totalDeleted} documents total     ║`);
-    console.log('╚════════════════════════════════════════════╝');
-    console.log('\nYou can now start fresh with clean data! 🎉\n');
-    
+    console.log("╚════════════════════════════════════════════╝");
+    console.log("\nYou can now start fresh with clean data! 🎉\n");
+
     process.exit(0);
   } catch (error) {
-    console.error('\n❌ Operation failed:', error.message);
+    console.error("\n❌ Operation failed:", error.message);
     process.exit(1);
   }
 }

@@ -71,7 +71,10 @@ export async function createQuestion(
     console.log("[createQuestion] Adding document to Firestore...");
     const docRef = await addDoc(questionsRef, questionData);
 
-    console.log("[createQuestion] SUCCESS! Question created with ID:", docRef.id);
+    console.log(
+      "[createQuestion] SUCCESS! Question created with ID:",
+      docRef.id,
+    );
     return docRef.id;
   } catch (error) {
     console.error("[createQuestion] FAILED:", error);
