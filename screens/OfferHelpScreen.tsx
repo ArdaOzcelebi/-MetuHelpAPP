@@ -301,10 +301,9 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
               responseLabel={t.response}
               responsesLabel={t.responses}
               onPress={() => {
-                browseNavigation.navigate("BrowseTab", {
-                  screen: "QuestionDetail",
-                  params: { questionId: question.id },
-                } as any);
+                navigation.navigate("QuestionDetail", {
+                  questionId: question.id,
+                });
               }}
             />
           ))

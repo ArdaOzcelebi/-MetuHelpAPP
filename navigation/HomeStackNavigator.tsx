@@ -4,6 +4,7 @@ import HomeScreen from "@/screens/HomeScreen";
 import NeedHelpScreen from "@/screens/NeedHelpScreen";
 import OfferHelpScreen from "@/screens/OfferHelpScreen";
 import RequestDetailScreen from "@/screens/RequestDetailScreen";
+import QuestionDetailScreen from "@/screens/QuestionDetailScreen";
 import PostNeedScreen from "@/screens/PostNeedScreen";
 import ChatScreen from "@/screens/ChatScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
@@ -17,6 +18,7 @@ export type HomeStackParamList = {
   NeedHelp: undefined;
   OfferHelp: undefined;
   RequestDetail: { requestId: string };
+  QuestionDetail: { questionId: string };
   PostNeed: undefined;
   Chat: { chatId: string };
 };
@@ -55,6 +57,13 @@ export default function HomeStackNavigator() {
         name="RequestDetail"
         component={RequestDetailScreen}
         options={{ headerTitle: t.requestDetails }}
+      />
+      <Stack.Screen
+        name="QuestionDetail"
+        component={QuestionDetailScreen}
+        options={{
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="PostNeed"
