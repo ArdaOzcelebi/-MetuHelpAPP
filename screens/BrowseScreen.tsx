@@ -108,11 +108,7 @@ function AnimatedNeedCard({
       onPressOut={() => {
         scale.value = withSpring(1, { damping: 15, stiffness: 150 });
       }}
-      style={[
-        styles.needCard,
-        { backgroundColor: theme.cardBackground },
-        animatedStyle,
-      ]}
+      style={[styles.needCard, { backgroundColor: "#FFFFFF" }, animatedStyle]}
     >
       <View style={styles.needContent}>
         <View
@@ -121,7 +117,7 @@ function AnimatedNeedCard({
             {
               backgroundColor: need.urgent
                 ? "rgba(220, 38, 38, 0.1)"
-                : theme.backgroundDefault,
+                : "#F0F0F0",
             },
           ]}
         >
@@ -139,7 +135,7 @@ function AnimatedNeedCard({
         </View>
         <View style={styles.needInfo}>
           <View style={styles.needHeader}>
-            <ThemedText style={styles.needTitle}>
+            <ThemedText style={[styles.needTitle, { color: "#1A1A1A" }]}>
               {language === "en" ? need.titleEn : need.titleTr}
             </ThemedText>
             {need.urgent ? (
@@ -149,15 +145,11 @@ function AnimatedNeedCard({
             ) : null}
           </View>
           <View style={styles.needMeta}>
-            <Feather name="map-pin" size={12} color={theme.textSecondary} />
-            <ThemedText
-              style={[styles.needLocation, { color: theme.textSecondary }]}
-            >
+            <Feather name="map-pin" size={12} color="#999999" />
+            <ThemedText style={[styles.needLocation, { color: "#999999" }]}>
               {language === "en" ? need.locationEn : need.locationTr}
             </ThemedText>
-            <ThemedText
-              style={[styles.needTime, { color: theme.textSecondary }]}
-            >
+            <ThemedText style={[styles.needTime, { color: "#999999" }]}>
               {need.time}
             </ThemedText>
           </View>
@@ -354,23 +346,18 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
         />
       }
     >
-      <View
-        style={[
-          styles.searchContainer,
-          { backgroundColor: theme.backgroundDefault },
-        ]}
-      >
-        <Feather name="search" size={18} color={theme.textSecondary} />
+      <View style={[styles.searchContainer, { backgroundColor: "#FFFFFF" }]}>
+        <Feather name="search" size={18} color="#999999" />
         <TextInput
-          style={[styles.searchInput, { color: theme.text }]}
+          style={[styles.searchInput, { color: "#1A1A1A" }]}
           placeholder={t.search}
-          placeholderTextColor={theme.textSecondary}
+          placeholderTextColor="#999999"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 ? (
           <Pressable onPress={() => setSearchQuery("")}>
-            <Feather name="x" size={18} color={theme.textSecondary} />
+            <Feather name="x" size={18} color="#999999" />
           </Pressable>
         ) : null}
       </View>
@@ -384,7 +371,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
               styles.tab,
               selectedTab === tab.id && {
                 borderBottomWidth: 2,
-                borderBottomColor: isDark ? "#FF6B6B" : METUColors.maroon,
+                borderBottomColor: METUColors.maroon,
               },
             ]}
           >
@@ -392,12 +379,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
               style={[
                 styles.tabText,
                 {
-                  color:
-                    selectedTab === tab.id
-                      ? isDark
-                        ? "#FF6B6B"
-                        : METUColors.maroon
-                      : theme.textSecondary,
+                  color: selectedTab === tab.id ? METUColors.maroon : "#999999",
                   fontWeight: selectedTab === tab.id ? "600" : "400",
                 },
               ]}
@@ -431,11 +413,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
             </View>
           ) : filteredQuestions.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Feather
-                name="message-circle"
-                size={64}
-                color={theme.textSecondary}
-              />
+              <Feather name="message-circle" size={64} color="#CCCCCC" />
               <ThemedText style={styles.emptyText}>
                 {searchQuery
                   ? t.noQuestionsFound
