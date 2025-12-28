@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Modal,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
@@ -18,6 +17,7 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useRegistrationModal } from "@/src/contexts/RegistrationModalContext";
 import {
   Spacing,
   BorderRadius,
@@ -33,6 +33,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const { theme, isDark } = useTheme();
   const { t } = useLanguage();
   const { signUp } = useAuth();
+  const { showModal } = useRegistrationModal();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,7 +43,6 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleRegister = async () => {
     setError("");
@@ -58,18 +58,13 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
     try {
       await signUp(email, password, rememberMe);
 
-      // Show success modal instead of Alert
-      setShowSuccessModal(true);
+      // Show success modal using global context
+      showModal();
     } catch (err: any) {
       setError(err.message || t.registrationFailed);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoToLogin = () => {
-    setShowSuccessModal(false);
-    navigation.navigate("Login");
   };
 
   return (
@@ -279,55 +274,6 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
           </View>
         </View>
       </KeyboardAvoidingView>
-
-      {/* Success Modal */}
-      <Modal
-        visible={showSuccessModal}
-        transparent
-        animationType="fade"
-        onRequestClose={handleGoToLogin}
-      >
-        <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalOverlay} onPress={handleGoToLogin}>
-            <Pressable
-              style={[
-                styles.modalContent,
-                { backgroundColor: theme.backgroundRoot },
-              ]}
-              onPress={() => {}}
-            >
-              {/* Mail Icon */}
-              <View style={styles.iconContainer}>
-                <View
-                  style={[
-                    styles.iconCircle,
-                    { backgroundColor: isDark ? "#9A2020" : METUColors.maroon },
-                  ]}
-                >
-                  <Feather name="mail" size={40} color="#FFFFFF" />
-                </View>
-              </View>
-
-              {/* Title */}
-              <ThemedText type="h2" style={styles.modalTitle}>
-                {t.verifyYourEmail}
-              </ThemedText>
-
-              {/* Message */}
-              <ThemedText
-                style={[styles.modalMessage, { color: theme.textSecondary }]}
-              >
-                {t.checkYourInbox}
-              </ThemedText>
-
-              {/* Go to Login Button */}
-              <Button onPress={handleGoToLogin} style={styles.modalButton}>
-                {t.goToLogin}
-              </Button>
-            </Pressable>
-          </Pressable>
-        </View>
-      </Modal>
     </ThemedView>
   );
 }
@@ -426,49 +372,5 @@ const styles = StyleSheet.create({
   loginLink: {
     fontSize: Typography.small.fontSize,
     fontWeight: "600",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    width: "90%",
-    maxWidth: 400,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing["2xl"],
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 5,
-  },
-  iconContainer: {
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalTitle: {
-    textAlign: "center",
-    marginBottom: Spacing.md,
-  },
-  modalMessage: {
-    fontSize: Typography.body.fontSize,
-    lineHeight: 24,
-    textAlign: "center",
-    marginBottom: Spacing["2xl"],
-  },
-  modalButton: {
-    width: "100%",
   },
 });
