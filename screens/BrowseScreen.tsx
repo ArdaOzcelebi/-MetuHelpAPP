@@ -30,9 +30,11 @@ import {
   subscribeToQuestions,
   type QAQuestion,
 } from "@/src/services/qaService";
+import { RouteProp } from "@react-navigation/native";
 
 type BrowseScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
+  route: RouteProp<BrowseStackParamList, "Browse">;
 };
 
 const MOCK_NEEDS = [
@@ -279,11 +281,11 @@ function AnimatedQuestionCard({
   );
 }
 
-export default function BrowseScreen({ navigation }: BrowseScreenProps) {
+export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
   const [selectedTab, setSelectedTab] = useState<"needs" | "questions">(
-    "needs",
+    route.params?.initialTab || "needs",
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [questions, setQuestions] = useState<QAQuestion[]>([]);

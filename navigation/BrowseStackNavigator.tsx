@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
 
 export type BrowseStackParamList = {
-  Browse: undefined;
+  Browse: { initialTab?: "needs" | "questions" } | undefined;
   RequestDetail: { requestId: string };
   QuestionDetail: { questionId: string };
   AskQuestion: undefined;
@@ -44,7 +44,7 @@ export default function BrowseStackNavigator() {
         name="AskQuestion"
         component={AskQuestionScreen}
         options={{
-          headerTitle: t.askQuestion,
+          headerShown: false,
           presentation: "modal",
         }}
       />

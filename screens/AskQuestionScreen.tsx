@@ -6,6 +6,7 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  Keyboard,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -73,15 +74,19 @@ export default function AskQuestionScreen({
         questionId,
       );
 
-      Alert.alert("Success!", "Your question has been posted.", [
-        {
-          text: "OK",
-          onPress: () => {
-            console.log("[AskQuestionScreen] Navigating back");
-            navigation.goBack();
-          },
-        },
-      ]);
+      // Clear form state
+      setTitle("");
+      setDetails("");
+      
+      // Dismiss keyboard
+      Keyboard.dismiss();
+      
+      // Reset posting state
+      setIsPosting(false);
+      
+      // Navigate to Browse with questions tab selected
+      console.log("[AskQuestionScreen] Navigating to Browse with questions tab");
+      navigation.navigate("Browse", { initialTab: "questions" });
     } catch (error) {
       console.error("[AskQuestionScreen] Error posting question:", error);
       console.error("[AskQuestionScreen] Error details:", {
