@@ -115,16 +115,20 @@ export function subscribeToQuestions(
     q = query(questionsRef, orderBy("createdAt", "desc"));
   } else {
     // Default: Only show posts from last 48 hours
+    // Using createdAt for now to avoid composite index requirement
+    // TODO: Switch to lastActiveAt once composite index is created in Firestore
     const fortyEightHoursAgo = new Date();
     fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
     console.log(
       "[subscribeToQuestions] Using 48-hour filter, cutoff:",
       fortyEightHoursAgo,
     );
+
+    // Use createdAt instead of lastActiveAt to avoid composite index error
     q = query(
       questionsRef,
-      where("lastActiveAt", ">", Timestamp.fromDate(fortyEightHoursAgo)),
-      orderBy("lastActiveAt", "desc"),
+      where("createdAt", ">", Timestamp.fromDate(fortyEightHoursAgo)),
+      orderBy("createdAt", "desc"),
     );
   }
 
@@ -179,6 +183,7 @@ export function subscribeToQuestions(
         code: error.code,
         stack: error.stack,
       });
+      // Return empty array on error instead of breaking the UI
       callback([]);
     },
   );
