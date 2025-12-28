@@ -139,6 +139,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         );
       }
 
+      // Small delay to allow modal to render before auth state changes
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Sign out the user immediately - they should not be logged in until verified
       await firebaseSignOut(auth);
     } catch (err) {
