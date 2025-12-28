@@ -59,7 +59,7 @@ export default function AskQuestionScreen({
     if (!user) {
       console.log("[AskQuestionScreen] No user found");
       // Simple feedback without Alert.alert callbacks for web compatibility
-      setSuccessMessage("You must be logged in to post a question");
+      setSuccessMessage("Error: You must be logged in to post a question");
       setTimeout(() => setSuccessMessage(""), 3000);
       return;
     }
@@ -87,11 +87,11 @@ export default function AskQuestionScreen({
       // Show success message
       setSuccessMessage("Question posted successfully!");
 
-      // Navigate back immediately
-      console.log("[AskQuestionScreen] Navigating back");
+      // Navigate back after 1.5 seconds to let user see success message
+      console.log("[AskQuestionScreen] Navigating back in 1.5s");
       setTimeout(() => {
         navigation.goBack();
-      }, 100);
+      }, 1500);
     } catch (error) {
       console.error("[AskQuestionScreen] Error posting question:", error);
       console.error("[AskQuestionScreen] Error details:", {
@@ -101,8 +101,8 @@ export default function AskQuestionScreen({
 
       setSuccessMessage(
         error instanceof Error
-          ? error.message
-          : "Failed to post question. Please check your internet connection and try again.",
+          ? `Error: ${error.message}`
+          : "Error: Failed to post question. Please check your internet connection and try again.",
       );
       setTimeout(() => setSuccessMessage(""), 3000);
       setIsPosting(false);
