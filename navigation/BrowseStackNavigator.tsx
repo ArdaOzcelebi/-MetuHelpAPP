@@ -44,7 +44,7 @@ export default function BrowseStackNavigator() {
         name="AskQuestion"
         component={AskQuestionScreen}
         options={{
-          headerTitle: t.askQuestion,
+          headerShown: false,
           presentation: "modal",
         }}
       />

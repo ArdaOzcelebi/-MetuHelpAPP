@@ -68,36 +68,6 @@ const MOCK_NEEDS = [
   },
 ];
 
-const MOCK_QUESTIONS = [
-  {
-    id: "1",
-    titleEn: "Best study spots on campus that are open late?",
-    titleTr: "Kampuste gec saatlere kadar acik en iyi calisma yerleri?",
-    categoryEn: "Campus Life",
-    categoryTr: "Kampus Yasami",
-    responses: 8,
-    time: "2h",
-  },
-  {
-    id: "2",
-    titleEn: "How is CENG 242 with Prof. Ozyurt?",
-    titleTr: "Prof. Ozyurt ile CENG 242 nasil?",
-    categoryEn: "Professors",
-    categoryTr: "Hocalar",
-    responses: 3,
-    time: "4h",
-  },
-  {
-    id: "3",
-    titleEn: "Where can I find past exams for MATH 119?",
-    titleTr: "MATH 119 icin eski sinavlari nerede bulabilirim?",
-    categoryEn: "Classes",
-    categoryTr: "Dersler",
-    responses: 0,
-    time: "5h",
-  },
-];
-
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // Helper component for animated need cards
@@ -233,14 +203,16 @@ function AnimatedQuestionCard({
       }}
       style={[
         styles.questionCard,
-        { backgroundColor: theme.cardBackground },
+        { backgroundColor: "#FFFFFF" },
         animatedStyle,
       ]}
     >
-      <ThemedText style={styles.questionTitle}>{question.title}</ThemedText>
+      <ThemedText style={[styles.questionTitle, { color: "#1A1A1A" }]}>
+        {question.title}
+      </ThemedText>
       {question.body ? (
         <ThemedText
-          style={[styles.questionBody, { color: theme.textSecondary }]}
+          style={[styles.questionBody, { color: "#666666" }]}
           numberOfLines={2}
         >
           {question.body}
@@ -252,9 +224,7 @@ function AnimatedQuestionCard({
             name="message-circle"
             size={14}
             color={
-              question.answerCount > 0
-                ? METUColors.actionGreen
-                : theme.textSecondary
+              question.answerCount > 0 ? METUColors.actionGreen : "#999999"
             }
           />
           <ThemedText
@@ -262,16 +232,14 @@ function AnimatedQuestionCard({
               styles.responsesText,
               {
                 color:
-                  question.answerCount > 0
-                    ? METUColors.actionGreen
-                    : theme.textSecondary,
+                  question.answerCount > 0 ? METUColors.actionGreen : "#999999",
               },
             ]}
           >
             {question.answerCount}
           </ThemedText>
         </View>
-        <ThemedText style={[styles.timeText, { color: theme.textSecondary }]}>
+        <ThemedText style={[styles.timeText, { color: "#999999" }]}>
           {getTimeAgo(question.createdAt)}
         </ThemedText>
       </View>
@@ -289,24 +257,44 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
   const [questions, setQuestions] = useState<QAQuestion[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  // Debounce search query to avoid too many Firebase queries
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Subscribe to questions from Firebase
   useEffect(() => {
-    console.log("[BrowseScreen] Setting up questions subscription");
-    const unsubscribe = subscribeToQuestions((fetchedQuestions) => {
-      console.log(
-        `[BrowseScreen] Received ${fetchedQuestions.length} questions from subscription`,
-      );
-      setQuestions(fetchedQuestions);
-      setLoadingQuestions(false);
-      setRefreshing(false);
+    console.log("[BrowseScreen] Setting up questions subscription", {
+      debouncedSearchQuery,
+      isSearching: debouncedSearchQuery.length > 0,
     });
+    setLoadingQuestions(true);
+
+    const unsubscribe = subscribeToQuestions(
+      (fetchedQuestions) => {
+        console.log(
+          `[BrowseScreen] Received ${fetchedQuestions.length} questions from subscription`,
+        );
+        setQuestions(fetchedQuestions);
+        setLoadingQuestions(false);
+        setRefreshing(false);
+      },
+      debouncedSearchQuery.length > 0
+        ? { searchQuery: debouncedSearchQuery }
+        : undefined,
+    );
 
     return () => {
       console.log("[BrowseScreen] Cleaning up questions subscription");
       unsubscribe();
     };
-  }, []);
+  }, [debouncedSearchQuery]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -343,37 +331,20 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Classes":
-      case "Dersler":
-        return isDark ? "#60A5FA" : "#3B82F6";
-      case "Professors":
-      case "Hocalar":
-        return isDark ? "#A78BFA" : "#8B5CF6";
-      case "Campus Life":
-      case "Kampus Yasami":
-        return isDark ? "#34D399" : "#10B981";
-      default:
-        return theme.textSecondary;
-    }
-  };
-
   const filteredNeeds = MOCK_NEEDS.filter((need) => {
     const title = language === "en" ? need.titleEn : need.titleTr;
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const filteredQuestions = questions.filter((q) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      q.title.toLowerCase().includes(searchLower) ||
-      q.body.toLowerCase().includes(searchLower)
-    );
+    // Questions are already filtered by the subscription based on debouncedSearchQuery
+    // No additional client-side filtering needed
+    return true;
   });
 
   return (
     <ScreenScrollView
+      style={{ backgroundColor: "#FAFAFA" }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -585,16 +556,24 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   questionCard: {
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderRadius: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   questionTitle: {
-    fontSize: Typography.body.fontSize,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1A1A1A",
     marginBottom: Spacing.xs,
   },
   questionBody: {
-    fontSize: Typography.small.fontSize,
+    fontSize: 14,
+    color: "#666666",
     marginBottom: Spacing.sm,
     lineHeight: 20,
   },
@@ -618,10 +597,12 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   responsesText: {
-    fontSize: Typography.small.fontSize,
+    fontSize: 12,
+    color: "#999999",
   },
   timeText: {
-    fontSize: Typography.small.fontSize,
+    fontSize: 12,
+    color: "#999999",
     marginLeft: "auto",
   },
   loadingContainer: {

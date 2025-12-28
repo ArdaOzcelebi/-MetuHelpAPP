@@ -15,6 +15,7 @@ import {
   updateDoc,
   increment,
   Timestamp,
+  where,
 } from "firebase/firestore";
 import { getFirestoreInstance } from "@/src/firebase/firebaseConfig";
 
@@ -25,6 +26,7 @@ export interface QAQuestion {
   authorName: string;
   authorId: string;
   createdAt: Date;
+  lastActiveAt: Date;
   answerCount: number;
 }
 
@@ -65,6 +67,7 @@ export async function createQuestion(
       authorName: userName,
       authorId: userId,
       createdAt: serverTimestamp(),
+      lastActiveAt: serverTimestamp(),
       answerCount: 0,
     };
 
@@ -90,14 +93,40 @@ export async function createQuestion(
 
 /**
  * Subscribe to questions with real-time updates
+ * @param callback Function to call with updated questions
+ * @param options.searchQuery If provided, searches all posts by title (ignores 48-hour filter)
+ *                            If not provided, shows only posts from last 48 hours
  */
 export function subscribeToQuestions(
   callback: (questions: QAQuestion[]) => void,
+  options?: { searchQuery?: string },
 ): () => void {
-  console.log("[subscribeToQuestions] Setting up real-time listener");
+  console.log("[subscribeToQuestions] Setting up real-time listener", options);
   const db = getFirestoreInstance();
   const questionsRef = collection(db, "questions");
-  const q = query(questionsRef, orderBy("createdAt", "desc"));
+
+  let q;
+  if (options?.searchQuery) {
+    // When searching, query all posts (no time filter)
+    console.log(
+      "[subscribeToQuestions] Using search mode for query:",
+      options.searchQuery,
+    );
+    q = query(questionsRef, orderBy("createdAt", "desc"));
+  } else {
+    // Default: Only show posts from last 48 hours
+    const fortyEightHoursAgo = new Date();
+    fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
+    console.log(
+      "[subscribeToQuestions] Using 48-hour filter, cutoff:",
+      fortyEightHoursAgo,
+    );
+    q = query(
+      questionsRef,
+      where("lastActiveAt", ">", Timestamp.fromDate(fortyEightHoursAgo)),
+      orderBy("lastActiveAt", "desc"),
+    );
+  }
 
   const unsubscribe = onSnapshot(
     q,
@@ -105,12 +134,13 @@ export function subscribeToQuestions(
       console.log(
         `[subscribeToQuestions] Received ${snapshot.docs.length} documents`,
       );
-      const questions: QAQuestion[] = [];
+      let questions: QAQuestion[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
         console.log(`[subscribeToQuestions] Document ${doc.id}:`, {
           title: data.title,
           createdAt: data.createdAt,
+          lastActiveAt: data.lastActiveAt,
           hasTimestamp: !!data.createdAt,
         });
         questions.push({
@@ -120,9 +150,23 @@ export function subscribeToQuestions(
           authorName: data.authorName || "Anonymous",
           authorId: data.authorId || "",
           createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+          lastActiveAt:
+            (data.lastActiveAt as Timestamp)?.toDate() || new Date(),
           answerCount: data.answerCount || 0,
         });
       });
+
+      // If searching, filter by search query on the client side
+      if (options?.searchQuery) {
+        const searchLower = options.searchQuery.toLowerCase();
+        questions = questions.filter((q) =>
+          q.title.toLowerCase().includes(searchLower),
+        );
+        console.log(
+          `[subscribeToQuestions] After search filter: ${questions.length} questions`,
+        );
+      }
+
       console.log(
         `[subscribeToQuestions] Calling callback with ${questions.length} questions`,
       );
@@ -164,6 +208,7 @@ export async function getQuestion(
     authorName: data.authorName || "Anonymous",
     authorId: data.authorId || "",
     createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+    lastActiveAt: (data.lastActiveAt as Timestamp)?.toDate() || new Date(),
     answerCount: data.answerCount || 0,
   };
 }
@@ -223,9 +268,10 @@ export async function addAnswer(
     createdAt: serverTimestamp(),
   });
 
-  // Update answer count
+  // Update answer count and lastActiveAt to keep question fresh
   const questionRef = doc(db, "questions", questionId);
   await updateDoc(questionRef, {
     answerCount: increment(1),
+    lastActiveAt: serverTimestamp(),
   });
 }
