@@ -134,6 +134,9 @@ interface Translations {
   passwordResetEmailSentMessage: string;
   invalidEmail: string;
   emailRequired: string;
+  verifyYourEmail: string;
+  goToLogin: string;
+  checkYourInbox: string;
 
   // Navigation
   home: string;
@@ -336,6 +339,10 @@ const translations: Record<Language, Translations> = {
       "Please check your inbox for instructions to reset your password.",
     invalidEmail: "Invalid email format",
     emailRequired: "Email is required",
+    verifyYourEmail: "Verify Your Email",
+    goToLogin: "Go to Login",
+    checkYourInbox:
+      "We have sent a verification link to your @metu.edu.tr address.\n\nPlease check your inbox (and spam) and verify your account to unlock access.",
 
     // Navigation
     home: "Home",
@@ -541,6 +548,10 @@ const translations: Record<Language, Translations> = {
       "Şifrenizi sıfırlamak için lütfen gelen kutunuzu kontrol edin.",
     invalidEmail: "Geçersiz e-posta formatı",
     emailRequired: "E-posta gereklidir",
+    verifyYourEmail: "E-postanızı Doğrulayın",
+    goToLogin: "Giriş Sayfasına Git",
+    checkYourInbox:
+      "@metu.edu.tr adresinize bir doğrulama bağlantısı gönderdik.\n\nLütfen gelen kutunuzu (ve spam klasörünü) kontrol edin ve erişimi açmak için hesabınızı doğrulayın.",
 
     // Navigation
     home: "Ana Sayfa",
