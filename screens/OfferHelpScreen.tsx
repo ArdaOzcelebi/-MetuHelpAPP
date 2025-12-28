@@ -24,7 +24,6 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/src/contexts/AuthContext";
 import {
   Spacing,
   BorderRadius,
@@ -115,7 +114,7 @@ function QuestionCard({
   responsesLabel,
   onPress,
 }: QuestionCardProps) {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -182,8 +181,7 @@ function QuestionCard({
 
 export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
   const { theme, isDark } = useTheme();
-  const { t, language } = useLanguage();
-  const { user } = useAuth();
+  const { t } = useLanguage();
   const [selectedTab, setSelectedTab] = useState<
     "recent" | "unanswered" | "popular"
   >("recent");
@@ -207,19 +205,14 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
 
   // Subscribe to real-time questions from Firebase
   useEffect(() => {
-    console.log("[OfferHelpScreen] Setting up questions subscription");
     setLoading(true);
 
     const unsubscribe = subscribeToQuestions((fetchedQuestions) => {
-      console.log(
-        `[OfferHelpScreen] Received ${fetchedQuestions.length} questions`,
-      );
       setQuestions(fetchedQuestions);
       setLoading(false);
     });
 
     return () => {
-      console.log("[OfferHelpScreen] Cleaning up questions subscription");
       unsubscribe();
     };
   }, []);
