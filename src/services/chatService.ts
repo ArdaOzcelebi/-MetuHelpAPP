@@ -390,6 +390,12 @@ export async function sendMessage(
 /**
  * Subscribe to chats for a specific user (as requester or helper)
  *
+ * IMPORTANT: This query fetches all ACTIVE (non-finalized) chats where the user
+ * is a participant. This ensures that:
+ * 1. When a help request is accepted, the chat immediately appears
+ * 2. When a chat is finalized, it disappears from the list
+ * 3. Empty chats (no messages yet) still appear so users can start typing
+ *
  * @param userId - The user ID to get chats for
  * @param callback - Function called with updated array of chats
  * @returns Unsubscribe function to stop listening
@@ -406,101 +412,56 @@ export function subscribeToUserChats(
 
     const db = getFirestoreInstance();
 
-    // Query for chats where user is either requester or helper
-    // Note: This requires creating two separate queries since Firestore doesn't support OR queries
-    // For simplicity, we'll query for requester chats first
-    const q1 = query(
+    // Query for chats where:
+    // 1. User is in the participants (members) array
+    // 2. Status is 'active' (excludes 'finalized' chats)
+    //
+    // Note: We use status == 'active' instead of status != 'finalized' because
+    // Firestore inequality queries have limitations with compound queries
+    const q = query(
       collection(db, CHATS_COLLECTION),
-      where("requesterId", "==", userId),
+      where("members", "array-contains", userId),
+      where("status", "==", "active"),
     );
 
-    const q2 = query(
-      collection(db, CHATS_COLLECTION),
-      where("helperId", "==", userId),
-    );
-
-    const chatsMap = new Map<string, Chat>();
-
-    const updateChats = () => {
-      const allChats = Array.from(chatsMap.values());
-      allChats.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-      callback(allChats);
-    };
-
-    // Subscribe to both queries
-    const unsubscribe1 = onSnapshot(
-      q1,
+    return onSnapshot(
+      q,
       (snapshot) => {
         console.log(
-          "[subscribeToUserChats] Query1 (requesterId) snapshot:",
+          "[subscribeToUserChats] Snapshot received:",
           snapshot.size,
-          "documents",
+          "active chats",
         );
-        snapshot.docChanges().forEach((change) => {
+
+        const chats: Chat[] = [];
+        snapshot.forEach((doc) => {
           console.log(
-            "[subscribeToUserChats] Query1 change:",
-            change.type,
-            change.doc.id,
+            "[subscribeToUserChats] Processing chat:",
+            doc.id,
+            "status:",
+            doc.data().status,
           );
-          const chat = documentToChat(change.doc.id, change.doc.data());
-          if (change.type === "removed") {
-            chatsMap.delete(change.doc.id);
-          } else if (chat) {
-            console.log(
-              "[subscribeToUserChats] Query1 adding chat:",
-              chat.id,
-              "status:",
-              chat.status,
-            );
-            chatsMap.set(change.doc.id, chat);
+          const chat = documentToChat(doc.id, doc.data());
+          if (chat) {
+            chats.push(chat);
           }
         });
-        updateChats();
-      },
-      (error) => {
-        console.error("[subscribeToUserChats] Query1 error:", error);
-      },
-    );
 
-    const unsubscribe2 = onSnapshot(
-      q2,
-      (snapshot) => {
+        // Sort by most recently updated first
+        chats.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+
         console.log(
-          "[subscribeToUserChats] Query2 (helperId) snapshot:",
-          snapshot.size,
-          "documents",
+          "[subscribeToUserChats] Returning",
+          chats.length,
+          "active chats",
         );
-        snapshot.docChanges().forEach((change) => {
-          console.log(
-            "[subscribeToUserChats] Query2 change:",
-            change.type,
-            change.doc.id,
-          );
-          const chat = documentToChat(change.doc.id, change.doc.data());
-          if (change.type === "removed") {
-            chatsMap.delete(change.doc.id);
-          } else if (chat) {
-            console.log(
-              "[subscribeToUserChats] Query2 adding chat:",
-              chat.id,
-              "status:",
-              chat.status,
-            );
-            chatsMap.set(change.doc.id, chat);
-          }
-        });
-        updateChats();
+        callback(chats);
       },
       (error) => {
-        console.error("[subscribeToUserChats] Query2 error:", error);
+        console.error("[subscribeToUserChats] Subscription error:", error);
+        callback([]);
       },
     );
-
-    // Return combined unsubscribe function
-    return () => {
-      unsubscribe1();
-      unsubscribe2();
-    };
   } catch (error) {
     console.error("[subscribeToUserChats] Setup error:", error);
     return () => {
