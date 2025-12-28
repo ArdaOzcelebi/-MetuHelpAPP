@@ -81,6 +81,10 @@ export default function AskQuestionScreen({
         questionId,
       );
 
+      // Clear form inputs immediately
+      setTitle("");
+      setBody("");
+
       // Dismiss keyboard immediately
       Keyboard.dismiss();
 
@@ -202,6 +206,12 @@ export default function AskQuestionScreen({
               styles.titleInput,
               {
                 color: "#1A1A1A",
+                backgroundColor: "#FFFFFF",
+                borderWidth: 1,
+                borderColor: "#E0E0E0",
+                borderRadius: 8,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
               },
             ]}
             placeholder="Question title..."
@@ -219,6 +229,12 @@ export default function AskQuestionScreen({
               styles.bodyInput,
               {
                 color: "#1A1A1A",
+                backgroundColor: "#FFFFFF",
+                borderWidth: 1,
+                borderColor: "#E0E0E0",
+                borderRadius: 8,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
               },
             ]}
             placeholder="Provide more details to help others answer your question..."
