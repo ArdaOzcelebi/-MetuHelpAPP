@@ -27,7 +27,11 @@ import {
   getHelpRequest,
   acceptHelpRequest,
 } from "@/src/services/helpRequestService";
-import { createChat, getChatByRequestId } from "@/src/services/chatService";
+import {
+  createChat,
+  getChatByRequestId,
+  sendSystemMessage,
+} from "@/src/services/chatService";
 import type { HelpRequest } from "@/src/types/helpRequest";
 
 type RequestDetailScreenProps = {
@@ -237,6 +241,13 @@ export default function RequestDetailScreen({
           helperEmail: user.email || "",
         });
         console.log("[RequestDetailScreen] Chat created successfully:", chatId);
+
+        // Send initial system message
+        await sendSystemMessage(
+          chatId,
+          "Chat started! Please coordinate the meeting point here.",
+        );
+        console.log("[RequestDetailScreen] System message sent successfully");
 
         // Accept the request (update status to "accepted")
         await acceptHelpRequest(

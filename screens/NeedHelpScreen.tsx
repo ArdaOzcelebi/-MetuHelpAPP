@@ -127,6 +127,7 @@ interface RequestCardProps {
   resumeChatLabel?: string;
   onOpenChat?: () => void;
   onMarkComplete?: () => void;
+  isBeingHelped?: boolean;
 }
 
 function RequestCard({
@@ -151,6 +152,7 @@ function RequestCard({
   resumeChatLabel = "Resume Chat",
   onOpenChat,
   onMarkComplete,
+  isBeingHelped = false,
 }: RequestCardProps) {
   const { theme, isDark } = useTheme();
   const scale = useSharedValue(1);
@@ -219,6 +221,11 @@ function RequestCard({
           shadowOpacity: isDark ? 0.3 : 0.1,
           shadowRadius: 8,
           elevation: 3,
+        },
+        // Add amber border if request is being helped but not yet completed
+        isBeingHelped && {
+          borderWidth: 2,
+          borderColor: "#F59E0B", // Amber color
         },
         animatedStyle,
       ]}
@@ -374,6 +381,33 @@ function RequestCard({
                   {resumeChatLabel}
                 </ThemedText>
               </Pressable>
+            ) : isBeingHelped ? (
+              // Someone else is already helping - show disabled "Being Helped" button
+              <View
+                style={[
+                  styles.actionButton,
+                  styles.primaryButton,
+                  {
+                    backgroundColor: theme.backgroundSecondary,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                <Feather
+                  name="user-check"
+                  size={16}
+                  color={theme.textSecondary}
+                />
+                <ThemedText
+                  style={[
+                    styles.actionButtonText,
+                    { color: theme.textSecondary },
+                  ]}
+                >
+                  Being Helped
+                </ThemedText>
+              </View>
             ) : status === "active" ? (
               // User hasn't helped yet and request is still active - show "Offer Help"
               <Pressable
@@ -459,7 +493,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
     if (!selectedRequest) return;
 
     setShowConfirmModal(false);
-    
+
     try {
       await finalizeHelpRequest(selectedRequest.id);
     } catch (error) {
@@ -510,7 +544,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       <ConfirmationModal
         visible={showConfirmModal}
         title="Mark as Completed"
-        message={`Are you sure you want to mark "${selectedRequest?.title || 'this request'}" as completed? This will finalize the request and archive it.`}
+        message={`Are you sure you want to mark "${selectedRequest?.title || "this request"}" as completed? This will finalize the request and archive it.`}
         confirmText="Mark Complete"
         cancelText="Cancel"
         onConfirm={performFinalization}
@@ -557,6 +591,14 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
             const userHasOfferedHelp =
               userOfferedHelpMap.get(request.id) || false;
 
+            // Check if request is being helped by someone else
+            // A request is "being helped" if acceptedBy is set and status is 'active'
+            const isBeingHelped = !!(
+              request.acceptedBy &&
+              request.status === "active" &&
+              request.acceptedBy !== user?.uid
+            );
+
             return (
               <RequestCard
                 key={request.id}
@@ -575,6 +617,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 isOwnRequest={isOwnRequest}
                 hasActiveChat={hasActiveChat}
                 userHasOfferedHelp={userHasOfferedHelp}
+                isBeingHelped={isBeingHelped}
                 openChatLabel="Open Chat"
                 resumeChatLabel="Resume Chat"
                 onPress={() =>

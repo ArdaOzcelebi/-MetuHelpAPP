@@ -122,7 +122,9 @@ function QuestionCard({
     transform: [{ scale: scale.value }],
   }));
 
-  const timeAgo = question.createdAt ? getTimeAgo(question.createdAt) : "Just now";
+  const timeAgo = question.createdAt
+    ? getTimeAgo(question.createdAt)
+    : "Just now";
   const answerCount = question.answerCount || 0;
   const hasAnswers = answerCount > 0;
 
@@ -242,7 +244,7 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
   };
 
   return (
-    <ScreenScrollView 
+    <ScreenScrollView
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl

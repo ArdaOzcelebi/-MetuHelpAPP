@@ -133,6 +133,10 @@ function documentToHelpRequest(
       createdAt: convertTimestamp(data.createdAt),
       updatedAt: convertTimestamp(data.updatedAt),
       status: data.status || "active",
+      acceptedBy: data.acceptedBy,
+      acceptedByName: data.acceptedByName,
+      acceptedByEmail: data.acceptedByEmail,
+      chatId: data.chatId,
     };
   } catch (error) {
     console.error("Error converting document to HelpRequest:", error);
@@ -478,7 +482,10 @@ export async function acceptHelpRequest(
  */
 export async function finalizeHelpRequest(requestId: string): Promise<void> {
   try {
-    console.log("[finalizeHelpRequest] Attempting to finalize request:", requestId);
+    console.log(
+      "[finalizeHelpRequest] Attempting to finalize request:",
+      requestId,
+    );
     const db = getFirestoreInstance();
     const docRef = doc(db, COLLECTION_NAME, requestId);
 
