@@ -30,9 +30,11 @@ import {
   subscribeToQuestions,
   type QAQuestion,
 } from "@/src/services/qaService";
+import { RouteProp } from "@react-navigation/native";
 
 type BrowseScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
+  route: RouteProp<BrowseStackParamList, "Browse">;
 };
 
 const MOCK_NEEDS = [
@@ -65,6 +67,36 @@ const MOCK_NEEDS = [
     locationTr: "Ogrenci Merkezi",
     time: "18 min",
     urgent: false,
+  },
+];
+
+const MOCK_QUESTIONS = [
+  {
+    id: "1",
+    titleEn: "Best study spots on campus that are open late?",
+    titleTr: "Kampuste gec saatlere kadar acik en iyi calisma yerleri?",
+    categoryEn: "Campus Life",
+    categoryTr: "Kampus Yasami",
+    responses: 8,
+    time: "2h",
+  },
+  {
+    id: "2",
+    titleEn: "How is CENG 242 with Prof. Ozyurt?",
+    titleTr: "Prof. Ozyurt ile CENG 242 nasil?",
+    categoryEn: "Professors",
+    categoryTr: "Hocalar",
+    responses: 3,
+    time: "4h",
+  },
+  {
+    id: "3",
+    titleEn: "Where can I find past exams for MATH 119?",
+    titleTr: "MATH 119 icin eski sinavlari nerede bulabilirim?",
+    categoryEn: "Classes",
+    categoryTr: "Dersler",
+    responses: 0,
+    time: "5h",
   },
 ];
 
@@ -108,7 +140,11 @@ function AnimatedNeedCard({
       onPressOut={() => {
         scale.value = withSpring(1, { damping: 15, stiffness: 150 });
       }}
-      style={[styles.needCard, { backgroundColor: "#FFFFFF" }, animatedStyle]}
+      style={[
+        styles.needCard,
+        { backgroundColor: theme.cardBackground },
+        animatedStyle,
+      ]}
     >
       <View style={styles.needContent}>
         <View
@@ -117,7 +153,7 @@ function AnimatedNeedCard({
             {
               backgroundColor: need.urgent
                 ? "rgba(220, 38, 38, 0.1)"
-                : "#F0F0F0",
+                : theme.backgroundDefault,
             },
           ]}
         >
@@ -135,7 +171,7 @@ function AnimatedNeedCard({
         </View>
         <View style={styles.needInfo}>
           <View style={styles.needHeader}>
-            <ThemedText style={[styles.needTitle, { color: "#1A1A1A" }]}>
+            <ThemedText style={styles.needTitle}>
               {language === "en" ? need.titleEn : need.titleTr}
             </ThemedText>
             {need.urgent ? (
@@ -145,11 +181,15 @@ function AnimatedNeedCard({
             ) : null}
           </View>
           <View style={styles.needMeta}>
-            <Feather name="map-pin" size={12} color="#999999" />
-            <ThemedText style={[styles.needLocation, { color: "#999999" }]}>
+            <Feather name="map-pin" size={12} color={theme.textSecondary} />
+            <ThemedText
+              style={[styles.needLocation, { color: theme.textSecondary }]}
+            >
               {language === "en" ? need.locationEn : need.locationTr}
             </ThemedText>
-            <ThemedText style={[styles.needTime, { color: "#999999" }]}>
+            <ThemedText
+              style={[styles.needTime, { color: theme.textSecondary }]}
+            >
               {need.time}
             </ThemedText>
           </View>
@@ -195,16 +235,14 @@ function AnimatedQuestionCard({
       }}
       style={[
         styles.questionCard,
-        { backgroundColor: "#FFFFFF" },
+        { backgroundColor: theme.cardBackground },
         animatedStyle,
       ]}
     >
-      <ThemedText style={[styles.questionTitle, { color: "#1A1A1A" }]}>
-        {question.title}
-      </ThemedText>
+      <ThemedText style={styles.questionTitle}>{question.title}</ThemedText>
       {question.body ? (
         <ThemedText
-          style={[styles.questionBody, { color: "#666666" }]}
+          style={[styles.questionBody, { color: theme.textSecondary }]}
           numberOfLines={2}
         >
           {question.body}
@@ -216,7 +254,9 @@ function AnimatedQuestionCard({
             name="message-circle"
             size={14}
             color={
-              question.answerCount > 0 ? METUColors.actionGreen : "#999999"
+              question.answerCount > 0
+                ? METUColors.actionGreen
+                : theme.textSecondary
             }
           />
           <ThemedText
@@ -224,14 +264,16 @@ function AnimatedQuestionCard({
               styles.responsesText,
               {
                 color:
-                  question.answerCount > 0 ? METUColors.actionGreen : "#999999",
+                  question.answerCount > 0
+                    ? METUColors.actionGreen
+                    : theme.textSecondary,
               },
             ]}
           >
             {question.answerCount}
           </ThemedText>
         </View>
-        <ThemedText style={[styles.timeText, { color: "#999999" }]}>
+        <ThemedText style={[styles.timeText, { color: theme.textSecondary }]}>
           {getTimeAgo(question.createdAt)}
         </ThemedText>
       </View>
@@ -239,54 +281,34 @@ function AnimatedQuestionCard({
   );
 }
 
-export default function BrowseScreen({ navigation }: BrowseScreenProps) {
+export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
   const [selectedTab, setSelectedTab] = useState<"needs" | "questions">(
-    "needs",
+    route.params?.initialTab || "needs",
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [questions, setQuestions] = useState<QAQuestion[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-
-  // Debounce search query to avoid too many Firebase queries
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   // Subscribe to questions from Firebase
   useEffect(() => {
-    console.log("[BrowseScreen] Setting up questions subscription", {
-      debouncedSearchQuery,
-      isSearching: debouncedSearchQuery.length > 0,
+    console.log("[BrowseScreen] Setting up questions subscription");
+    const unsubscribe = subscribeToQuestions((fetchedQuestions) => {
+      console.log(
+        `[BrowseScreen] Received ${fetchedQuestions.length} questions from subscription`,
+      );
+      setQuestions(fetchedQuestions);
+      setLoadingQuestions(false);
+      setRefreshing(false);
     });
-    setLoadingQuestions(true);
-
-    const unsubscribe = subscribeToQuestions(
-      (fetchedQuestions) => {
-        console.log(
-          `[BrowseScreen] Received ${fetchedQuestions.length} questions from subscription`,
-        );
-        setQuestions(fetchedQuestions);
-        setLoadingQuestions(false);
-        setRefreshing(false);
-      },
-      debouncedSearchQuery.length > 0
-        ? { searchQuery: debouncedSearchQuery }
-        : undefined,
-    );
 
     return () => {
       console.log("[BrowseScreen] Cleaning up questions subscription");
       unsubscribe();
     };
-  }, [debouncedSearchQuery]);
+  }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -299,7 +321,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
     const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
 
-    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 1) return t.justNow || "Just now";
     if (diffInMinutes < 60) return `${diffInMinutes}m`;
     if (diffInHours < 24) return `${diffInHours}h`;
     return `${Math.floor(diffInHours / 24)}d`;
@@ -323,20 +345,37 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
     }
   };
 
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "Classes":
+      case "Dersler":
+        return isDark ? "#60A5FA" : "#3B82F6";
+      case "Professors":
+      case "Hocalar":
+        return isDark ? "#A78BFA" : "#8B5CF6";
+      case "Campus Life":
+      case "Kampus Yasami":
+        return isDark ? "#34D399" : "#10B981";
+      default:
+        return theme.textSecondary;
+    }
+  };
+
   const filteredNeeds = MOCK_NEEDS.filter((need) => {
     const title = language === "en" ? need.titleEn : need.titleTr;
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const filteredQuestions = questions.filter((q) => {
-    // Questions are already filtered by the subscription based on debouncedSearchQuery
-    // No additional client-side filtering needed
-    return true;
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      q.title.toLowerCase().includes(searchLower) ||
+      q.body.toLowerCase().includes(searchLower)
+    );
   });
 
   return (
     <ScreenScrollView
-      style={{ backgroundColor: "#FAFAFA" }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -346,18 +385,23 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
         />
       }
     >
-      <View style={[styles.searchContainer, { backgroundColor: "#FFFFFF" }]}>
-        <Feather name="search" size={18} color="#999999" />
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: theme.backgroundDefault },
+        ]}
+      >
+        <Feather name="search" size={18} color={theme.textSecondary} />
         <TextInput
-          style={[styles.searchInput, { color: "#1A1A1A" }]}
+          style={[styles.searchInput, { color: theme.text }]}
           placeholder={t.search}
-          placeholderTextColor="#999999"
+          placeholderTextColor={theme.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 ? (
           <Pressable onPress={() => setSearchQuery("")}>
-            <Feather name="x" size={18} color="#999999" />
+            <Feather name="x" size={18} color={theme.textSecondary} />
           </Pressable>
         ) : null}
       </View>
@@ -371,7 +415,7 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
               styles.tab,
               selectedTab === tab.id && {
                 borderBottomWidth: 2,
-                borderBottomColor: METUColors.maroon,
+                borderBottomColor: isDark ? "#FF6B6B" : METUColors.maroon,
               },
             ]}
           >
@@ -379,7 +423,12 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
               style={[
                 styles.tabText,
                 {
-                  color: selectedTab === tab.id ? METUColors.maroon : "#999999",
+                  color:
+                    selectedTab === tab.id
+                      ? isDark
+                        ? "#FF6B6B"
+                        : METUColors.maroon
+                      : theme.textSecondary,
                   fontWeight: selectedTab === tab.id ? "600" : "400",
                 },
               ]}
@@ -413,11 +462,15 @@ export default function BrowseScreen({ navigation }: BrowseScreenProps) {
             </View>
           ) : filteredQuestions.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Feather name="message-circle" size={64} color="#CCCCCC" />
+              <Feather
+                name="message-circle"
+                size={64}
+                color={theme.textSecondary}
+              />
               <ThemedText style={styles.emptyText}>
                 {searchQuery
-                  ? t.noQuestionsFound
-                  : "No questions yet. Be the first to ask!"}
+                  ? t.noQuestionsFound || "No questions found"
+                  : t.noQuestions || "No questions yet. Be the first to ask!"}
               </ThemedText>
             </View>
           ) : (
@@ -534,24 +587,16 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   questionCard: {
-    padding: Spacing.md,
-    borderRadius: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
   },
   questionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1A1A1A",
+    fontSize: Typography.body.fontSize,
+    fontWeight: "600",
     marginBottom: Spacing.xs,
   },
   questionBody: {
-    fontSize: 14,
-    color: "#666666",
+    fontSize: Typography.small.fontSize,
     marginBottom: Spacing.sm,
     lineHeight: 20,
   },
@@ -575,12 +620,10 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   responsesText: {
-    fontSize: 12,
-    color: "#999999",
+    fontSize: Typography.small.fontSize,
   },
   timeText: {
-    fontSize: 12,
-    color: "#999999",
+    fontSize: Typography.small.fontSize,
     marginLeft: "auto",
   },
   loadingContainer: {
