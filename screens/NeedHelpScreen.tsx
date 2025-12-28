@@ -78,7 +78,11 @@ function FilterChip({ label, icon, isSelected, onPress }: FilterChipProps) {
       style={[
         styles.chip,
         {
-          backgroundColor: isSelected ? METUColors.maroon : "#F0F0F0",
+          backgroundColor: isSelected
+            ? isDark
+              ? "#CC3333"
+              : METUColors.maroon
+            : theme.backgroundDefault,
         },
         animatedStyle,
       ]}
@@ -86,11 +90,14 @@ function FilterChip({ label, icon, isSelected, onPress }: FilterChipProps) {
       <Feather
         name={icon}
         size={14}
-        color={isSelected ? "#FFFFFF" : "#1A1A1A"}
+        color={isSelected ? "#FFFFFF" : theme.text}
         style={styles.chipIcon}
       />
       <ThemedText
-        style={[styles.chipText, { color: isSelected ? "#FFFFFF" : "#1A1A1A" }]}
+        style={[
+          styles.chipText,
+          { color: isSelected ? "#FFFFFF" : theme.text },
+        ]}
       >
         {label}
       </ThemedText>
@@ -208,10 +215,10 @@ function RequestCard({
       style={[
         styles.requestCard,
         {
-          backgroundColor: "#FFFFFF",
+          backgroundColor: theme.cardBackground,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
+          shadowOpacity: isDark ? 0.3 : 0.1,
           shadowRadius: 8,
           elevation: 3,
         },
@@ -231,14 +238,22 @@ function RequestCard({
             {
               backgroundColor: urgent
                 ? "rgba(220, 38, 38, 0.1)"
-                : "rgba(128, 0, 0, 0.1)",
+                : isDark
+                  ? "rgba(255, 107, 107, 0.15)"
+                  : "rgba(128, 0, 0, 0.1)",
             },
           ]}
         >
           <Feather
             name={getCategoryIcon()}
             size={24}
-            color={urgent ? METUColors.alertRed : METUColors.maroon}
+            color={
+              urgent
+                ? METUColors.alertRed
+                : isDark
+                  ? "#FF6B6B"
+                  : METUColors.maroon
+            }
           />
         </View>
         <View style={styles.headerInfo}>
@@ -311,14 +326,16 @@ function RequestCard({
                 style={[
                   styles.actionButton,
                   {
-                    backgroundColor: "#F0F0F0",
+                    backgroundColor: theme.backgroundSecondary,
                     borderWidth: 1,
-                    borderColor: "#E5E5E5",
+                    borderColor: theme.border,
                   },
                 ]}
               >
-                <Feather name="clock" size={16} color="#999999" />
-                <ThemedText style={[styles.waitingText, { color: "#999999" }]}>
+                <Feather name="clock" size={16} color={theme.textSecondary} />
+                <ThemedText
+                  style={[styles.waitingText, { color: theme.textSecondary }]}
+                >
                   Waiting for Help...
                 </ThemedText>
               </View>
@@ -371,13 +388,17 @@ function RequestCard({
                   styles.actionButton,
                   styles.primaryButton,
                   {
-                    backgroundColor: "#F0F0F0",
+                    backgroundColor: theme.backgroundSecondary,
                     borderWidth: 1,
-                    borderColor: "#E5E5E5",
+                    borderColor: theme.border,
                   },
                 ]}
               >
-                <Feather name="user-check" size={16} color="#999999" />
+                <Feather
+                  name="user-check"
+                  size={16}
+                  color={theme.textSecondary}
+                />
                 <ThemedText
                   style={[
                     styles.actionButtonText,

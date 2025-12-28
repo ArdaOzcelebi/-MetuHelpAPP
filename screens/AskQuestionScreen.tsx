@@ -87,11 +87,12 @@ export default function AskQuestionScreen({
       // Show success message
       setSuccessMessage("Question posted successfully!");
 
-      // Navigate back after 1.5 seconds to let user see success message
-      console.log("[AskQuestionScreen] Navigating back in 1.5s");
-      setTimeout(() => {
-        navigation.goBack();
-      }, 1500);
+      // Navigate back immediately - no delay needed
+      console.log("[AskQuestionScreen] Navigating back immediately");
+      navigation.goBack();
+
+      // Reset posting state after navigation
+      setIsPosting(false);
     } catch (error) {
       console.error("[AskQuestionScreen] Error posting question:", error);
       console.error("[AskQuestionScreen] Error details:", {
