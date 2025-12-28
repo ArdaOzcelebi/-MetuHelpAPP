@@ -44,6 +44,9 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const [error, setError] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  // Add this line temporarily:
+  useEffect(() => { setShowSuccessModal(true); }, []);
+  
   const handleRegister = async () => {
     setError("");
 
