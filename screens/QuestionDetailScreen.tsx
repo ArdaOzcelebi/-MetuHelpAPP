@@ -6,15 +6,15 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/src/contexts/AuthContext";
@@ -30,6 +30,7 @@ import {
   BorderRadius,
   METUColors,
   Typography,
+  Shadows,
 } from "@/constants/theme";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
 
@@ -42,7 +43,7 @@ export default function QuestionDetailScreen({
   route,
   navigation,
 }: QuestionDetailScreenProps) {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { user } = useAuth();
   const { questionId } = route.params;
 
@@ -51,6 +52,7 @@ export default function QuestionDetailScreen({
   const [loading, setLoading] = useState(true);
   const [answerText, setAnswerText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     let unsubscribeAnswers: (() => void) | undefined;
@@ -59,8 +61,8 @@ export default function QuestionDetailScreen({
       try {
         const q = await getQuestion(questionId);
         if (!q) {
-          Alert.alert("Error", "Question not found");
-          navigation.goBack();
+          setSuccessMessage("Error: Question not found");
+          setTimeout(() => navigation.goBack(), 2000);
           return;
         }
         setQuestion(q);
@@ -76,8 +78,8 @@ export default function QuestionDetailScreen({
         setLoading(false);
       } catch (error) {
         console.error("Failed to load question:", error);
-        Alert.alert("Error", "Failed to load question");
-        navigation.goBack();
+        setSuccessMessage("Error: Failed to load question");
+        setTimeout(() => navigation.goBack(), 2000);
       }
     };
 
@@ -94,11 +96,13 @@ export default function QuestionDetailScreen({
     if (!answerText.trim() || isPosting) return;
 
     if (!user) {
-      Alert.alert("Error", "You must be logged in to post an answer");
+      setSuccessMessage("Error: You must be logged in to post an answer");
+      setTimeout(() => setSuccessMessage(""), 3000);
       return;
     }
 
     setIsPosting(true);
+    Keyboard.dismiss();
 
     try {
       await addAnswer(
@@ -108,13 +112,16 @@ export default function QuestionDetailScreen({
         user.displayName || "Anonymous",
       );
       setAnswerText("");
-      Alert.alert("Success", "Your answer has been posted!");
+      setSuccessMessage("Answer posted successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error posting answer:", error);
-      Alert.alert(
-        "Error",
-        error instanceof Error ? error.message : "Failed to post answer",
+      setSuccessMessage(
+        error instanceof Error
+          ? `Error: ${error.message}`
+          : "Error: Failed to post answer",
       );
+      setTimeout(() => setSuccessMessage(""), 3000);
     } finally {
       setIsPosting(false);
     }
@@ -135,18 +142,34 @@ export default function QuestionDetailScreen({
 
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
+      <View style={[styles.container, { backgroundColor: "#FAFAFA" }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={METUColors.maroon} />
         </View>
-      </ThemedView>
+      </View>
     );
   }
 
   if (!question) return null;
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={[styles.container, { backgroundColor: "#FAFAFA" }]}>
+      {/* Success/Error Message */}
+      {successMessage ? (
+        <View
+          style={[
+            styles.successMessage,
+            {
+              backgroundColor: successMessage.includes("Error")
+                ? METUColors.alertRed
+                : METUColors.actionGreen,
+            },
+          ]}
+        >
+          <ThemedText style={styles.successText}>{successMessage}</ThemedText>
+        </View>
+      ) : null}
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -158,12 +181,7 @@ export default function QuestionDetailScreen({
           showsVerticalScrollIndicator={false}
         >
           {/* Question Card */}
-          <View
-            style={[
-              styles.questionCard,
-              { backgroundColor: theme.cardBackground },
-            ]}
-          >
+          <View style={styles.questionCard}>
             <View style={styles.questionHeader}>
               <View
                 style={[
@@ -178,25 +196,21 @@ export default function QuestionDetailScreen({
                 </ThemedText>
               </View>
               <View style={styles.authorInfo}>
-                <ThemedText style={styles.authorName}>
+                <ThemedText style={[styles.authorName, { color: "#1A1A1A" }]}>
                   {question.authorName}
                 </ThemedText>
-                <ThemedText
-                  style={[styles.timeText, { color: theme.textSecondary }]}
-                >
+                <ThemedText style={[styles.timeText, { color: "#999999" }]}>
                   {getTimeAgo(question.createdAt)}
                 </ThemedText>
               </View>
             </View>
 
-            <ThemedText style={styles.questionTitle}>
+            <ThemedText style={[styles.questionTitle, { color: "#1A1A1A" }]}>
               {question.title}
             </ThemedText>
 
             {question.body ? (
-              <ThemedText
-                style={[styles.questionBody, { color: theme.textSecondary }]}
-              >
+              <ThemedText style={[styles.questionBody, { color: "#333333" }]}>
                 {question.body}
               </ThemedText>
             ) : null}
@@ -204,7 +218,7 @@ export default function QuestionDetailScreen({
 
           {/* Answers Section */}
           <View style={styles.answersSection}>
-            <ThemedText style={styles.answersHeader}>
+            <ThemedText style={[styles.answersHeader, { color: "#1A1A1A" }]}>
               {answers.length} {answers.length === 1 ? "Answer" : "Answers"}
             </ThemedText>
 
@@ -212,7 +226,7 @@ export default function QuestionDetailScreen({
               <View style={styles.noAnswers}>
                 <Feather name="message-circle" size={48} color="#CCCCCC" />
                 <ThemedText
-                  style={[styles.noAnswersText, { color: theme.textSecondary }]}
+                  style={[styles.noAnswersText, { color: "#666666" }]}
                 >
                   No answers yet. Be the first to help!
                 </ThemedText>
@@ -223,7 +237,7 @@ export default function QuestionDetailScreen({
                   key={answer.id}
                   style={[
                     styles.answerCard,
-                    { backgroundColor: theme.cardBackground },
+                    answer.authorId === user?.uid && styles.userAnswerCard,
                   ]}
                 >
                   <View style={styles.answerHeader}>
@@ -242,7 +256,9 @@ export default function QuestionDetailScreen({
                       </ThemedText>
                     </View>
                     <View style={styles.answerAuthorInfo}>
-                      <ThemedText style={styles.answerAuthorName}>
+                      <ThemedText
+                        style={[styles.answerAuthorName, { color: "#1A1A1A" }]}
+                      >
                         {answer.authorName}
                         {answer.authorId === user?.uid && (
                           <ThemedText style={styles.youBadge}>
@@ -252,16 +268,13 @@ export default function QuestionDetailScreen({
                         )}
                       </ThemedText>
                       <ThemedText
-                        style={[
-                          styles.timeText,
-                          { color: theme.textSecondary },
-                        ]}
+                        style={[styles.timeText, { color: "#999999" }]}
                       >
                         {getTimeAgo(answer.createdAt)}
                       </ThemedText>
                     </View>
                   </View>
-                  <ThemedText style={styles.answerBody}>
+                  <ThemedText style={[styles.answerBody, { color: "#333333" }]}>
                     {answer.body}
                   </ThemedText>
                 </View>
@@ -270,26 +283,12 @@ export default function QuestionDetailScreen({
           </View>
         </ScrollView>
 
-        {/* Answer Input */}
-        <View
-          style={[
-            styles.inputContainer,
-            {
-              backgroundColor: theme.cardBackground,
-              borderTopColor: theme.backgroundSecondary,
-            },
-          ]}
-        >
+        {/* Answer Input - Floating Chat-style */}
+        <View style={styles.inputContainer}>
           <TextInput
-            style={[
-              styles.answerInput,
-              {
-                backgroundColor: theme.backgroundDefault,
-                color: theme.text,
-              },
-            ]}
+            style={styles.answerInput}
             placeholder="Write your answer..."
-            placeholderTextColor={theme.textSecondary}
+            placeholderTextColor="#999999"
             value={answerText}
             onChangeText={setAnswerText}
             multiline
@@ -300,30 +299,31 @@ export default function QuestionDetailScreen({
             disabled={!answerText.trim() || isPosting}
             style={({ pressed }) => [
               styles.sendButton,
-              {
-                backgroundColor:
-                  answerText.trim() && !isPosting
-                    ? isDark
-                      ? "#CC3333"
-                      : METUColors.maroon
-                    : theme.backgroundSecondary,
-                opacity: pressed && answerText.trim() && !isPosting ? 0.9 : 1,
-              },
+              { opacity: pressed && answerText.trim() && !isPosting ? 0.9 : 1 },
             ]}
           >
             {isPosting ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : answerText.trim() ? (
+              <LinearGradient
+                colors={
+                  isDark
+                    ? ["#CC3333", "#AA2222"]
+                    : [METUColors.maroon, METUColors.maroonDark]
+                }
+                style={styles.sendButtonGradient}
+              >
+                <Feather name="send" size={20} color="#FFFFFF" />
+              </LinearGradient>
             ) : (
-              <Feather
-                name="send"
-                size={20}
-                color={answerText.trim() ? "#FFFFFF" : theme.textSecondary}
-              />
+              <View style={styles.sendButtonDisabled}>
+                <Feather name="send" size={20} color="#CCCCCC" />
+              </View>
             )}
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -339,17 +339,32 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Spacing.md,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
+  successMessage: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  successText: {
+    color: "#FFFFFF",
+    fontSize: Typography.body.fontSize,
+    fontWeight: "500",
+    textAlign: "center",
+  },
   questionCard: {
+    backgroundColor: "#FFFFFF",
     padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 16,
     marginBottom: Spacing.lg,
+    ...Shadows.medium,
   },
   questionHeader: {
     flexDirection: "row",
@@ -405,9 +420,15 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   answerCard: {
+    backgroundColor: "#FFFFFF",
     padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.md,
+    borderRadius: 12,
+    marginBottom: 12,
+    ...Shadows.small,
+  },
+  userAnswerCard: {
+    borderColor: "#007AFF",
+    borderWidth: 1,
   },
   answerHeader: {
     flexDirection: "row",
@@ -445,29 +466,53 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     position: "absolute",
-    bottom: Platform.OS === "web" ? 60 : 0, // Add space for bottom navigation on web
+    bottom: Platform.OS === "web" ? 60 : 0,
     left: 0,
     right: 0,
     flexDirection: "row",
     padding: Spacing.md,
+    backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
+    borderTopColor: "#E5E5E5",
     gap: Spacing.sm,
     alignItems: "flex-end",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
   },
   answerInput: {
     flex: 1,
     minHeight: 44,
     maxHeight: 100,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     fontSize: Typography.body.fontSize,
+    color: "#1A1A1A",
   },
   sendButton: {
     width: 44,
     height: 44,
-    borderRadius: BorderRadius.md,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+  },
+  sendButtonGradient: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sendButtonDisabled: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F0F0F0",
   },
 });
