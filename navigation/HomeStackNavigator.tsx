@@ -15,7 +15,7 @@ import { getCommonScreenOptions } from "@/navigation/screenOptions";
 export type HomeStackParamList = {
   Home: undefined;
   NeedHelp: undefined;
-  OfferHelp: undefined;
+  OfferHelp: { initialTab?: "recent" | "unanswered" | "popular" } | undefined;
   RequestDetail: { requestId: string };
   PostNeed: undefined;
   Chat: { chatId: string };
