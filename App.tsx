@@ -13,6 +13,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
 import { ChatOverlayProvider } from "@/src/contexts/ChatOverlayContext";
 import { ChatOverlay } from "@/src/components/ChatOverlay";
+import { RegistrationModalProvider } from "@/src/contexts/RegistrationModalContext";
 
 const NAVIGATION_KEYS = {
   AUTHENTICATED: "main",
@@ -58,16 +59,18 @@ export default function App() {
     <ErrorBoundary>
       <LanguageProvider>
         <AuthProvider>
-          <ChatOverlayProvider>
-            <SafeAreaProvider>
-              <GestureHandlerRootView style={styles.root}>
-                <KeyboardProvider>
-                  <AppContent />
-                  <StatusBar style="auto" />
-                </KeyboardProvider>
-              </GestureHandlerRootView>
-            </SafeAreaProvider>
-          </ChatOverlayProvider>
+          <RegistrationModalProvider>
+            <ChatOverlayProvider>
+              <SafeAreaProvider>
+                <GestureHandlerRootView style={styles.root}>
+                  <KeyboardProvider>
+                    <AppContent />
+                    <StatusBar style="auto" />
+                  </KeyboardProvider>
+                </GestureHandlerRootView>
+              </SafeAreaProvider>
+            </ChatOverlayProvider>
+          </RegistrationModalProvider>
         </AuthProvider>
       </LanguageProvider>
     </ErrorBoundary>

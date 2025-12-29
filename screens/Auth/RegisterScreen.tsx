@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
@@ -18,6 +17,7 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useRegistrationModal } from "@/src/contexts/RegistrationModalContext";
 import {
   Spacing,
   BorderRadius,
@@ -33,6 +33,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const { theme, isDark } = useTheme();
   const { t } = useLanguage();
   const { signUp } = useAuth();
+  const { showModal } = useRegistrationModal();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,18 +58,8 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
     try {
       await signUp(email, password, rememberMe);
 
-      // Show success message
-      Alert.alert(
-        t.registrationSuccessful,
-        t.verificationEmailSentMessage,
-        [
-          {
-            text: t.ok,
-            onPress: () => navigation.navigate("Login"),
-          },
-        ],
-        { cancelable: false },
-      );
+      // Show success modal using global context
+      showModal();
     } catch (err: any) {
       setError(err.message || t.registrationFailed);
     } finally {
