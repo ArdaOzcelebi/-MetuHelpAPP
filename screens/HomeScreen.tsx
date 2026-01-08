@@ -21,6 +21,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCampusStats } from "@/hooks/useCampusStats";
 import {
   Spacing,
   BorderRadius,
@@ -201,6 +202,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
 
+  // Fetch campus statistics
+  const stats = useCampusStats();
+
   // Entrance animations
   const headerOpacity = useSharedValue(0);
   const headerTranslateY = useSharedValue(-20);
@@ -369,7 +373,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               size={20}
               color={isDark ? "#FF6B6B" : METUColors.maroon}
             />
-            <ThemedText style={styles.statNumber}>24</ThemedText>
+            <ThemedText style={styles.statNumber}>
+              {stats.loading ? "..." : stats.activeRequests}
+            </ThemedText>
             <ThemedText
               type="small"
               style={[styles.statLabel, { color: theme.textSecondary }]}
@@ -388,7 +394,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               size={20}
               color={METUColors.actionGreen}
             />
-            <ThemedText style={styles.statNumber}>156</ThemedText>
+            <ThemedText style={styles.statNumber}>
+              {stats.loading ? "..." : stats.helpedToday}
+            </ThemedText>
             <ThemedText
               type="small"
               style={[styles.statLabel, { color: theme.textSecondary }]}

@@ -15,6 +15,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useCampusStats } from "@/hooks/useCampusStats";
 import {
   Spacing,
   BorderRadius,
@@ -31,6 +32,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { theme, isDark } = useTheme();
   const { t } = useLanguage();
   const { user, signOut } = useAuth();
+  const stats = useCampusStats();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
 
@@ -137,7 +139,9 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
             size={20}
             color={isDark ? "#FF6B6B" : METUColors.maroon}
           />
-          <ThemedText style={styles.statNumber}>12</ThemedText>
+          <ThemedText style={styles.statNumber}>
+            {stats.loading ? "..." : stats.requestsPosted}
+          </ThemedText>
           <ThemedText
             style={[styles.statLabel, { color: theme.textSecondary }]}
           >
@@ -151,7 +155,9 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           ]}
         >
           <Feather name="users" size={20} color={METUColors.actionGreen} />
-          <ThemedText style={styles.statNumber}>28</ThemedText>
+          <ThemedText style={styles.statNumber}>
+            {stats.loading ? "..." : stats.helpGiven}
+          </ThemedText>
           <ThemedText
             style={[styles.statLabel, { color: theme.textSecondary }]}
           >
