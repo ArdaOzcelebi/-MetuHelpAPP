@@ -62,11 +62,30 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
  */
 function MinimizedBubble() {
   const { isDark } = useTheme();
-  const { toggleMinimize, unreadCount } = useChatOverlay();
+  const { toggleMinimize, unreadCount, currentRouteName } = useChatOverlay();
   const scale = useSharedValue(1);
+  
+  // Animated bottom position based on current route
+  const bottomPosition = useSharedValue(
+    IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"]
+  );
+
+  // Update position when route changes
+  useEffect(() => {
+    const isOnQuestionDetail = currentRouteName === "QuestionDetail";
+    const newBottom = isOnQuestionDetail
+      ? (IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"]) + 80 // Move up by 80pt when on QuestionDetail
+      : IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"];
+    
+    bottomPosition.value = withSpring(newBottom, {
+      damping: 20,
+      stiffness: 90,
+    });
+  }, [currentRouteName]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    bottom: bottomPosition.value,
   }));
 
   return (
@@ -551,7 +570,29 @@ function ConversationView() {
  */
 function ExpandedWindow() {
   const { theme, isDark } = useTheme();
-  const { toggleMinimize, closeChat, activeView } = useChatOverlay();
+  const { toggleMinimize, closeChat, activeView, currentRouteName } = useChatOverlay();
+  
+  // Animated bottom position based on current route
+  const bottomPosition = useSharedValue(
+    IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"]
+  );
+
+  // Update position when route changes
+  useEffect(() => {
+    const isOnQuestionDetail = currentRouteName === "QuestionDetail";
+    const newBottom = isOnQuestionDetail
+      ? (IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"]) + 80 // Move up by 80pt when on QuestionDetail
+      : IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"];
+    
+    bottomPosition.value = withSpring(newBottom, {
+      damping: 20,
+      stiffness: 90,
+    });
+  }, [currentRouteName]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    bottom: bottomPosition.value,
+  }));
 
   const content = (
     <View
@@ -606,11 +647,16 @@ function ExpandedWindow() {
     );
   }
 
-  // On web, use absolute positioning
+  // On web, use absolute positioning with animation
+  const AnimatedKeyboardAvoidingView = Animated.createAnimatedComponent(KeyboardAvoidingView);
+  
   return (
-    <KeyboardAvoidingView style={styles.expandedWrapper} behavior="height">
+    <AnimatedKeyboardAvoidingView 
+      style={[styles.expandedWrapper, animatedStyle]} 
+      behavior="height"
+    >
       {content}
-    </KeyboardAvoidingView>
+    </AnimatedKeyboardAvoidingView>
   );
 }
 
@@ -679,7 +725,7 @@ const styles = StyleSheet.create({
   // Minimized bubble styles
   bubble: {
     position: "absolute",
-    bottom: IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"],
+    // bottom is now animated, removed from static styles
     right: Spacing.xl,
     width: 56,
     height: 56,
@@ -713,7 +759,7 @@ const styles = StyleSheet.create({
   // Expanded window styles
   expandedWrapper: {
     position: "absolute",
-    bottom: IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"],
+    // bottom is now animated, removed from static styles
     right: Spacing.xl,
     width: OVERLAY_WIDTH,
     height: OVERLAY_HEIGHT,

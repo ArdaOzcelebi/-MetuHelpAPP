@@ -19,6 +19,7 @@ interface ChatOverlayContextValue {
   isMinimized: boolean;
   activeView: "threads" | "conversation";
   activeChatId: string | null;
+  currentRouteName: string | null;
 
   // Data
   chats: Chat[];
@@ -30,6 +31,7 @@ interface ChatOverlayContextValue {
   closeChat: () => void;
   toggleMinimize: () => void;
   goBackToThreads: () => void;
+  setCurrentRouteName: (routeName: string | null) => void;
 }
 
 const ChatOverlayContext = createContext<ChatOverlayContextValue | undefined>(
@@ -50,6 +52,7 @@ export function ChatOverlayProvider({
     "threads",
   );
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [currentRouteName, setCurrentRouteName] = useState<string | null>(null);
 
   // Data state
   const [chats, setChats] = useState<Chat[]>([]);
@@ -166,6 +169,7 @@ export function ChatOverlayProvider({
     isMinimized,
     activeView,
     activeChatId,
+    currentRouteName,
     chats,
     unreadCount,
     openChat,
@@ -173,6 +177,7 @@ export function ChatOverlayProvider({
     closeChat,
     toggleMinimize,
     goBackToThreads,
+    setCurrentRouteName,
   };
 
   return (
