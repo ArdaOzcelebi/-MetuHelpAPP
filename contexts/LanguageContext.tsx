@@ -216,7 +216,7 @@ const translations: Record<Language, Translations> = {
   en: {
     // Home Screen
     welcome: "Welcome to METU Help!",
-    tagline: "Connect with fellow students for instant campus support",
+    tagline: "Help Others!",
     needHelp: "NEED HELP",
     offerHelp: "OFFER HELP",
     activeRequests: "Active Requests",
@@ -438,7 +438,7 @@ const translations: Record<Language, Translations> = {
   tr: {
     // Home Screen
     welcome: "METU HELP'e Hoş geldiniz!",
-    tagline: "Anında kampüs desteği için diğer öğrencilerle bağlantıya geçin",
+    tagline: "Başkalarına Yardım Et!",
     needHelp: "YARDIM İSTE",
     offerHelp: "YARDIM ET",
     activeRequests: "Aktif İstekler",

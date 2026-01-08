@@ -5,6 +5,11 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import {
+  useNavigation,
+  CompositeNavigationProp,
+} from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -28,6 +33,8 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
+import type { MainTabParamList } from "@/navigation/MainTabNavigator";
+import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "Home">;
@@ -200,6 +207,15 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { t } = useLanguage();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
+  
+  // Get navigation for cross-tab navigation
+  const browseNavigation =
+    useNavigation<
+      CompositeNavigationProp<
+        BottomTabNavigationProp<MainTabParamList>,
+        NativeStackNavigationProp<BrowseStackParamList>
+      >
+    >();
 
   // Entrance animations
   const headerOpacity = useSharedValue(0);
@@ -343,7 +359,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               title={t.needHelp}
               icon="heart"
               backgroundColor={METUColors.actionGreen}
-              onPress={() => navigation.navigate("NeedHelp")}
+              onPress={() => navigation.navigate("PostNeed")}
             />
           </Animated.View>
 
@@ -352,7 +368,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               title={t.offerHelp}
               icon="users"
               backgroundColor={isDark ? "#CC3333" : METUColors.maroon}
-              onPress={() => navigation.navigate("OfferHelp")}
+              onPress={() => {
+                browseNavigation.navigate("BrowseTab", {
+                  screen: "Browse",
+                  params: { initialTab: "needs" },
+                } as any);
+              }}
             />
           </Animated.View>
         </View>
