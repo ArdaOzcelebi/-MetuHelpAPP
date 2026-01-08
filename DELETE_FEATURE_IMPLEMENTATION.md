@@ -66,7 +66,7 @@ Both English and Turkish translations were added.
 - Added new `deleteQuestion(questionId: string)` function
 - Imported `deleteDoc` from Firestore
 - Added error logging and proper error handling
-- Note: Deleting a question will cascade delete all answers (Firestore subcollection behavior)
+- **Important Note**: Firestore does NOT automatically delete subcollections. When a question is deleted, its answers subcollection becomes orphaned. This is intentional Firestore behavior and would require a separate cleanup mechanism if needed in the future.
 
 ### 3. UI Components
 

@@ -293,15 +293,16 @@ export async function addAnswer(
  * @returns Promise that resolves when deletion is complete
  */
 export async function deleteQuestion(questionId: string): Promise<void> {
+  console.log("[deleteQuestion] Deleting question:", questionId);
+  console.warn(
+    "[deleteQuestion] Note: Answers subcollection is not automatically deleted and will become orphaned",
+  );
+
   try {
-    console.log("[deleteQuestion] Deleting question:", questionId);
     const db = getFirestoreInstance();
     const questionRef = doc(db, "questions", questionId);
     await deleteDoc(questionRef);
     console.log("[deleteQuestion] Question deleted successfully");
-    console.warn(
-      "[deleteQuestion] Note: Answers subcollection is not automatically deleted",
-    );
   } catch (error) {
     console.error("[deleteQuestion] Error occurred:", error);
     throw error;
