@@ -127,7 +127,16 @@ export default function QuestionDetailScreen({
   };
 
   const handleDeleteQuestion = async () => {
+    console.log("[QuestionDetail] handleDeleteQuestion called", {
+      hasQuestion: !!question,
+      hasUser: !!user,
+      questionId: question?.id,
+      userId: user?.uid,
+      questionAuthorId: question?.authorId,
+    });
+
     if (!question || !user) {
+      console.warn("[QuestionDetail] Missing question or user");
       return;
     }
 
@@ -136,18 +145,24 @@ export default function QuestionDetailScreen({
       {
         text: t.cancel,
         style: "cancel",
+        onPress: () => console.log("[QuestionDetail] Delete cancelled"),
       },
       {
         text: t.deleteQuestion,
         style: "destructive",
         onPress: async () => {
+          console.log("[QuestionDetail] Delete confirmed, starting deletion");
           setDeleting(true);
           try {
             await deleteQuestion(question.id);
+            console.log("[QuestionDetail] Delete successful");
             Alert.alert(t.questionDeleted, t.questionDeletedMessage, [
               {
                 text: t.ok,
-                onPress: () => navigation.goBack(),
+                onPress: () => {
+                  console.log("[QuestionDetail] Navigating back");
+                  navigation.goBack();
+                },
               },
             ]);
           } catch (error) {

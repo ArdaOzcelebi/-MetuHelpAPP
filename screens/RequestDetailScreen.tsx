@@ -290,7 +290,16 @@ export default function RequestDetailScreen({
 
   // Handler to delete the request
   const handleDeleteRequest = async () => {
+    console.log("[RequestDetail] handleDeleteRequest called", {
+      hasRequest: !!request,
+      hasUser: !!user,
+      requestId: request?.id,
+      userId: user?.uid,
+      requestUserId: request?.userId,
+    });
+
     if (!request || !user) {
+      console.warn("[RequestDetail] Missing request or user");
       return;
     }
 
@@ -299,18 +308,24 @@ export default function RequestDetailScreen({
       {
         text: t.cancel,
         style: "cancel",
+        onPress: () => console.log("[RequestDetail] Delete cancelled"),
       },
       {
         text: t.deleteRequest,
         style: "destructive",
         onPress: async () => {
+          console.log("[RequestDetail] Delete confirmed, starting deletion");
           setDeleting(true);
           try {
             await deleteHelpRequest(request.id);
+            console.log("[RequestDetail] Delete successful");
             Alert.alert(t.requestDeleted, t.requestDeletedMessage, [
               {
                 text: t.ok,
-                onPress: () => navigation.goBack(),
+                onPress: () => {
+                  console.log("[RequestDetail] Navigating back");
+                  navigation.goBack();
+                },
               },
             ]);
           } catch (error) {
@@ -330,6 +345,11 @@ export default function RequestDetailScreen({
 
   // Determine button state and action
   const isOwnRequest = user?.uid === request.userId;
+  console.log("[RequestDetail] Ownership check:", {
+    isOwnRequest,
+    userId: user?.uid,
+    requestUserId: request.userId,
+  });
   const isAccepted = request.status === "accepted";
   const isFinalized = request.status === "finalized";
   const canViewChat =
