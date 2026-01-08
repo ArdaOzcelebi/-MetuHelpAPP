@@ -135,7 +135,10 @@ export function subscribeToUserStats(
 }
 
 /**
- * Get recent activity for a user (last 10 items)
+ * Get recent activity for a user (up to 10 most recent items across all activity types)
+ *
+ * Returns a combined list of the user's help requests, help given, and questions,
+ * sorted by timestamp with the most recent first. Limited to 10 total items.
  */
 export async function getRecentActivity(
   userId: string,
@@ -152,11 +155,18 @@ export async function getRecentActivity(
     const requestsSnapshot = await getDocs(requestsQuery);
     requestsSnapshot.forEach((doc) => {
       const data = doc.data();
+      // Skip items with invalid timestamps
+      if (!data.createdAt) {
+        console.warn(
+          `[getRecentActivity] Skipping request ${doc.id}: missing createdAt`,
+        );
+        return;
+      }
       activities.push({
         id: doc.id,
         type: "request",
         title: data.title || "Help Request",
-        timestamp: data.createdAt?.toDate() || new Date(),
+        timestamp: data.createdAt?.toDate() || new Date(0),
         status: data.status,
       });
     });
@@ -169,11 +179,18 @@ export async function getRecentActivity(
     const helpGivenSnapshot = await getDocs(helpGivenQuery);
     helpGivenSnapshot.forEach((doc) => {
       const data = doc.data();
+      // Skip items with invalid timestamps
+      if (!data.updatedAt) {
+        console.warn(
+          `[getRecentActivity] Skipping help ${doc.id}: missing updatedAt`,
+        );
+        return;
+      }
       activities.push({
         id: doc.id,
         type: "help",
         title: `Helped with: ${data.title || "Request"}`,
-        timestamp: data.updatedAt?.toDate() || new Date(),
+        timestamp: data.updatedAt?.toDate() || new Date(0),
         status: data.status,
       });
     });
@@ -186,15 +203,22 @@ export async function getRecentActivity(
     const questionsSnapshot = await getDocs(questionsQuery);
     questionsSnapshot.forEach((doc) => {
       const data = doc.data();
+      // Skip items with invalid timestamps
+      if (!data.createdAt) {
+        console.warn(
+          `[getRecentActivity] Skipping question ${doc.id}: missing createdAt`,
+        );
+        return;
+      }
       activities.push({
         id: doc.id,
         type: "question",
         title: data.title || "Question",
-        timestamp: data.createdAt?.toDate() || new Date(),
+        timestamp: data.createdAt?.toDate() || new Date(0),
       });
     });
 
-    // Sort by timestamp (most recent first) and return last 10
+    // Sort by timestamp (most recent first) and return up to 10 items
     activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     return activities.slice(0, 10);
   } catch (error) {

@@ -34,9 +34,12 @@ type ProfileScreenProps = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, "Profile">;
 };
 
+// Display only first 5 activities for better UX, even though service fetches 10
+const MAX_DISPLAYED_ACTIVITIES = 5;
+
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { theme, isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, signOut } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
@@ -147,7 +150,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(language === "tr" ? "tr-TR" : "en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -307,69 +310,74 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
               </ThemedText>
             </View>
           ) : (
-            recentActivity.slice(0, 5).map((activity, index) => (
-              <View key={activity.id}>
-                {index > 0 && <View style={styles.divider} />}
-                <View style={styles.activityRow}>
-                  <View
-                    style={[
-                      styles.activityIconContainer,
-                      { backgroundColor: theme.backgroundSecondary },
-                    ]}
-                  >
-                    <Feather
-                      name={getActivityIcon(activity.type)}
-                      size={16}
-                      color={theme.text}
-                    />
-                  </View>
-                  <View style={styles.activityInfo}>
-                    <ThemedText style={styles.activityTitle} numberOfLines={1}>
-                      {activity.title}
-                    </ThemedText>
-                    <ThemedText
-                      style={[
-                        styles.activityTime,
-                        { color: theme.textSecondary },
-                      ]}
-                    >
-                      {formatActivityTime(activity.timestamp)}
-                    </ThemedText>
-                  </View>
-                  {activity.status && (
+            recentActivity
+              .slice(0, MAX_DISPLAYED_ACTIVITIES)
+              .map((activity, index) => (
+                <View key={activity.id}>
+                  {index > 0 && <View style={styles.divider} />}
+                  <View style={styles.activityRow}>
                     <View
                       style={[
-                        styles.statusBadge,
-                        {
-                          backgroundColor:
-                            activity.status === "active"
-                              ? "rgba(16, 185, 129, 0.1)"
-                              : activity.status === "finalized"
-                                ? "rgba(59, 130, 246, 0.1)"
-                                : "rgba(128, 128, 128, 0.1)",
-                        },
+                        styles.activityIconContainer,
+                        { backgroundColor: theme.backgroundSecondary },
                       ]}
                     >
+                      <Feather
+                        name={getActivityIcon(activity.type)}
+                        size={16}
+                        color={theme.text}
+                      />
+                    </View>
+                    <View style={styles.activityInfo}>
+                      <ThemedText
+                        style={styles.activityTitle}
+                        numberOfLines={1}
+                      >
+                        {activity.title}
+                      </ThemedText>
                       <ThemedText
                         style={[
-                          styles.statusText,
+                          styles.activityTime,
+                          { color: theme.textSecondary },
+                        ]}
+                      >
+                        {formatActivityTime(activity.timestamp)}
+                      </ThemedText>
+                    </View>
+                    {activity.status && (
+                      <View
+                        style={[
+                          styles.statusBadge,
                           {
-                            color:
+                            backgroundColor:
                               activity.status === "active"
-                                ? METUColors.actionGreen
+                                ? "rgba(16, 185, 129, 0.1)"
                                 : activity.status === "finalized"
-                                  ? "#3B82F6"
-                                  : theme.textSecondary,
+                                  ? "rgba(59, 130, 246, 0.1)"
+                                  : "rgba(128, 128, 128, 0.1)",
                           },
                         ]}
                       >
-                        {activity.status}
-                      </ThemedText>
-                    </View>
-                  )}
+                        <ThemedText
+                          style={[
+                            styles.statusText,
+                            {
+                              color:
+                                activity.status === "active"
+                                  ? METUColors.actionGreen
+                                  : activity.status === "finalized"
+                                    ? "#3B82F6"
+                                    : theme.textSecondary,
+                            },
+                          ]}
+                        >
+                          {activity.status}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
                 </View>
-              </View>
-            ))
+              ))
           )}
         </View>
       </View>
