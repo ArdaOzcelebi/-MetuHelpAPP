@@ -21,6 +21,12 @@ interface Translations {
   // Request Screen
   iCanHelp: string;
   urgent: string;
+  deleteRequest: string;
+  deleteRequestConfirm: string;
+  deleteRequestConfirmMessage: string;
+  requestDeleted: string;
+  requestDeletedMessage: string;
+  failedToDeleteRequest: string;
 
   // Q&A Screen
   recent: string;
@@ -40,6 +46,11 @@ interface Translations {
   acceptedAnswer: string;
   editQuestion: string;
   deleteQuestion: string;
+  deleteQuestionConfirm: string;
+  deleteQuestionConfirmMessage: string;
+  questionDeleted: string;
+  questionDeletedMessage: string;
+  failedToDeleteQuestion: string;
   editAnswer: string;
   deleteAnswer: string;
   questionPosted: string;
@@ -221,6 +232,13 @@ const translations: Record<Language, Translations> = {
     // Request Screen
     iCanHelp: "I Can Help",
     urgent: "Urgent",
+    deleteRequest: "Delete Request",
+    deleteRequestConfirm: "Delete Request?",
+    deleteRequestConfirmMessage:
+      "Are you sure you want to delete this request? This action cannot be undone.",
+    requestDeleted: "Request Deleted",
+    requestDeletedMessage: "Your request has been deleted successfully.",
+    failedToDeleteRequest: "Failed to delete request",
 
     // Q&A Screen
     recent: "Recent",
@@ -240,6 +258,12 @@ const translations: Record<Language, Translations> = {
     acceptedAnswer: "Accepted Answer",
     editQuestion: "Edit Question",
     deleteQuestion: "Delete Question",
+    deleteQuestionConfirm: "Delete Question?",
+    deleteQuestionConfirmMessage:
+      "Are you sure you want to delete this question? This action cannot be undone.",
+    questionDeleted: "Question Deleted",
+    questionDeletedMessage: "Your question has been deleted successfully.",
+    failedToDeleteQuestion: "Failed to delete question",
     editAnswer: "Edit Answer",
     deleteAnswer: "Delete Answer",
     questionPosted: "Question Posted!",
@@ -430,6 +454,13 @@ const translations: Record<Language, Translations> = {
     // Request Screen
     iCanHelp: "Yardım Edebilirim",
     urgent: "Acil",
+    deleteRequest: "İsteği Sil",
+    deleteRequestConfirm: "İstek Silinsin mi?",
+    deleteRequestConfirmMessage:
+      "Bu isteği silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    requestDeleted: "İstek Silindi",
+    requestDeletedMessage: "İsteğiniz başarıyla silindi.",
+    failedToDeleteRequest: "İstek silinemedi",
 
     // Q&A Screen
     recent: "Son",
@@ -449,6 +480,12 @@ const translations: Record<Language, Translations> = {
     acceptedAnswer: "Kabul Edilen Cevap",
     editQuestion: "Soruyu Düzenle",
     deleteQuestion: "Soruyu Sil",
+    deleteQuestionConfirm: "Soru Silinsin mi?",
+    deleteQuestionConfirmMessage:
+      "Bu soruyu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    questionDeleted: "Soru Silindi",
+    questionDeletedMessage: "Sorunuz başarıyla silindi.",
+    failedToDeleteQuestion: "Soru silinemedi",
     editAnswer: "Cevabı Düzenle",
     deleteAnswer: "Cevabı Sil",
     questionPosted: "Soru Gönderildi!",

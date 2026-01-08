@@ -16,6 +16,7 @@ import {
   increment,
   Timestamp,
   where,
+  deleteDoc,
 } from "firebase/firestore";
 import { getFirestoreInstance } from "@/src/firebase/firebaseConfig";
 
@@ -279,4 +280,25 @@ export async function addAnswer(
     answerCount: increment(1),
     lastActiveAt: serverTimestamp(),
   });
+}
+
+/**
+ * Delete a question permanently from Firestore
+ *
+ * WARNING: This operation is irreversible and will also delete all answers.
+ *
+ * @param questionId - The unique ID of the question to delete
+ * @returns Promise that resolves when deletion is complete
+ */
+export async function deleteQuestion(questionId: string): Promise<void> {
+  try {
+    console.log("[deleteQuestion] Deleting question:", questionId);
+    const db = getFirestoreInstance();
+    const questionRef = doc(db, "questions", questionId);
+    await deleteDoc(questionRef);
+    console.log("[deleteQuestion] Question deleted successfully");
+  } catch (error) {
+    console.error("[deleteQuestion] Error occurred:", error);
+    throw error;
+  }
 }

@@ -18,11 +18,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
 import {
   getQuestion,
   subscribeToAnswers,
   addAnswer,
+  deleteQuestion,
   type QAQuestion,
   type QAAnswer,
 } from "@/src/services/qaService";
@@ -45,6 +47,7 @@ export default function QuestionDetailScreen({
 }: QuestionDetailScreenProps) {
   const { isDark } = useTheme();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { questionId } = route.params;
   const insets = useSafeAreaInsets();
 
@@ -53,6 +56,7 @@ export default function QuestionDetailScreen({
   const [loading, setLoading] = useState(true);
   const [answerText, setAnswerText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let unsubscribeAnswers: (() => void) | undefined;
@@ -122,6 +126,46 @@ export default function QuestionDetailScreen({
     }
   };
 
+  const handleDeleteQuestion = async () => {
+    if (!question || !user) {
+      return;
+    }
+
+    // Confirm deletion
+    Alert.alert(t.deleteQuestionConfirm, t.deleteQuestionConfirmMessage, [
+      {
+        text: t.cancel,
+        style: "cancel",
+      },
+      {
+        text: t.deleteQuestion,
+        style: "destructive",
+        onPress: async () => {
+          setDeleting(true);
+          try {
+            await deleteQuestion(question.id);
+            Alert.alert(t.questionDeleted, t.questionDeletedMessage, [
+              {
+                text: t.ok,
+                onPress: () => navigation.goBack(),
+              },
+            ]);
+          } catch (error) {
+            console.error("[QuestionDetail] Error deleting question:", error);
+            Alert.alert(
+              t.error,
+              error instanceof Error
+                ? error.message
+                : t.failedToDeleteQuestion,
+            );
+          } finally {
+            setDeleting(false);
+          }
+        },
+      },
+    ]);
+  };
+
   const getTimeAgo = (date: Date): string => {
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
@@ -166,7 +210,21 @@ export default function QuestionDetailScreen({
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Question Details</ThemedText>
-        <View style={styles.headerRight} />
+        <View style={styles.headerRight}>
+          {user?.uid === question.authorId && (
+            <TouchableOpacity
+              onPress={handleDeleteQuestion}
+              disabled={deleting}
+              style={styles.deleteButton}
+            >
+              {deleting ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Feather name="trash-2" size={20} color="#DC2626" />
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Main Content Area */}
@@ -353,6 +411,14 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     width: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   keyboardView: {
     flex: 1,

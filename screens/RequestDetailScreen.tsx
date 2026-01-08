@@ -26,6 +26,7 @@ import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
   getHelpRequest,
   acceptHelpRequest,
+  deleteHelpRequest,
 } from "@/src/services/helpRequestService";
 import {
   createChat,
@@ -82,6 +83,7 @@ export default function RequestDetailScreen({
   const [loading, setLoading] = useState(true);
   const [offeringHelp, setOfferingHelp] = useState(false);
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -286,6 +288,47 @@ export default function RequestDetailScreen({
     openChat(request.chatId);
   };
 
+  // Handler to delete the request
+  const handleDeleteRequest = async () => {
+    if (!request || !user) {
+      return;
+    }
+
+    // Confirm deletion
+    Alert.alert(t.deleteRequestConfirm, t.deleteRequestConfirmMessage, [
+      {
+        text: t.cancel,
+        style: "cancel",
+      },
+      {
+        text: t.deleteRequest,
+        style: "destructive",
+        onPress: async () => {
+          setDeleting(true);
+          try {
+            await deleteHelpRequest(request.id);
+            Alert.alert(t.requestDeleted, t.requestDeletedMessage, [
+              {
+                text: t.ok,
+                onPress: () => navigation.goBack(),
+              },
+            ]);
+          } catch (error) {
+            console.error("[RequestDetail] Error deleting request:", error);
+            Alert.alert(
+              t.error,
+              error instanceof Error
+                ? error.message
+                : t.failedToDeleteRequest,
+            );
+          } finally {
+            setDeleting(false);
+          }
+        },
+      },
+    ]);
+  };
+
   const posterInitials = getUserInitials(request.userName, request.userEmail);
   const displayName = request.isAnonymous ? "Anonymous" : request.userName;
   const displayInitials = request.isAnonymous ? "AN" : posterInitials;
@@ -367,6 +410,25 @@ export default function RequestDetailScreen({
               <ThemedText style={styles.urgentText}>{t.urgent}</ThemedText>
             </View>
           ) : null}
+          {isOwnRequest && (
+            <Pressable
+              onPress={handleDeleteRequest}
+              disabled={deleting}
+              style={({ pressed }) => [
+                styles.deleteButton,
+                {
+                  backgroundColor: METUColors.alertRed,
+                  opacity: pressed || deleting ? 0.7 : 1,
+                },
+              ]}
+            >
+              {deleting ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Feather name="trash-2" size={16} color="#FFFFFF" />
+              )}
+            </Pressable>
+          )}
         </View>
       </View>
 
@@ -646,5 +708,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.small.fontSize,
     lineHeight: 20,
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -438,9 +438,16 @@ export async function updateHelpRequestStatus(
  * await deleteHelpRequest('abc123');
  */
 export async function deleteHelpRequest(requestId: string): Promise<void> {
-  const db = getFirestoreInstance();
-  const docRef = doc(db, COLLECTION_NAME, requestId);
-  await deleteDoc(docRef);
+  try {
+    console.log("[deleteHelpRequest] Deleting request:", requestId);
+    const db = getFirestoreInstance();
+    const docRef = doc(db, COLLECTION_NAME, requestId);
+    await deleteDoc(docRef);
+    console.log("[deleteHelpRequest] Request deleted successfully");
+  } catch (error) {
+    console.error("[deleteHelpRequest] Error occurred:", error);
+    throw error;
+  }
 }
 
 /**
