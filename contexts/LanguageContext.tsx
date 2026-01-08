@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  ReactNode,
+} from "react";
 
 type Language = "en" | "tr";
 
@@ -726,10 +732,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguage((prev) => (prev === "en" ? "tr" : "en"));
   };
 
-  const t = translations[language];
+  // Memoize translations object to prevent unnecessary re-renders
+  const t = useMemo(() => translations[language], [language]);
+
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({ language, toggleLanguage, t }),
+    [language, t],
+  );
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );

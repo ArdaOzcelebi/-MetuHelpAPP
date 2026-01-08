@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import {
   StyleSheet,
   View,
@@ -35,7 +35,7 @@ import {
   type HelpRequest,
 } from "@/src/services/helpRequestService";
 import { RouteProp, useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
+import { getShortTimeAgo } from "@/src/utils/timeUtils";
 
 type BrowseScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
@@ -44,182 +44,200 @@ type BrowseScreenProps = {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-// Helper component for animated need cards
-function AnimatedNeedCard({
-  need,
-  navigation,
-  theme,
-  isDark,
-  t,
-  getCategoryIcon,
-  getTimeAgo,
-}: {
-  need: HelpRequest;
-  navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
-  theme: ReturnType<typeof useTheme>["theme"];
-  isDark: boolean;
-  t: any;
-  getCategoryIcon: (category: string) => keyof typeof Feather.glyphMap;
-  getTimeAgo: (date: Date) => string;
-}) {
-  const scale = useSharedValue(1);
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+// Helper component for animated need cards - Memoized for performance
+const AnimatedNeedCard = memo(
+  ({
+    need,
+    navigation,
+    theme,
+    isDark,
+    t,
+    getCategoryIcon,
+  }: {
+    need: HelpRequest;
+    navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
+    theme: ReturnType<typeof useTheme>["theme"];
+    isDark: boolean;
+    t: any;
+    getCategoryIcon: (category: string) => keyof typeof Feather.glyphMap;
+  }) => {
+    const scale = useSharedValue(1);
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }],
+    }));
 
-  return (
-    <AnimatedPressable
-      key={need.id}
-      onPress={() =>
-        navigation.navigate("RequestDetail", { requestId: need.id })
-      }
-      onPressIn={() => {
-        scale.value = withSpring(0.98, {
-          damping: 15,
-          stiffness: 150,
-        });
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1, { damping: 15, stiffness: 150 });
-      }}
-      style={[
-        styles.needCard,
-        { backgroundColor: theme.cardBackground },
-        animatedStyle,
-      ]}
-    >
-      <View style={styles.needContent}>
-        <View
-          style={[
-            styles.categoryIcon,
-            {
-              backgroundColor: need.urgent
-                ? "rgba(220, 38, 38, 0.1)"
-                : theme.backgroundDefault,
-            },
-          ]}
-        >
-          <Feather
-            name={getCategoryIcon(need.category)}
-            size={20}
-            color={
-              need.urgent
-                ? METUColors.alertRed
-                : isDark
-                  ? "#FF6B6B"
-                  : METUColors.maroon
-            }
-          />
-        </View>
-        <View style={styles.needInfo}>
-          <View style={styles.needHeader}>
-            <ThemedText style={styles.needTitle}>{need.title}</ThemedText>
-            {need.urgent ? (
-              <View style={styles.urgentBadge}>
-                <ThemedText style={styles.urgentText}>{t.urgent}</ThemedText>
-              </View>
-            ) : null}
-          </View>
-          <View style={styles.needMeta}>
-            <Feather name="map-pin" size={12} color={theme.textSecondary} />
-            <ThemedText
-              style={[styles.needLocation, { color: theme.textSecondary }]}
-            >
-              {need.location}
-            </ThemedText>
-            <ThemedText
-              style={[styles.needTime, { color: theme.textSecondary }]}
-            >
-              {getTimeAgo(need.createdAt)}
-            </ThemedText>
-          </View>
-        </View>
-      </View>
-    </AnimatedPressable>
-  );
-}
+    const handlePress = useCallback(() => {
+      navigation.navigate("RequestDetail", { requestId: need.id });
+    }, [navigation, need.id]);
 
-// Helper component for animated question cards
-function AnimatedQuestionCard({
-  question,
-  navigation,
-  theme,
-  getTimeAgo,
-}: {
-  question: QAQuestion;
-  navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
-  theme: ReturnType<typeof useTheme>["theme"];
-  getTimeAgo: (date: Date) => string;
-}) {
-  const scale = useSharedValue(1);
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+    const handlePressIn = useCallback(() => {
+      scale.value = withSpring(0.98, {
+        damping: 15,
+        stiffness: 150,
+      });
+    }, [scale]);
 
-  return (
-    <AnimatedPressable
-      key={question.id}
-      onPress={() =>
-        navigation.navigate("QuestionDetail", {
-          questionId: question.id,
-        })
-      }
-      onPressIn={() => {
-        scale.value = withSpring(0.98, {
-          damping: 15,
-          stiffness: 150,
-        });
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1, { damping: 15, stiffness: 150 });
-      }}
-      style={[
-        styles.questionCard,
-        { backgroundColor: theme.cardBackground },
-        animatedStyle,
-      ]}
-    >
-      <ThemedText style={styles.questionTitle}>{question.title}</ThemedText>
-      {question.body ? (
-        <ThemedText
-          style={[styles.questionBody, { color: theme.textSecondary }]}
-          numberOfLines={2}
-        >
-          {question.body}
-        </ThemedText>
-      ) : null}
-      <View style={styles.questionMeta}>
-        <View style={styles.responsesContainer}>
-          <Feather
-            name="message-circle"
-            size={14}
-            color={
-              question.answerCount > 0
-                ? METUColors.actionGreen
-                : theme.textSecondary
-            }
-          />
-          <ThemedText
+    const handlePressOut = useCallback(() => {
+      scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+    }, [scale]);
+
+    const timeAgo = useMemo(() => getShortTimeAgo(need.createdAt), [need.createdAt]);
+
+    return (
+      <AnimatedPressable
+        key={need.id}
+        onPress={handlePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={[
+          styles.needCard,
+          { backgroundColor: theme.cardBackground },
+          animatedStyle,
+        ]}
+      >
+        <View style={styles.needContent}>
+          <View
             style={[
-              styles.responsesText,
+              styles.categoryIcon,
               {
-                color:
-                  question.answerCount > 0
-                    ? METUColors.actionGreen
-                    : theme.textSecondary,
+                backgroundColor: need.urgent
+                  ? "rgba(220, 38, 38, 0.1)"
+                  : theme.backgroundDefault,
               },
             ]}
           >
-            {question.answerCount}
+            <Feather
+              name={getCategoryIcon(need.category)}
+              size={20}
+              color={
+                need.urgent
+                  ? METUColors.alertRed
+                  : isDark
+                    ? "#FF6B6B"
+                    : METUColors.maroon
+              }
+            />
+          </View>
+          <View style={styles.needInfo}>
+            <View style={styles.needHeader}>
+              <ThemedText style={styles.needTitle}>{need.title}</ThemedText>
+              {need.urgent ? (
+                <View style={styles.urgentBadge}>
+                  <ThemedText style={styles.urgentText}>{t.urgent}</ThemedText>
+                </View>
+              ) : null}
+            </View>
+            <View style={styles.needMeta}>
+              <Feather name="map-pin" size={12} color={theme.textSecondary} />
+              <ThemedText
+                style={[styles.needLocation, { color: theme.textSecondary }]}
+              >
+                {need.location}
+              </ThemedText>
+              <ThemedText
+                style={[styles.needTime, { color: theme.textSecondary }]}
+              >
+                {timeAgo}
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+      </AnimatedPressable>
+    );
+  },
+);
+
+// Helper component for animated question cards - Memoized for performance
+const AnimatedQuestionCard = memo(
+  ({
+    question,
+    navigation,
+    theme,
+  }: {
+    question: QAQuestion;
+    navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
+    theme: ReturnType<typeof useTheme>["theme"];
+  }) => {
+    const scale = useSharedValue(1);
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }],
+    }));
+
+    const handlePress = useCallback(() => {
+      navigation.navigate("QuestionDetail", {
+        questionId: question.id,
+      });
+    }, [navigation, question.id]);
+
+    const handlePressIn = useCallback(() => {
+      scale.value = withSpring(0.98, {
+        damping: 15,
+        stiffness: 150,
+      });
+    }, [scale]);
+
+    const handlePressOut = useCallback(() => {
+      scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+    }, [scale]);
+
+    const timeAgo = useMemo(() => getShortTimeAgo(question.createdAt), [question.createdAt]);
+
+    return (
+      <AnimatedPressable
+        key={question.id}
+        onPress={handlePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={[
+          styles.questionCard,
+          { backgroundColor: theme.cardBackground },
+          animatedStyle,
+        ]}
+      >
+        <ThemedText style={styles.questionTitle}>{question.title}</ThemedText>
+        {question.body ? (
+          <ThemedText
+            style={[styles.questionBody, { color: theme.textSecondary }]}
+            numberOfLines={2}
+          >
+            {question.body}
+          </ThemedText>
+        ) : null}
+        <View style={styles.questionMeta}>
+          <View style={styles.responsesContainer}>
+            <Feather
+              name="message-circle"
+              size={14}
+              color={
+                question.answerCount > 0
+                  ? METUColors.actionGreen
+                  : theme.textSecondary
+              }
+            />
+            <ThemedText
+              style={[
+                styles.responsesText,
+                {
+                  color:
+                    question.answerCount > 0
+                      ? METUColors.actionGreen
+                      : theme.textSecondary,
+                },
+              ]}
+            >
+              {question.answerCount}
+            </ThemedText>
+          </View>
+          <ThemedText
+            style={[styles.timeText, { color: theme.textSecondary }]}
+          >
+            {timeAgo}
           </ThemedText>
         </View>
-        <ThemedText style={[styles.timeText, { color: theme.textSecondary }]}>
-          {getTimeAgo(question.createdAt)}
-        </ThemedText>
-      </View>
-    </AnimatedPressable>
-  );
-}
+      </AnimatedPressable>
+    );
+  },
+);
 
 export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   const { theme, isDark } = useTheme();
@@ -276,57 +294,49 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
     };
   }, []);
 
-  const onRefresh = () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     // The subscriptions will automatically update
-  };
+  }, []);
 
-  const getTimeAgo = (date: Date): string => {
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  // Memoize getCategoryIcon function
+  const getCategoryIcon = useCallback(
+    (category: string): keyof typeof Feather.glyphMap => {
+      switch (category) {
+        case "medical":
+          return "activity";
+        case "academic":
+          return "book";
+        case "transport":
+          return "navigation";
+        default:
+          return "help-circle";
+      }
+    },
+    [],
+  );
 
-    if (diffInMinutes < 1) return t.justNow || "Just now";
-    if (diffInMinutes < 60) return `${diffInMinutes}m`;
-    if (diffInHours < 24) return `${diffInHours}h`;
-    return `${Math.floor(diffInHours / 24)}d`;
-  };
-
-  const TABS = [
-    { id: "needs", label: t.needs },
-    { id: "questions", label: t.questions },
-  ] as const;
-
-  const getCategoryIcon = (category: string): keyof typeof Feather.glyphMap => {
-    switch (category) {
-      case "medical":
-        return "activity";
-      case "academic":
-        return "book";
-      case "transport":
-        return "navigation";
-      default:
-        return "help-circle";
-    }
-  };
-
-  const filteredNeeds = helpRequests.filter((need) => {
+  // Memoize filtered arrays to avoid recalculating on every render
+  const filteredNeeds = useMemo(() => {
     const searchLower = searchQuery.toLowerCase();
-    return (
-      need.title.toLowerCase().includes(searchLower) ||
-      need.description.toLowerCase().includes(searchLower) ||
-      need.location.toLowerCase().includes(searchLower)
-    );
-  });
+    return helpRequests.filter((need) => {
+      return (
+        need.title.toLowerCase().includes(searchLower) ||
+        need.description.toLowerCase().includes(searchLower) ||
+        need.location.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [helpRequests, searchQuery]);
 
-  const filteredQuestions = questions.filter((q) => {
+  const filteredQuestions = useMemo(() => {
     const searchLower = searchQuery.toLowerCase();
-    return (
-      q.title.toLowerCase().includes(searchLower) ||
-      q.body.toLowerCase().includes(searchLower)
-    );
-  });
+    return questions.filter((q) => {
+      return (
+        q.title.toLowerCase().includes(searchLower) ||
+        q.body.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [questions, searchQuery]);
 
   return (
     <ScreenScrollView
@@ -419,7 +429,6 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                 isDark={isDark}
                 t={t}
                 getCategoryIcon={getCategoryIcon}
-                getTimeAgo={getTimeAgo}
               />
             ))
           )}
@@ -450,7 +459,6 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                 question={question}
                 navigation={navigation}
                 theme={theme}
-                getTimeAgo={getTimeAgo}
               />
             ))
           )}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback, memo } from "react";
 import {
   StyleSheet,
   View,
@@ -30,6 +30,7 @@ import { useAuth } from "@/src/contexts/AuthContext";
 import { Spacing, BorderRadius, METUColors, Shadows } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { subscribeToHelpRequests } from "@/src/services/helpRequestService";
+import { getFirstName } from "@/src/utils/userUtils";
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "Home">;
@@ -46,153 +47,159 @@ interface BentoWidgetProps {
   delay?: number;
 }
 
-// Bento Grid Widget Component
-function BentoWidget({
-  title,
-  subtitle,
-  icon,
-  gradientColors,
-  onPress,
-  size,
-  delay = 0,
-}: BentoWidgetProps) {
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(20);
+// Bento Grid Widget Component - Memoized for performance
+const BentoWidget = memo(
+  ({
+    title,
+    subtitle,
+    icon,
+    gradientColors,
+    onPress,
+    size,
+    delay = 0,
+  }: BentoWidgetProps) => {
+    const scale = useSharedValue(1);
+    const opacity = useSharedValue(0);
+    const translateY = useSharedValue(20);
 
-  useEffect(() => {
-    opacity.value = withDelay(
-      delay,
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
-    );
-    translateY.value = withDelay(
-      delay,
-      withSpring(0, { damping: 18, stiffness: 90 }),
-    );
-  }, [delay, opacity, translateY]);
+    useEffect(() => {
+      opacity.value = withDelay(
+        delay,
+        withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
+      );
+      translateY.value = withDelay(
+        delay,
+        withSpring(0, { damping: 18, stiffness: 90 }),
+      );
+    }, [delay, opacity, translateY]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }, { translateY: translateY.value }],
-  }));
+    const animatedStyle = useAnimatedStyle(() => ({
+      opacity: opacity.value,
+      transform: [{ scale: scale.value }, { translateY: translateY.value }],
+    }));
 
-  const handlePressIn = () => {
-    scale.value = withSpring(0.97, { damping: 15, stiffness: 200 });
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-  };
+    const handlePressIn = useCallback(() => {
+      scale.value = withSpring(0.97, { damping: 15, stiffness: 200 });
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+    }, [scale]);
 
-  const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 200 });
-  };
+    const handlePressOut = useCallback(() => {
+      scale.value = withSpring(1, { damping: 15, stiffness: 200 });
+    }, [scale]);
 
-  const handlePress = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }
-    onPress();
-  };
+    const handlePress = useCallback(() => {
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }
+      onPress();
+    }, [onPress]);
 
-  return (
-    <Animated.View
-      style={[
-        styles.bentoWidget,
-        size === "large" ? styles.bentoLarge : styles.bentoWide,
-        animatedStyle,
-      ]}
-    >
-      <Pressable
-        onPress={handlePress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={styles.bentoTouchable}
+    return (
+      <Animated.View
+        style={[
+          styles.bentoWidget,
+          size === "large" ? styles.bentoLarge : styles.bentoWide,
+          animatedStyle,
+        ]}
       >
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.bentoGradient}
+        <Pressable
+          onPress={handlePress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          style={styles.bentoTouchable}
         >
-          <View style={styles.bentoContent}>
-            <View
-              style={[
-                styles.bentoIconContainer,
-                size === "large"
-                  ? styles.bentoIconLarge
-                  : styles.bentoIconSmall,
-              ]}
-            >
-              <Feather
-                name={icon}
-                size={size === "large" ? 40 : 32}
-                color="#FFFFFF"
-              />
-            </View>
-            <View style={styles.bentoTextContainer}>
-              <ThemedText
+          <LinearGradient
+            colors={gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.bentoGradient}
+          >
+            <View style={styles.bentoContent}>
+              <View
                 style={[
-                  styles.bentoTitle,
-                  size === "large" && styles.bentoTitleLarge,
+                  styles.bentoIconContainer,
+                  size === "large"
+                    ? styles.bentoIconLarge
+                    : styles.bentoIconSmall,
                 ]}
               >
-                {title}
-              </ThemedText>
-              {subtitle && (
-                <ThemedText style={styles.bentoSubtitle}>{subtitle}</ThemedText>
-              )}
+                <Feather
+                  name={icon}
+                  size={size === "large" ? 40 : 32}
+                  color="#FFFFFF"
+                />
+              </View>
+              <View style={styles.bentoTextContainer}>
+                <ThemedText
+                  style={[
+                    styles.bentoTitle,
+                    size === "large" && styles.bentoTitleLarge,
+                  ]}
+                >
+                  {title}
+                </ThemedText>
+                {subtitle && (
+                  <ThemedText style={styles.bentoSubtitle}>
+                    {subtitle}
+                  </ThemedText>
+                )}
+              </View>
             </View>
-          </View>
-        </LinearGradient>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-// Stats Ticker Component
-function StatsTicker({
-  activeCount,
-  text,
-  isDark,
-}: {
-  activeCount: number;
-  text: string;
-  isDark: boolean;
-}) {
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(-10);
-
-  useEffect(() => {
-    opacity.value = withDelay(
-      100,
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
     );
-    translateY.value = withDelay(
-      100,
-      withSpring(0, { damping: 18, stiffness: 90 }),
+  },
+);
+
+// Stats Ticker Component - Memoized for performance
+const StatsTicker = memo(
+  ({
+    activeCount,
+    text,
+    isDark,
+  }: {
+    activeCount: number;
+    text: string;
+    isDark: boolean;
+  }) => {
+    const opacity = useSharedValue(0);
+    const translateY = useSharedValue(-10);
+
+    useEffect(() => {
+      opacity.value = withDelay(
+        100,
+        withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
+      );
+      translateY.value = withDelay(
+        100,
+        withSpring(0, { damping: 18, stiffness: 90 }),
+      );
+    }, [opacity, translateY]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      opacity: opacity.value,
+      transform: [{ translateY: translateY.value }],
+    }));
+
+    return (
+      <Animated.View style={[styles.statsTicker, animatedStyle]}>
+        <BlurView
+          intensity={80}
+          tint={isDark ? "dark" : "light"}
+          style={styles.statsBlur}
+        >
+          <Feather name="activity" size={16} color={METUColors.gold} />
+          <ThemedText style={styles.statsText}>
+            {activeCount} {text}
+          </ThemedText>
+        </BlurView>
+      </Animated.View>
     );
-  }, [opacity, translateY]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  return (
-    <Animated.View style={[styles.statsTicker, animatedStyle]}>
-      <BlurView
-        intensity={80}
-        tint={isDark ? "dark" : "light"}
-        style={styles.statsBlur}
-      >
-        <Feather name="activity" size={16} color={METUColors.gold} />
-        <ThemedText style={styles.statsText}>
-          {activeCount} {text}
-        </ThemedText>
-      </BlurView>
-    </Animated.View>
-  );
-}
+  },
+);
 
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { theme, isDark } = useTheme();
@@ -228,31 +235,20 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     transform: [{ translateY: headerTranslateY.value }],
   }));
 
-  // Gradient colors based on theme
-  const backgroundGradientColors = isDark
-    ? (["#1A1A1A", "#2A2A2A"] as const)
-    : (["#FAFAFA", "#FFFFFF"] as const);
+  // Gradient colors based on theme - Memoized to avoid recreation
+  const backgroundGradientColors = useMemo(
+    () =>
+      isDark
+        ? (["#1A1A1A", "#2A2A2A"] as const)
+        : (["#FAFAFA", "#FFFFFF"] as const),
+    [isDark],
+  );
 
-  // Extract first name from user display name or email
-  const getUserFirstName = () => {
-    if (user?.displayName) {
-      return user.displayName.split(" ")[0];
-    }
-    if (user?.email) {
-      const username = user.email.split("@")[0];
-      // Get first part before dot and capitalize
-      return (
-        username.split(".")[0].charAt(0).toUpperCase() +
-        username.split(".")[0].slice(1)
-      );
-    }
-    return "Student";
-  };
-
-  // Create greeting
-  const getGreeting = () => {
-    return t.welcome;
-  };
+  // Memoize user first name extraction
+  const userFirstName = useMemo(
+    () => getFirstName(user?.displayName, user?.email),
+    [user?.displayName, user?.email],
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -284,7 +280,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
         {/* Header Section */}
         <Animated.View style={[styles.header, headerStyle]}>
-          <ThemedText style={styles.greeting}>{getGreeting()}</ThemedText>
+          <ThemedText style={styles.greeting}>{t.welcome}</ThemedText>
           <ThemedText
             type="body"
             style={[styles.tagline, { color: theme.textSecondary }]}
