@@ -343,9 +343,9 @@ export default function RequestDetailScreen({
         t.error,
         error instanceof Error ? error.message : t.failedToDeleteRequest,
       );
-      setIsDeleting(false); // Reset flag on error so user can retry
+    } finally {
+      setIsDeleting(false); // Always reset to allow retries
     }
-    // Note: Don't reset isDeleting on success - we're navigating away anyway
   };
 
   const posterInitials = getUserInitials(request.userName, request.userEmail);
