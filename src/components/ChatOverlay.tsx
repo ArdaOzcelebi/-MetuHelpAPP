@@ -54,7 +54,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const IS_WEB = Platform.OS === "web";
 const OVERLAY_WIDTH = IS_WEB ? 300 : SCREEN_WIDTH * 0.9;
 const OVERLAY_HEIGHT = IS_WEB ? 400 : SCREEN_HEIGHT * 0.7;
-const QUESTION_DETAIL_OFFSET = 80; // Additional offset when on QuestionDetailScreen
+const QUESTION_DETAIL_OFFSET = Spacing.largeButtonHeight; // Move up when on QuestionDetailScreen
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -86,7 +86,7 @@ function MinimizedBubble() {
       damping: 20,
       stiffness: 90,
     });
-  }, [currentRouteName, bottomPosition]);
+  }, [currentRouteName]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -589,7 +589,7 @@ function ExpandedWindow() {
       damping: 20,
       stiffness: 90,
     });
-  }, [currentRouteName, bottomPosition]);
+  }, [currentRouteName]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     bottom: bottomPosition.value,
