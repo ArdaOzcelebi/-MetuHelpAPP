@@ -204,7 +204,7 @@ export default function QuestionDetailScreen({
               onPress={() => setShowDeleteModal(true)}
               style={styles.deleteButton}
             >
-              <Feather name="trash-2" size={20} color="#FF6B6B" />
+              <Feather name="trash-2" size={20} color={METUColors.alertRed} />
             </TouchableOpacity>
           )}
         </View>

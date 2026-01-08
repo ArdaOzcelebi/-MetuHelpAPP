@@ -527,7 +527,7 @@ export default function RequestDetailScreen({
           <ThemedText
             style={[styles.deleteButtonText, { color: METUColors.alertRed }]}
           >
-            {t.deleteQuestion}
+            {t.delete}
           </ThemedText>
         </Pressable>
       )}

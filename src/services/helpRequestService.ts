@@ -431,11 +431,23 @@ export async function updateHelpRequestStatus(
  * WARNING: This operation is irreversible. Consider using updateHelpRequestStatus
  * to mark as 'cancelled' instead for soft deletion.
  *
+ * SECURITY NOTE: This function does not perform authorization checks. It is the caller's
+ * responsibility to verify that the user has permission to delete the request before
+ * calling this function. In the UI layer (RequestDetailScreen), we ensure only the
+ * request owner can access the delete functionality, and only when the request hasn't
+ * been accepted or finalized.
+ *
+ * For production apps, consider implementing Firestore Security Rules to enforce
+ * server-side authorization and prevent unauthorized deletions.
+ *
  * @param requestId - The unique ID of the help request to delete
  * @returns Promise that resolves when deletion is complete
  *
  * @example
- * await deleteHelpRequest('abc123');
+ * // Only delete if user is the owner and request is not accepted
+ * if (request.userId === user.uid && request.status === 'active') {
+ *   await deleteHelpRequest('abc123');
+ * }
  */
 export async function deleteHelpRequest(requestId: string): Promise<void> {
   const db = getFirestoreInstance();
