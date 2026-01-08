@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Pressable, Platform } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
@@ -258,14 +264,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         end={{ x: 0, y: 1 }}
       />
 
-      <View
-        style={[
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
           styles.content,
           {
             paddingTop: headerHeight + Spacing.md,
-            paddingBottom: tabBarHeight + Spacing.xl,
+            paddingBottom: tabBarHeight + Spacing.xl + Spacing["6xl"],
           },
         ]}
+        showsVerticalScrollIndicator={false}
       >
         {/* Stats Ticker */}
         <StatsTicker
@@ -330,7 +338,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             delay={500}
           />
         </View>
-      </View>
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -346,8 +354,10 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     paddingHorizontal: Spacing.lg,
   },
   statsTicker: {
@@ -379,8 +389,8 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   bentoGrid: {
-    flex: 1,
     gap: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
   bentoRow: {
     flexDirection: "row",
