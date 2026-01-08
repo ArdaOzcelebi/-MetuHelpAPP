@@ -103,7 +103,7 @@ function BentoWidget({
         style={styles.bentoTouchable}
       >
         <LinearGradient
-          colors={gradientColors as any}
+          colors={gradientColors as [string, string, ...string[]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.bentoGradient}
@@ -226,6 +226,13 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     return "Student";
   };
 
+  // Create personalized greeting
+  const getGreeting = () => {
+    const firstName = getUserFirstName();
+    // Create a greeting that works in both languages
+    return `Welcome Back, ${firstName}!`;
+  };
+
   return (
     <ThemedView style={styles.container}>
       {/* Background gradient */}
@@ -250,9 +257,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
         {/* Header Section */}
         <Animated.View style={[styles.header, headerStyle]}>
-          <ThemedText style={styles.greeting}>
-            {t.welcome.replace("METU Help", getUserFirstName())}
-          </ThemedText>
+          <ThemedText style={styles.greeting}>{getGreeting()}</ThemedText>
           <ThemedText
             type="body"
             style={[styles.tagline, { color: theme.textSecondary }]}
@@ -266,8 +271,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           {/* Top Row - Two Large Squares */}
           <View style={styles.bentoRow}>
             <BentoWidget
-              title="URGENT NEEDS"
-              subtitle="Request Help"
+              title={t.urgentNeeds}
+              subtitle={t.requestHelp}
               icon="heart"
               gradientColors={[
                 isDark ? "#DC2626" : "#EF4444",
@@ -278,8 +283,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               delay={200}
             />
             <BentoWidget
-              title="OFFER HELP"
-              subtitle="Be a Hero"
+              title={t.offerHelp}
+              subtitle={t.beAHero}
               icon="users"
               gradientColors={[
                 isDark ? "#059669" : "#10B981",
@@ -293,8 +298,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
           {/* Bottom Row - Wide Forum Widget */}
           <BentoWidget
-            title="Q&A Forum"
-            subtitle="Ask questions, share solutions, and engage with the METU community"
+            title={t.qAndAForum}
+            subtitle={t.qAndAForumDescription}
             icon="message-circle"
             gradientColors={
               isDark
