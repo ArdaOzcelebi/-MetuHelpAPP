@@ -227,6 +227,14 @@ export default function RequestDetailScreen({
     setOfferingHelp(true);
 
     try {
+      // Fetch fresh request data to ensure we have the latest status
+      const freshRequest = await getHelpRequest(requestId);
+      if (!freshRequest) {
+        Alert.alert("Error", "Request not found.");
+        setOfferingHelp(false);
+        return;
+      }
+
       // Check if a chat already exists
       const existingChat = await getChatByRequestId(requestId, user.uid);
 
@@ -253,8 +261,8 @@ export default function RequestDetailScreen({
           return;
         }
 
-        // User is the helper, check if request needs to be accepted (status might still be "active")
-        if (request.status === "active") {
+        // User is the helper, check if request needs to be accepted using FRESH data
+        if (freshRequest.status === "active") {
           console.log("[RequestDetailScreen] Accepting existing request");
           await acceptHelpRequest(
             requestId,
@@ -302,6 +310,9 @@ export default function RequestDetailScreen({
       }
 
       setHasOfferedHelp(true);
+      
+      // Update local request state with fresh data to reflect acceptance
+      setRequest(freshRequest);
 
       // Open chat in the global overlay instead of navigating
       console.log("[RequestDetailScreen] Opening chat via overlay:", chatId);
