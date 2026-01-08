@@ -75,6 +75,8 @@ interface Translations {
   needs: string;
   questions: string;
   search: string;
+  noActiveRequests: string;
+  noRequestsFound: string;
 
   // Profile Screen
   notifications: string;
@@ -276,6 +278,8 @@ const translations: Record<Language, Translations> = {
     needs: "Needs",
     questions: "Questions",
     search: "Search...",
+    noActiveRequests: "No active requests. Be the first to post!",
+    noRequestsFound: "No requests found",
 
     // Profile Screen
     notifications: "Notifications",
@@ -485,6 +489,8 @@ const translations: Record<Language, Translations> = {
     needs: "İhtiyaçlar",
     questions: "Sorular",
     search: "Ara...",
+    noActiveRequests: "Aktif talep yok. İlk yayınlayan siz olun!",
+    noRequestsFound: "Talep bulunamadı",
 
     // Profile Screen
     notifications: "Bildirimler",
