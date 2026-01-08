@@ -43,6 +43,12 @@ type RequestDetailScreenProps = {
 };
 
 /**
+ * Delay (in ms) before navigating back after opening chat overlay.
+ * Ensures chat overlay state updates are fully processed before navigation.
+ */
+const CHAT_OVERLAY_DELAY = 100;
+
+/**
  * Calculate time difference from now
  */
 function getTimeAgo(date: Date): string {
@@ -305,7 +311,7 @@ export default function RequestDetailScreen({
       // Use setTimeout to ensure chat overlay state updates are processed first
       setTimeout(() => {
         navigation.goBack();
-      }, 100);
+      }, CHAT_OVERLAY_DELAY);
     } catch (error) {
       console.error("[RequestDetailScreen] Error offering help:", error);
       Alert.alert("Error", "Failed to create chat. Please try again.", [
