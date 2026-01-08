@@ -221,13 +221,27 @@ If you still see this error when trying to delete:
    - ❌ Having typos in the rules (check console for syntax errors)
    - ❌ Being logged in with a different account than the one who created the post
 
-5. **Test Your Rules**
+5. **Test Your Rules in Rules Playground**
    - In Firebase Console → Firestore Database → Rules tab
    - Click "Rules Playground" button
-   - Set operation type to "delete"
-   - Set path to: `/helpRequests/{requestId}`
-   - Add `request.auth.uid` to match your user ID
-   - The simulator should show if the rule passes or fails
+   - Configure the test:
+     - **Location**: `/databases/(default)/documents/helpRequests/testRequestId`
+     - **Operation**: Select "delete"
+     - **Authenticated**: ✓ Check this box
+     - **Auth UID**: Enter your user ID (get from browser console: `user.uid`)
+   - **CRITICAL**: Add mock document data (click "+ Add" under "Firestore data"):
+     ```
+     Field: userId
+     Type: string
+     Value: (same user ID as Auth UID above)
+     ```
+   - Click "Run" button
+   - Should show ✅ "Simulated delete allowed"
+   
+   **Common Playground Errors:**
+   - ❌ "Null value error" = You forgot to add mock document data
+   - ❌ "Permission denied" = The `userId` in mock data doesn't match Auth UID
+   - ❌ "Authenticated" unchecked = Must check "Authenticated" box
 
 ### Other Troubleshooting Steps
 
@@ -236,7 +250,44 @@ If you still see this error when trying to delete:
 3. Check browser console for detailed error messages
 4. Use Firebase Emulator for local testing with rules
 
+### If Rules Playground Shows "Null value error"
+
+This error occurs when testing delete operations in Rules Playground without mock data:
+
+**Problem**: The rule checks `resource.data.userId`, but there's no document data in the playground by default.
+
+**Solution**: Add mock document data in Rules Playground:
+1. In the "Firestore data" section, click "+ Add"
+2. Add these fields:
+   - `userId` (string): Your user ID
+   - `title` (string): "Test Request"
+   - `status` (string): "active"
+3. Make sure the `userId` value matches your "Auth UID" field above
+4. Click "Run" - should now work without null error
+
 ## Data Structure Reference
+
+### Help Request Document
+```typescript
+helpRequests/{requestId}
+  - userId: string          // REQUIRED - must match auth.uid for delete
+  - userEmail: string
+  - userName: string
+  - title: string
+  - category: string
+  - description: string
+  - location: string
+  - isReturnNeeded: boolean
+  - urgent: boolean
+  - isAnonymous: boolean
+  - status: string          // "active" | "accepted" | "finalized"
+  - createdAt: Timestamp
+  - updatedAt: Timestamp
+  - acceptedBy?: string
+  - acceptedByName?: string
+  - acceptedByEmail?: string
+  - chatId?: string
+```
 
 ### Chat Document
 ```typescript
