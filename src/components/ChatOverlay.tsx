@@ -54,8 +54,17 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const IS_WEB = Platform.OS === "web";
 const OVERLAY_WIDTH = IS_WEB ? 300 : SCREEN_WIDTH * 0.9;
 const OVERLAY_HEIGHT = IS_WEB ? 400 : SCREEN_HEIGHT * 0.7;
+const QUESTION_DETAIL_OFFSET = 80; // Additional offset when on QuestionDetailScreen
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+/**
+ * Calculate bottom position based on current route
+ */
+function getBottomPosition(isOnQuestionDetail: boolean): number {
+  const baseBottom = IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"];
+  return isOnQuestionDetail ? baseBottom + QUESTION_DETAIL_OFFSET : baseBottom;
+}
 
 /**
  * Minimized FAB bubble with unread badge
@@ -66,22 +75,18 @@ function MinimizedBubble() {
   const scale = useSharedValue(1);
   
   // Animated bottom position based on current route
-  const bottomPosition = useSharedValue(
-    IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"]
-  );
+  const bottomPosition = useSharedValue(getBottomPosition(false));
 
   // Update position when route changes
   useEffect(() => {
     const isOnQuestionDetail = currentRouteName === "QuestionDetail";
-    const newBottom = isOnQuestionDetail
-      ? (IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"]) + 80 // Move up by 80pt when on QuestionDetail
-      : IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"];
+    const newBottom = getBottomPosition(isOnQuestionDetail);
     
     bottomPosition.value = withSpring(newBottom, {
       damping: 20,
       stiffness: 90,
     });
-  }, [currentRouteName]);
+  }, [currentRouteName, bottomPosition]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -573,22 +578,18 @@ function ExpandedWindow() {
   const { toggleMinimize, closeChat, activeView, currentRouteName } = useChatOverlay();
   
   // Animated bottom position based on current route
-  const bottomPosition = useSharedValue(
-    IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"]
-  );
+  const bottomPosition = useSharedValue(getBottomPosition(false));
 
   // Update position when route changes
   useEffect(() => {
     const isOnQuestionDetail = currentRouteName === "QuestionDetail";
-    const newBottom = isOnQuestionDetail
-      ? (IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"]) + 80 // Move up by 80pt when on QuestionDetail
-      : IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"];
+    const newBottom = getBottomPosition(isOnQuestionDetail);
     
     bottomPosition.value = withSpring(newBottom, {
       damping: 20,
       stiffness: 90,
     });
-  }, [currentRouteName]);
+  }, [currentRouteName, bottomPosition]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     bottom: bottomPosition.value,
