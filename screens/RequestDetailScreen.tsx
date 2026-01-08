@@ -310,7 +310,7 @@ export default function RequestDetailScreen({
       }
 
       setHasOfferedHelp(true);
-      
+
       // Update local request state to reflect acceptance
       // Note: We update the fresh data with the new accepted status
       setRequest({

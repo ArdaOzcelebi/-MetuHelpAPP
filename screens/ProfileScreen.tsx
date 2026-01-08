@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -6,6 +6,7 @@ import {
   Switch,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -22,6 +23,12 @@ import {
   Typography,
 } from "@/constants/theme";
 import type { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
+import {
+  subscribeToUserStats,
+  getRecentActivity,
+  type UserStats,
+  type RecentActivityItem,
+} from "@/src/services/profileStatsService";
 
 type ProfileScreenProps = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, "Profile">;
@@ -33,6 +40,53 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { user, signOut } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
+  const [userStats, setUserStats] = useState<UserStats>({
+    requestsPosted: 0,
+    helpGiven: 0,
+    questionsAsked: 0,
+  });
+  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>(
+    [],
+  );
+  const [loadingActivity, setLoadingActivity] = useState(true);
+
+  // Subscribe to real-time user stats
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    console.log(
+      "[ProfileScreen] Setting up stats subscription for user:",
+      user.uid,
+    );
+    const unsubscribe = subscribeToUserStats(user.uid, (stats) => {
+      console.log("[ProfileScreen] Received stats update:", stats);
+      setUserStats(stats);
+    });
+
+    return () => {
+      console.log("[ProfileScreen] Cleaning up stats subscription");
+      unsubscribe();
+    };
+  }, [user?.uid]);
+
+  // Load recent activity
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    console.log("[ProfileScreen] Loading recent activity");
+    setLoadingActivity(true);
+    getRecentActivity(user.uid)
+      .then((activity) => {
+        console.log("[ProfileScreen] Loaded activity:", activity.length);
+        setRecentActivity(activity);
+      })
+      .catch((error) => {
+        console.error("[ProfileScreen] Failed to load activity:", error);
+      })
+      .finally(() => {
+        setLoadingActivity(false);
+      });
+  }, [user?.uid]);
 
   const handleLogout = () => {
     console.log("[ProfileScreen] Logout button pressed");
@@ -92,6 +146,41 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
     return "METU Student";
   };
 
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(date);
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "request":
+        return "heart";
+      case "help":
+        return "users";
+      case "question":
+        return "message-circle";
+      default:
+        return "activity";
+    }
+  };
+
+  const formatActivityTime = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return formatDate(date);
+  };
+
   return (
     <ScreenScrollView>
       <View style={styles.profileHeader}>
@@ -123,6 +212,13 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
             </ThemedText>
           </View>
         )}
+        {user?.metadata?.creationTime && (
+          <ThemedText
+            style={[styles.memberSinceText, { color: theme.textSecondary }]}
+          >
+            {t.memberSince} {formatDate(new Date(user.metadata.creationTime))}
+          </ThemedText>
+        )}
       </View>
 
       <View style={styles.statsRow}>
@@ -137,7 +233,9 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
             size={20}
             color={isDark ? "#FF6B6B" : METUColors.maroon}
           />
-          <ThemedText style={styles.statNumber}>12</ThemedText>
+          <ThemedText style={styles.statNumber}>
+            {userStats.requestsPosted}
+          </ThemedText>
           <ThemedText
             style={[styles.statLabel, { color: theme.textSecondary }]}
           >
@@ -151,17 +249,133 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           ]}
         >
           <Feather name="users" size={20} color={METUColors.actionGreen} />
-          <ThemedText style={styles.statNumber}>28</ThemedText>
+          <ThemedText style={styles.statNumber}>
+            {userStats.helpGiven}
+          </ThemedText>
           <ThemedText
             style={[styles.statLabel, { color: theme.textSecondary }]}
           >
             {t.helpGiven}
           </ThemedText>
         </View>
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
+        >
+          <Feather name="message-circle" size={20} color="#3B82F6" />
+          <ThemedText style={styles.statNumber}>
+            {userStats.questionsAsked}
+          </ThemedText>
+          <ThemedText
+            style={[styles.statLabel, { color: theme.textSecondary }]}
+          >
+            {t.questionsAsked}
+          </ThemedText>
+        </View>
+      </View>
+
+      {/* Recent Activity Section */}
+      <View style={styles.section}>
+        <ThemedText style={styles.sectionTitle}>{t.recentActivity}</ThemedText>
+        <View
+          style={[
+            styles.activityCard,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
+        >
+          {loadingActivity ? (
+            <View style={styles.activityLoading}>
+              <ActivityIndicator
+                size="small"
+                color={isDark ? METUColors.maroon : METUColors.maroon}
+              />
+            </View>
+          ) : recentActivity.length === 0 ? (
+            <View style={styles.emptyActivity}>
+              <Feather
+                name="activity"
+                size={32}
+                color={theme.textSecondary}
+                style={{ opacity: 0.5 }}
+              />
+              <ThemedText
+                style={[styles.emptyText, { color: theme.textSecondary }]}
+              >
+                {t.noRecentActivity}
+              </ThemedText>
+            </View>
+          ) : (
+            recentActivity.slice(0, 5).map((activity, index) => (
+              <View key={activity.id}>
+                {index > 0 && <View style={styles.divider} />}
+                <View style={styles.activityRow}>
+                  <View
+                    style={[
+                      styles.activityIconContainer,
+                      { backgroundColor: theme.backgroundSecondary },
+                    ]}
+                  >
+                    <Feather
+                      name={getActivityIcon(activity.type)}
+                      size={16}
+                      color={theme.text}
+                    />
+                  </View>
+                  <View style={styles.activityInfo}>
+                    <ThemedText style={styles.activityTitle} numberOfLines={1}>
+                      {activity.title}
+                    </ThemedText>
+                    <ThemedText
+                      style={[
+                        styles.activityTime,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      {formatActivityTime(activity.timestamp)}
+                    </ThemedText>
+                  </View>
+                  {activity.status && (
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        {
+                          backgroundColor:
+                            activity.status === "active"
+                              ? "rgba(16, 185, 129, 0.1)"
+                              : activity.status === "finalized"
+                                ? "rgba(59, 130, 246, 0.1)"
+                                : "rgba(128, 128, 128, 0.1)",
+                        },
+                      ]}
+                    >
+                      <ThemedText
+                        style={[
+                          styles.statusText,
+                          {
+                            color:
+                              activity.status === "active"
+                                ? METUColors.actionGreen
+                                : activity.status === "finalized"
+                                  ? "#3B82F6"
+                                  : theme.textSecondary,
+                          },
+                        ]}
+                      >
+                        {activity.status}
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))
+          )}
+        </View>
       </View>
 
       <View style={styles.section}>
-        <ThemedText style={styles.sectionTitle}>{t.notifications}</ThemedText>
+        <ThemedText style={styles.sectionTitle}>{t.settings}</ThemedText>
         <View
           style={[
             styles.settingCard,
@@ -402,5 +616,60 @@ const styles = StyleSheet.create({
     fontSize: Typography.caption.fontSize,
     textAlign: "center",
     marginBottom: Spacing.xl,
+  },
+  memberSinceText: {
+    fontSize: Typography.caption.fontSize,
+    marginTop: Spacing.xs,
+  },
+  activityCard: {
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+  },
+  activityLoading: {
+    padding: Spacing.xl,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyActivity: {
+    padding: Spacing.xl,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    marginTop: Spacing.md,
+    fontSize: Typography.body.fontSize,
+  },
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  activityIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: Typography.body.fontSize,
+    marginBottom: Spacing.xs / 2,
+  },
+  activityTime: {
+    fontSize: Typography.caption.fontSize,
+  },
+  statusBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs / 2,
+    borderRadius: BorderRadius.sm,
+  },
+  statusText: {
+    fontSize: Typography.caption.fontSize,
+    fontWeight: "600",
+    textTransform: "capitalize",
   },
 });
