@@ -224,9 +224,7 @@ function AnimatedQuestionCard({
 export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
-  const [selectedTab, setSelectedTab] = useState<"needs" | "questions">(
-    route.params?.initialTab || "needs",
-  );
+  const [selectedTab, setSelectedTab] = useState<"needs" | "questions">("needs");
   const [searchQuery, setSearchQuery] = useState("");
   const [questions, setQuestions] = useState<QAQuestion[]>([]);
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
@@ -234,24 +232,20 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   const [loadingNeeds, setLoadingNeeds] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Handle initialTab route parameter - clear after use to prevent zombie loops
-  useEffect(() => {
-    if (route.params?.initialTab) {
-      setSelectedTab(route.params.initialTab);
-      // CRITICAL: Clear the param so it doesn't run again on next focus
-      navigation.setParams({ initialTab: undefined });
-    }
-  }, [route.params?.initialTab, navigation]);
-
-  // Reset to "needs" tab when Browse tab is focused (unless coming with initialTab param)
+  // Handle tab selection when screen is focused
+  // Reset to "needs" by default, but respect initialTab parameter if provided
   useFocusEffect(
     useCallback(() => {
-      // Only reset if there's no initialTab parameter
-      // This allows AskQuestionScreen to navigate to questions tab
-      if (!route.params?.initialTab) {
+      if (route.params?.initialTab) {
+        // Navigate to specific tab (e.g., from AskQuestionScreen)
+        setSelectedTab(route.params.initialTab);
+        // Clear the param so it doesn't persist on next focus
+        navigation.setParams({ initialTab: undefined });
+      } else {
+        // Default behavior: reset to "needs" tab
         setSelectedTab("needs");
       }
-    }, [route.params?.initialTab]),
+    }, [route.params?.initialTab, navigation]),
   );
 
   // Subscribe to questions from Firebase
