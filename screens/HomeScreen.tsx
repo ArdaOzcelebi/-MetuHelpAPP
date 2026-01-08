@@ -147,9 +147,11 @@ function BentoWidget({
 function StatsTicker({
   activeCount,
   text,
+  isDark,
 }: {
   activeCount: number;
   text: string;
+  isDark: boolean;
 }) {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(-10);
@@ -172,8 +174,12 @@ function StatsTicker({
 
   return (
     <Animated.View style={[styles.statsTicker, animatedStyle]}>
-      <BlurView intensity={80} tint="light" style={styles.statsBlur}>
-        <Feather name="zap" size={16} color={METUColors.gold} />
+      <BlurView
+        intensity={80}
+        tint={isDark ? "dark" : "light"}
+        style={styles.statsBlur}
+      >
+        <Feather name="activity" size={16} color={METUColors.gold} />
         <ThemedText style={styles.statsText}>
           {activeCount} {text}
         </ThemedText>
@@ -261,6 +267,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         <StatsTicker
           activeCount={activeRequestCount}
           text={t.activeRequestsOnCampus}
+          isDark={isDark}
         />
 
         {/* Header Section */}
