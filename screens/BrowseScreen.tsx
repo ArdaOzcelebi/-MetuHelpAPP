@@ -30,45 +30,16 @@ import {
   subscribeToQuestions,
   type QAQuestion,
 } from "@/src/services/qaService";
+import {
+  subscribeToHelpRequests,
+  type HelpRequest,
+} from "@/src/services/helpRequestService";
 import { RouteProp } from "@react-navigation/native";
 
 type BrowseScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
   route: RouteProp<BrowseStackParamList, "Browse">;
 };
-
-const MOCK_NEEDS = [
-  {
-    id: "1",
-    titleEn: "Need 1 Bandage",
-    titleTr: "1 Bandaj Lazim",
-    category: "medical",
-    locationEn: "Near Library",
-    locationTr: "Kutuphane Yakininda",
-    time: "5 min",
-    urgent: true,
-  },
-  {
-    id: "2",
-    titleEn: "Need Pain Reliever",
-    titleTr: "Agri Kesici Lazim",
-    category: "medical",
-    locationEn: "Engineering Building",
-    locationTr: "Muhendislik Binasi",
-    time: "12 min",
-    urgent: true,
-  },
-  {
-    id: "3",
-    titleEn: "Need a Phone Charger (USB-C)",
-    titleTr: "Telefon Sarj Aleti (USB-C) Lazim",
-    category: "other",
-    locationEn: "Student Center",
-    locationTr: "Ogrenci Merkezi",
-    time: "18 min",
-    urgent: false,
-  },
-];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -78,17 +49,17 @@ function AnimatedNeedCard({
   navigation,
   theme,
   isDark,
-  language,
   t,
   getCategoryIcon,
+  getTimeAgo,
 }: {
-  need: (typeof MOCK_NEEDS)[0];
+  need: HelpRequest;
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
   theme: ReturnType<typeof useTheme>["theme"];
   isDark: boolean;
-  language: string;
   t: any;
   getCategoryIcon: (category: string) => keyof typeof Feather.glyphMap;
+  getTimeAgo: (date: Date) => string;
 }) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -141,9 +112,7 @@ function AnimatedNeedCard({
         </View>
         <View style={styles.needInfo}>
           <View style={styles.needHeader}>
-            <ThemedText style={styles.needTitle}>
-              {language === "en" ? need.titleEn : need.titleTr}
-            </ThemedText>
+            <ThemedText style={styles.needTitle}>{need.title}</ThemedText>
             {need.urgent ? (
               <View style={styles.urgentBadge}>
                 <ThemedText style={styles.urgentText}>{t.urgent}</ThemedText>
@@ -155,12 +124,12 @@ function AnimatedNeedCard({
             <ThemedText
               style={[styles.needLocation, { color: theme.textSecondary }]}
             >
-              {language === "en" ? need.locationEn : need.locationTr}
+              {need.location}
             </ThemedText>
             <ThemedText
               style={[styles.needTime, { color: theme.textSecondary }]}
             >
-              {need.time}
+              {getTimeAgo(need.createdAt)}
             </ThemedText>
           </View>
         </View>
@@ -259,7 +228,9 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [questions, setQuestions] = useState<QAQuestion[]>([]);
+  const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [loadingNeeds, setLoadingNeeds] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Handle initialTab route parameter - clear after use to prevent zombie loops
@@ -284,9 +255,22 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
     };
   }, []);
 
+  // Subscribe to help requests from Firebase
+  useEffect(() => {
+    const unsubscribe = subscribeToHelpRequests((fetchedRequests) => {
+      setHelpRequests(fetchedRequests);
+      setLoadingNeeds(false);
+      setRefreshing(false);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   const onRefresh = () => {
     setRefreshing(true);
-    // The subscription will automatically update
+    // The subscriptions will automatically update
   };
 
   const getTimeAgo = (date: Date): string => {
@@ -319,9 +303,13 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
     }
   };
 
-  const filteredNeeds = MOCK_NEEDS.filter((need) => {
-    const title = language === "en" ? need.titleEn : need.titleTr;
-    return title.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredNeeds = helpRequests.filter((need) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      need.title.toLowerCase().includes(searchLower) ||
+      need.description.toLowerCase().includes(searchLower) ||
+      need.location.toLowerCase().includes(searchLower)
+    );
   });
 
   const filteredQuestions = questions.filter((q) => {
@@ -399,18 +387,33 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
 
       {selectedTab === "needs" ? (
         <View style={styles.listContainer}>
-          {filteredNeeds.map((need) => (
-            <AnimatedNeedCard
-              key={need.id}
-              need={need}
-              navigation={navigation}
-              theme={theme}
-              isDark={isDark}
-              language={language}
-              t={t}
-              getCategoryIcon={getCategoryIcon}
-            />
-          ))}
+          {loadingNeeds ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={METUColors.maroon} />
+            </View>
+          ) : filteredNeeds.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Feather name="heart" size={64} color={theme.textSecondary} />
+              <ThemedText style={styles.emptyText}>
+                {searchQuery
+                  ? t.noRequestsFound || "No requests found"
+                  : t.noActiveRequests || "No active requests. Be the first to post!"}
+              </ThemedText>
+            </View>
+          ) : (
+            filteredNeeds.map((need) => (
+              <AnimatedNeedCard
+                key={need.id}
+                need={need}
+                navigation={navigation}
+                theme={theme}
+                isDark={isDark}
+                t={t}
+                getCategoryIcon={getCategoryIcon}
+                getTimeAgo={getTimeAgo}
+              />
+            ))
+          )}
         </View>
       ) : (
         <View style={styles.listContainer}>
