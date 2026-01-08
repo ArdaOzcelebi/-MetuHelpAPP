@@ -324,6 +324,22 @@ export async function deleteQuestion(questionId: string): Promise<void> {
     console.log("[deleteQuestion] Successfully deleted question:", questionId);
   } catch (error) {
     console.error("[deleteQuestion] Failed to delete question:", error);
+    // If the error is "Missing or insufficient permissions", it might be because
+    // the document was already deleted. Check if this is a permission error on a non-existent document.
+    if (error instanceof Error && error.message.includes("Missing or insufficient permissions")) {
+      // Check if document still exists
+      try {
+        const docSnap = await getDoc(questionRef);
+        if (!docSnap.exists()) {
+          // Document doesn't exist, so it was already deleted - this is success, not an error
+          console.log("[deleteQuestion] Document already deleted, treating as success");
+          return;
+        }
+      } catch (checkError) {
+        // If we can't check, just throw the original error
+        console.error("[deleteQuestion] Failed to verify document existence:", checkError);
+      }
+    }
     throw error;
   }
 }

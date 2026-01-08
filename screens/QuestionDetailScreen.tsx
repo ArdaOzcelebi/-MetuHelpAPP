@@ -132,6 +132,8 @@ export default function QuestionDetailScreen({
     if (isDeleting) return;
 
     setIsDeleting(true);
+    setShowDeleteModal(false); // Close modal immediately to prevent double-clicks
+    
     try {
       await deleteQuestion(questionId);
       Alert.alert(t.questionDeleted, t.questionDeletedMessage, [
@@ -148,10 +150,9 @@ export default function QuestionDetailScreen({
         t.error,
         error instanceof Error ? error.message : t.failedToDeleteQuestion,
       );
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteModal(false);
+      setIsDeleting(false); // Reset flag on error so user can retry
     }
+    // Note: Don't reset isDeleting on success - we're navigating away anyway
   };
 
   const getTimeAgo = (date: Date): string => {

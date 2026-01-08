@@ -325,6 +325,8 @@ export default function RequestDetailScreen({
     if (isDeleting) return;
 
     setIsDeleting(true);
+    setShowDeleteModal(false); // Close modal immediately to prevent double-clicks
+    
     try {
       await deleteHelpRequest(requestId);
       Alert.alert(t.requestDeleted, t.requestDeletedMessage, [
@@ -341,10 +343,9 @@ export default function RequestDetailScreen({
         t.error,
         error instanceof Error ? error.message : t.failedToDeleteRequest,
       );
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteModal(false);
+      setIsDeleting(false); // Reset flag on error so user can retry
     }
+    // Note: Don't reset isDeleting on success - we're navigating away anyway
   };
 
   const posterInitials = getUserInitials(request.userName, request.userEmail);
