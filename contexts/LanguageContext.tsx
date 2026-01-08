@@ -10,6 +10,12 @@ interface Translations {
   offerHelp: string;
   activeRequests: string;
   helpedToday: string;
+  urgentNeeds: string;
+  requestHelp: string;
+  helpOthers: string;
+  qAndAForum: string;
+  qAndAForumDescription: string;
+  activeRequestsOnCampus: string;
 
   // Categories
   all: string;
@@ -212,6 +218,13 @@ const translations: Record<Language, Translations> = {
     offerHelp: "OFFER HELP",
     activeRequests: "Active Requests",
     helpedToday: "Helped Today",
+    urgentNeeds: "URGENT NEEDS",
+    requestHelp: "Request Help",
+    helpOthers: "Help Others!",
+    qAndAForum: "Q&A Forum",
+    qAndAForumDescription:
+      "Ask questions, share solutions, and engage with the METU community",
+    activeRequestsOnCampus: "Active Requests on Campus",
 
     // Categories
     all: "All",
@@ -423,6 +436,13 @@ const translations: Record<Language, Translations> = {
     offerHelp: "YARDIM ET",
     activeRequests: "Aktif İstekler",
     helpedToday: "Bugün Yardım Edilen",
+    urgentNeeds: "ACİL İHTİYAÇLAR",
+    requestHelp: "Yardım İste",
+    helpOthers: "Başkalarına Yardım Et!",
+    qAndAForum: "Soru & Cevap Forumu",
+    qAndAForumDescription:
+      "Soru sorun, çözümler paylaşın ve ODTÜ topluluğu ile etkileşime geçin",
+    activeRequestsOnCampus: "Kampüste Aktif İstekler",
 
     // Categories
     all: "Tümü",

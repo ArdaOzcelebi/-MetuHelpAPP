@@ -1,18 +1,17 @@
-import React, { useEffect } from "react";
-// FIXED: Added 'Platform' to imports
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Pressable, Platform } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-  withSequence,
   withDelay,
   Easing,
 } from "react-native-reanimated";
@@ -21,52 +20,58 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  Spacing,
-  BorderRadius,
-  METUColors,
-  Typography,
-} from "@/constants/theme";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { Spacing, BorderRadius, METUColors, Shadows } from "@/constants/theme";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
+import { subscribeToHelpRequests } from "@/src/services/helpRequestService";
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, "Home">;
 };
 
-interface HeroButtonProps {
+// Bento Widget Props
+interface BentoWidgetProps {
   title: string;
+  subtitle?: string;
   icon: keyof typeof Feather.glyphMap;
-  backgroundColor: string;
+  gradientColors: readonly [string, string, ...string[]];
   onPress: () => void;
+  size: "large" | "wide";
+  delay?: number;
 }
 
-// UPGRADED HERO BUTTON
-function HeroButton({
+// Bento Grid Widget Component
+function BentoWidget({
   title,
+  subtitle,
   icon,
-  backgroundColor,
+  gradientColors,
   onPress,
-}: HeroButtonProps) {
+  size,
+  delay = 0,
+}: BentoWidgetProps) {
   const scale = useSharedValue(1);
-  const opacity = useSharedValue(1);
-  const glowOpacity = useSharedValue(0);
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20);
+
+  useEffect(() => {
+    opacity.value = withDelay(
+      delay,
+      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
+    );
+    translateY.value = withDelay(
+      delay,
+      withSpring(0, { damping: 18, stiffness: 90 }),
+    );
+  }, [delay, opacity, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
     opacity: opacity.value,
+    transform: [{ scale: scale.value }, { translateY: translateY.value }],
   }));
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowOpacity.value,
-  }));
-
-  // --- INTERACTION HANDLERS ---
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.96, { damping: 15, stiffness: 200 });
-    glowOpacity.value = withTiming(0.6, { duration: 150 });
-
-    // SAFE HAPTICS: Only run on mobile
+    scale.value = withSpring(0.97, { damping: 15, stiffness: 200 });
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
@@ -74,261 +79,199 @@ function HeroButton({
 
   const handlePressOut = () => {
     scale.value = withSpring(1, { damping: 15, stiffness: 200 });
-    glowOpacity.value = withTiming(0, { duration: 300 });
   };
 
   const handlePress = () => {
-    scale.value = withSequence(
-      withTiming(0.94, { duration: 100 }),
-      withSpring(1, { damping: 15, stiffness: 200 }),
-    );
-
-    // SAFE HAPTICS: Only run on mobile
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
     onPress();
   };
 
-  // WEB HOVER HANDLERS
-  const handleHoverIn = () => {
-    if (Platform.OS === "web") {
-      scale.value = withSpring(1.01, { damping: 15, stiffness: 200 });
-    }
-  };
-
-  const handleHoverOut = () => {
-    if (Platform.OS === "web") {
-      scale.value = withSpring(1, { damping: 15, stiffness: 200 });
-    }
-  };
-
   return (
-    <View style={styles.heroButtonWrapper}>
-      {/* Glow effect stays behind */}
-      <Animated.View
-        style={[styles.heroButtonGlow, { backgroundColor }, glowStyle]}
-      />
-
-      {/* Outer Shell: Handles Clicks & Hover */}
+    <Animated.View
+      style={[
+        styles.bentoWidget,
+        size === "large" ? styles.bentoLarge : styles.bentoWide,
+        animatedStyle,
+      ]}
+    >
       <Pressable
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        onHoverIn={handleHoverIn}
-        onHoverOut={handleHoverOut}
-        style={{ cursor: "pointer" }} // Hand cursor for web
+        style={styles.bentoTouchable}
       >
-        {/* Inner Visuals: Handles Animation & Style */}
-        <Animated.View
-          style={[styles.heroButton, { backgroundColor }, animatedStyle]}
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.bentoGradient}
         >
-          <View style={styles.heroButtonContent}>
-            <View style={styles.heroButtonIcon}>
-              <Feather name={icon} size={32} color="#FFFFFF" />
+          <View style={styles.bentoContent}>
+            <View
+              style={[
+                styles.bentoIconContainer,
+                size === "large"
+                  ? styles.bentoIconLarge
+                  : styles.bentoIconSmall,
+              ]}
+            >
+              <Feather
+                name={icon}
+                size={size === "large" ? 40 : 32}
+                color="#FFFFFF"
+              />
             </View>
-            <View style={styles.heroButtonText}>
-              <ThemedText style={styles.heroButtonTitle}>{title}</ThemedText>
+            <View style={styles.bentoTextContainer}>
+              <ThemedText
+                style={[
+                  styles.bentoTitle,
+                  size === "large" && styles.bentoTitleLarge,
+                ]}
+              >
+                {title}
+              </ThemedText>
+              {subtitle && (
+                <ThemedText style={styles.bentoSubtitle}>{subtitle}</ThemedText>
+              )}
             </View>
-            <Feather name="chevron-right" size={24} color="#FFFFFF" />
           </View>
-        </Animated.View>
+        </LinearGradient>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 
-// Decorative circle component
-function DecorativeCircle({
-  size,
-  top,
-  left,
-  right,
-  bottom,
-  color,
-  delay = 0,
+// Stats Ticker Component
+function StatsTicker({
+  activeCount,
+  text,
+  isDark,
 }: {
-  size: number;
-  top?: number;
-  left?: number;
-  right?: number;
-  bottom?: number;
-  color: string;
-  delay?: number;
+  activeCount: number;
+  text: string;
+  isDark: boolean;
 }) {
   const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.8);
+  const translateY = useSharedValue(-10);
 
   useEffect(() => {
     opacity.value = withDelay(
-      delay,
-      withTiming(0.15, { duration: 800, easing: Easing.out(Easing.quad) }),
+      100,
+      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
     );
-    scale.value = withDelay(
-      delay,
-      withSpring(1, { damping: 20, stiffness: 90 }),
+    translateY.value = withDelay(
+      100,
+      withSpring(0, { damping: 18, stiffness: 90 }),
     );
-  }, [delay, opacity, scale]);
+  }, [opacity, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ scale: scale.value }],
+    transform: [{ translateY: translateY.value }],
   }));
 
   return (
-    <Animated.View
-      style={[
-        styles.decorativeCircle,
-        animatedStyle,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: color,
-          top,
-          left,
-          right,
-          bottom,
-        },
-      ]}
-    />
+    <Animated.View style={[styles.statsTicker, animatedStyle]}>
+      <BlurView
+        intensity={80}
+        tint={isDark ? "dark" : "light"}
+        style={styles.statsBlur}
+      >
+        <Feather name="activity" size={16} color={METUColors.gold} />
+        <ThemedText style={styles.statsText}>
+          {activeCount} {text}
+        </ThemedText>
+      </BlurView>
+    </Animated.View>
   );
 }
 
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { theme, isDark } = useTheme();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
+  const [activeRequestCount, setActiveRequestCount] = useState(0);
 
-  // Entrance animations
+  // Subscribe to active help requests for live stats
+  useEffect(() => {
+    const unsubscribe = subscribeToHelpRequests((requests) => {
+      setActiveRequestCount(requests.length);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Header animations
   const headerOpacity = useSharedValue(0);
   const headerTranslateY = useSharedValue(-20);
-  const button1Opacity = useSharedValue(0);
-  const button1TranslateY = useSharedValue(30);
-  const button2Opacity = useSharedValue(0);
-  const button2TranslateY = useSharedValue(30);
-  const statsOpacity = useSharedValue(0);
-  const statsTranslateY = useSharedValue(20);
 
   useEffect(() => {
-    // Staggered entrance animations
     headerOpacity.value = withTiming(1, {
       duration: 600,
       easing: Easing.out(Easing.quad),
     });
     headerTranslateY.value = withSpring(0, { damping: 20, stiffness: 90 });
-
-    button1Opacity.value = withDelay(
-      200,
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
-    );
-    button1TranslateY.value = withDelay(
-      200,
-      withSpring(0, { damping: 18, stiffness: 90 }),
-    );
-
-    button2Opacity.value = withDelay(
-      350,
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }),
-    );
-    button2TranslateY.value = withDelay(
-      350,
-      withSpring(0, { damping: 18, stiffness: 90 }),
-    );
-
-    statsOpacity.value = withDelay(
-      500,
-      withTiming(1, { duration: 600, easing: Easing.out(Easing.quad) }),
-    );
-    statsTranslateY.value = withDelay(
-      500,
-      withSpring(0, { damping: 20, stiffness: 90 }),
-    );
-  }, [
-    headerOpacity,
-    headerTranslateY,
-    button1Opacity,
-    button1TranslateY,
-    button2Opacity,
-    button2TranslateY,
-    statsOpacity,
-    statsTranslateY,
-  ]);
+  }, [headerOpacity, headerTranslateY]);
 
   const headerStyle = useAnimatedStyle(() => ({
     opacity: headerOpacity.value,
     transform: [{ translateY: headerTranslateY.value }],
   }));
 
-  const button1Style = useAnimatedStyle(() => ({
-    opacity: button1Opacity.value,
-    transform: [{ translateY: button1TranslateY.value }],
-  }));
-
-  const button2Style = useAnimatedStyle(() => ({
-    opacity: button2Opacity.value,
-    transform: [{ translateY: button2TranslateY.value }],
-  }));
-
-  const statsStyle = useAnimatedStyle(() => ({
-    opacity: statsOpacity.value,
-    transform: [{ translateY: statsTranslateY.value }],
-  }));
-
   // Gradient colors based on theme
-  const gradientColors = isDark
-    ? (["#1A1A1A", "#2A2A2A", "#1A1A1A"] as const)
-    : (["#FFFFFF", "#FAFAFA", "#F5F5F5"] as const);
+  const backgroundGradientColors = isDark
+    ? (["#1A1A1A", "#2A2A2A"] as const)
+    : (["#FAFAFA", "#FFFFFF"] as const);
 
-  const circleColor = isDark ? "#800000" : "#800000";
+  // Extract first name from user display name or email
+  const getUserFirstName = () => {
+    if (user?.displayName) {
+      return user.displayName.split(" ")[0];
+    }
+    if (user?.email) {
+      return user.email.split("@")[0];
+    }
+    return "Student";
+  };
+
+  // Create greeting
+  const getGreeting = () => {
+    return t.welcome;
+  };
 
   return (
     <ThemedView style={styles.container}>
       {/* Background gradient */}
       <LinearGradient
-        colors={gradientColors}
+        colors={backgroundGradientColors}
         style={styles.backgroundGradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-
-      {/* Decorative circles */}
-      <DecorativeCircle
-        size={200}
-        top={-50}
-        right={-70}
-        color={circleColor}
-        delay={0}
-      />
-      <DecorativeCircle
-        size={150}
-        bottom={-40}
-        left={-50}
-        color={circleColor}
-        delay={200}
-      />
-      <DecorativeCircle
-        size={100}
-        top={150}
-        left={-30}
-        color={isDark ? "#10B981" : METUColors.actionGreen}
-        delay={400}
+        end={{ x: 0, y: 1 }}
       />
 
       <View
         style={[
           styles.content,
           {
-            paddingTop: headerHeight + Spacing.xl,
+            paddingTop: headerHeight + Spacing.md,
             paddingBottom: tabBarHeight + Spacing.xl,
           },
         ]}
       >
+        {/* Stats Ticker */}
+        <StatsTicker
+          activeCount={activeRequestCount}
+          text={t.activeRequestsOnCampus}
+          isDark={isDark}
+        />
+
+        {/* Header Section */}
         <Animated.View style={[styles.header, headerStyle]}>
-          <ThemedText type="h2" style={styles.greeting}>
-            {t.welcome}
-          </ThemedText>
+          <ThemedText style={styles.greeting}>{getGreeting()}</ThemedText>
           <ThemedText
             type="body"
             style={[styles.tagline, { color: theme.textSecondary }]}
@@ -337,66 +280,51 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           </ThemedText>
         </Animated.View>
 
-        <View style={styles.buttonsContainer}>
-          <Animated.View style={button1Style}>
-            <HeroButton
-              title={t.needHelp}
+        {/* Bento Grid Container */}
+        <View style={styles.bentoGrid}>
+          {/* Top Row - Two Large Squares */}
+          <View style={styles.bentoRow}>
+            <BentoWidget
+              title={t.urgentNeeds}
+              subtitle={t.requestHelp}
               icon="heart"
-              backgroundColor={METUColors.actionGreen}
-              onPress={() => navigation.navigate("NeedHelp")}
+              gradientColors={[
+                isDark ? "#DC2626" : "#EF4444",
+                isDark ? "#B91C1C" : "#DC2626",
+              ]}
+              onPress={() => navigation.navigate("PostNeed")}
+              size="large"
+              delay={200}
             />
-          </Animated.View>
-
-          <Animated.View style={button2Style}>
-            <HeroButton
+            <BentoWidget
               title={t.offerHelp}
+              subtitle={t.helpOthers}
               icon="users"
-              backgroundColor={isDark ? "#CC3333" : METUColors.maroon}
-              onPress={() => navigation.navigate("OfferHelp")}
+              gradientColors={[
+                isDark ? "#059669" : "#10B981",
+                isDark ? "#047857" : "#059669",
+              ]}
+              onPress={() => navigation.navigate("NeedHelp")}
+              size="large"
+              delay={350}
             />
-          </Animated.View>
-        </View>
+          </View>
 
-        <Animated.View style={[styles.statsContainer, statsStyle]}>
-          <View
-            style={[
-              styles.statCard,
-              { backgroundColor: theme.backgroundDefault },
-            ]}
-          >
-            <Feather
-              name="activity"
-              size={20}
-              color={isDark ? "#FF6B6B" : METUColors.maroon}
-            />
-            <ThemedText style={styles.statNumber}>24</ThemedText>
-            <ThemedText
-              type="small"
-              style={[styles.statLabel, { color: theme.textSecondary }]}
-            >
-              {t.activeRequests}
-            </ThemedText>
-          </View>
-          <View
-            style={[
-              styles.statCard,
-              { backgroundColor: theme.backgroundDefault },
-            ]}
-          >
-            <Feather
-              name="check-circle"
-              size={20}
-              color={METUColors.actionGreen}
-            />
-            <ThemedText style={styles.statNumber}>156</ThemedText>
-            <ThemedText
-              type="small"
-              style={[styles.statLabel, { color: theme.textSecondary }]}
-            >
-              {t.helpedToday}
-            </ThemedText>
-          </View>
-        </Animated.View>
+          {/* Bottom Row - Wide Forum Widget */}
+          <BentoWidget
+            title={t.qAndAForum}
+            subtitle={t.qAndAForumDescription}
+            icon="message-circle"
+            gradientColors={
+              isDark
+                ? ["rgba(42, 42, 42, 0.95)", "rgba(58, 58, 58, 0.95)"]
+                : ["rgba(255, 255, 255, 0.95)", "rgba(250, 250, 250, 0.95)"]
+            }
+            onPress={() => navigation.navigate("OfferHelp")}
+            size="wide"
+            delay={500}
+          />
+        </View>
       </View>
     </ThemedView>
   );
@@ -413,85 +341,100 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
   },
-  decorativeCircle: {
-    position: "absolute",
-  },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
   },
-  header: {
-    marginBottom: Spacing["3xl"],
+  statsTicker: {
+    marginBottom: Spacing.lg,
   },
-  greeting: {
-    marginBottom: Spacing.sm,
-  },
-  tagline: {
-    opacity: 0.8,
-  },
-  buttonsContainer: {
-    flex: 1,
-    justifyContent: "center",
-    gap: Spacing.lg,
-  },
-  heroButtonWrapper: {
-    position: "relative",
-  },
-  heroButton: {
-    borderRadius: BorderRadius.xl,
-    padding: Spacing["2xl"],
-    minHeight: Spacing.largeButtonHeight,
-    overflow: "hidden",
-  },
-  heroButtonGlow: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: BorderRadius.xl,
-    transform: [{ scale: 1.05 }],
-    opacity: 0,
-  },
-  heroButtonContent: {
+  statsBlur: {
     flexDirection: "row",
     alignItems: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.full,
+    overflow: "hidden",
   },
-  heroButtonIcon: {
-    width: 56,
-    height: 56,
+  statsText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  header: {
+    marginBottom: Spacing["2xl"],
+  },
+  greeting: {
+    fontSize: 34,
+    fontWeight: "700",
+    marginBottom: Spacing.xs,
+  },
+  tagline: {
+    fontSize: 15,
+    opacity: 0.8,
+  },
+  bentoGrid: {
+    flex: 1,
+    gap: Spacing.lg,
+  },
+  bentoRow: {
+    flexDirection: "row",
+    gap: Spacing.lg,
+  },
+  bentoWidget: {
+    borderRadius: BorderRadius.xl,
+    overflow: "hidden",
+    ...Shadows.medium,
+  },
+  bentoLarge: {
+    flex: 1,
+    minHeight: 180,
+  },
+  bentoWide: {
+    width: "100%",
+    minHeight: 140,
+  },
+  bentoTouchable: {
+    flex: 1,
+  },
+  bentoGradient: {
+    flex: 1,
+    padding: Spacing.xl,
+    justifyContent: "center",
+  },
+  bentoContent: {
+    gap: Spacing.md,
+  },
+  bentoIconContainer: {
     borderRadius: BorderRadius.md,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.lg,
   },
-  heroButtonText: {
-    flex: 1,
+  bentoIconLarge: {
+    width: 72,
+    height: 72,
   },
-  heroButtonTitle: {
-    fontSize: Typography.h3.fontSize,
+  bentoIconSmall: {
+    width: 56,
+    height: 56,
+  },
+  bentoTextContainer: {
+    gap: Spacing.xs,
+  },
+  bentoTitle: {
+    fontSize: 20,
     fontWeight: "700",
     color: "#FFFFFF",
+    letterSpacing: 0.5,
   },
-  statsContainer: {
-    flexDirection: "row",
-    gap: Spacing.md,
-    marginTop: Spacing["2xl"],
+  bentoTitleLarge: {
+    fontSize: 22,
   },
-  statCard: {
-    flex: 1,
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    alignItems: "center",
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginTop: Spacing.sm,
-  },
-  statLabel: {
-    marginTop: Spacing.xs,
-    textAlign: "center",
+  bentoSubtitle: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: "rgba(255, 255, 255, 0.9)",
+    lineHeight: 20,
   },
 });
