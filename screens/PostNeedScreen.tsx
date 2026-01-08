@@ -122,9 +122,6 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
       // Dismiss keyboard
       Keyboard.dismiss();
 
-      // Reset submitting state
-      setSubmitting(false);
-
       // Navigate back immediately - user will see their new request in the list
       navigation.goBack();
     } catch (error) {
