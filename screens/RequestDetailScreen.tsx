@@ -302,7 +302,10 @@ export default function RequestDetailScreen({
       openChat(chatId);
 
       // Navigate back to previous screen after successfully accepting help
-      navigation.goBack();
+      // Use setTimeout to ensure chat overlay state updates are processed first
+      setTimeout(() => {
+        navigation.goBack();
+      }, 100);
     } catch (error) {
       console.error("[RequestDetailScreen] Error offering help:", error);
       Alert.alert("Error", "Failed to create chat. Please try again.", [
