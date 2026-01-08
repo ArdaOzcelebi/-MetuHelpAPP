@@ -41,20 +41,6 @@ type BrowseScreenProps = {
   route: RouteProp<BrowseStackParamList, "Browse">;
 };
 
-// Calculate time difference from now
-function getTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins} min`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} hr`;
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} day${diffDays > 1 ? "s" : ""}`;
-}
-
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // Helper component for animated need cards
@@ -65,6 +51,7 @@ function AnimatedNeedCard({
   isDark,
   t,
   getCategoryIcon,
+  getTimeAgo,
 }: {
   need: HelpRequest;
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
@@ -72,6 +59,7 @@ function AnimatedNeedCard({
   isDark: boolean;
   t: any;
   getCategoryIcon: (category: string) => keyof typeof Feather.glyphMap;
+  getTimeAgo: (date: Date) => string;
 }) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -285,7 +273,7 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
     // The subscriptions will automatically update
   };
 
-  const getTimeAgoForQuestion = (date: Date): string => {
+  const getTimeAgo = (date: Date): string => {
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
     const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
@@ -422,6 +410,7 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                 isDark={isDark}
                 t={t}
                 getCategoryIcon={getCategoryIcon}
+                getTimeAgo={getTimeAgo}
               />
             ))
           )}
@@ -452,7 +441,7 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                 question={question}
                 navigation={navigation}
                 theme={theme}
-                getTimeAgo={getTimeAgoForQuestion}
+                getTimeAgo={getTimeAgo}
               />
             ))
           )}
