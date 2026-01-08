@@ -15,6 +15,7 @@ interface Translations {
   beAHero: string;
   qAndAForum: string;
   qAndAForumDescription: string;
+  activeRequestsOnCampus: string;
 
   // Categories
   all: string;
@@ -221,6 +222,7 @@ const translations: Record<Language, Translations> = {
     qAndAForum: "Q&A Forum",
     qAndAForumDescription:
       "Ask questions, share solutions, and engage with the METU community",
+    activeRequestsOnCampus: "Active Requests on Campus",
 
     // Categories
     all: "All",
@@ -436,6 +438,7 @@ const translations: Record<Language, Translations> = {
     qAndAForum: "Soru & Cevap Forumu",
     qAndAForumDescription:
       "Soru sorun, çözümler paylaşın ve ODTÜ topluluğu ile etkileşime geçin",
+    activeRequestsOnCampus: "Kampüste Aktif İstekler",
 
     // Categories
     all: "Tümü",

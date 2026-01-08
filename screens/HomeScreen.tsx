@@ -103,7 +103,7 @@ function BentoWidget({
         style={styles.bentoTouchable}
       >
         <LinearGradient
-          colors={gradientColors as [string, string, ...string[]]}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.bentoGradient}
@@ -144,7 +144,13 @@ function BentoWidget({
 }
 
 // Stats Ticker Component
-function StatsTicker({ activeCount }: { activeCount: number }) {
+function StatsTicker({
+  activeCount,
+  text,
+}: {
+  activeCount: number;
+  text: string;
+}) {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(-10);
 
@@ -169,7 +175,7 @@ function StatsTicker({ activeCount }: { activeCount: number }) {
       <BlurView intensity={80} tint="light" style={styles.statsBlur}>
         <Feather name="zap" size={16} color={METUColors.gold} />
         <ThemedText style={styles.statsText}>
-          {activeCount} Active Requests on Campus
+          {activeCount} {text}
         </ThemedText>
       </BlurView>
     </Animated.View>
@@ -229,8 +235,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   // Create personalized greeting
   const getGreeting = () => {
     const firstName = getUserFirstName();
-    // Create a greeting that works in both languages
-    return `Welcome Back, ${firstName}!`;
+    return `${t.welcomeBack}, ${firstName}!`;
   };
 
   return (
@@ -253,7 +258,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         ]}
       >
         {/* Stats Ticker */}
-        <StatsTicker activeCount={activeRequestCount} />
+        <StatsTicker
+          activeCount={activeRequestCount}
+          text={t.activeRequestsOnCampus}
+        />
 
         {/* Header Section */}
         <Animated.View style={[styles.header, headerStyle]}>
