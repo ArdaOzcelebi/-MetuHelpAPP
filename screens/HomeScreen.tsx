@@ -238,10 +238,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     return "Student";
   };
 
-  // Create personalized greeting
+  // Create greeting
   const getGreeting = () => {
-    const firstName = getUserFirstName();
-    return `${t.welcomeBack}, ${firstName}!`;
+    return t.welcome;
   };
 
   return (
@@ -293,19 +292,19 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 isDark ? "#DC2626" : "#EF4444",
                 isDark ? "#B91C1C" : "#DC2626",
               ]}
-              onPress={() => navigation.navigate("NeedHelp")}
+              onPress={() => navigation.navigate("PostNeed")}
               size="large"
               delay={200}
             />
             <BentoWidget
               title={t.offerHelp}
-              subtitle={t.beAHero}
+              subtitle={t.helpOthers}
               icon="users"
               gradientColors={[
                 isDark ? "#059669" : "#10B981",
                 isDark ? "#047857" : "#059669",
               ]}
-              onPress={() => navigation.navigate("OfferHelp")}
+              onPress={() => navigation.navigate("NeedHelp")}
               size="large"
               delay={350}
             />

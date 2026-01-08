@@ -12,7 +12,7 @@ interface Translations {
   helpedToday: string;
   urgentNeeds: string;
   requestHelp: string;
-  beAHero: string;
+  helpOthers: string;
   qAndAForum: string;
   qAndAForumDescription: string;
   activeRequestsOnCampus: string;
@@ -218,7 +218,7 @@ const translations: Record<Language, Translations> = {
     helpedToday: "Helped Today",
     urgentNeeds: "URGENT NEEDS",
     requestHelp: "Request Help",
-    beAHero: "Be a Hero",
+    helpOthers: "Help Others!",
     qAndAForum: "Q&A Forum",
     qAndAForumDescription:
       "Ask questions, share solutions, and engage with the METU community",
@@ -434,7 +434,7 @@ const translations: Record<Language, Translations> = {
     helpedToday: "Bugün Yardım Edilen",
     urgentNeeds: "ACİL İHTİYAÇLAR",
     requestHelp: "Yardım İste",
-    beAHero: "Kahraman Ol",
+    helpOthers: "Başkalarına Yardım Et!",
     qAndAForum: "Soru & Cevap Forumu",
     qAndAForumDescription:
       "Soru sorun, çözümler paylaşın ve ODTÜ topluluğu ile etkileşime geçin",
