@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { StyleSheet, View, TextInput, Pressable, Alert } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  Pressable,
+  Alert,
+  Keyboard,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -112,24 +119,11 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
       setIsReturnNeeded(false);
       setIsAnonymous(false);
 
-      // Show success message and navigate back
-      Alert.alert(t.requestPosted, t.requestPostedMessage, [
-        {
-          text: t.ok,
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      // Dismiss keyboard
+      Keyboard.dismiss();
 
-      // Navigate back after alert is shown (fallback if user doesn't press OK)
-      // This ensures the user sees their request was posted successfully
-      setTimeout(() => {
-        try {
-          navigation.goBack();
-        } catch (e) {
-          // Navigation might have already happened
-          console.log("Navigation already completed");
-        }
-      }, 3000);
+      // Navigate back immediately - user will see their new request in the list
+      navigation.goBack();
     } catch (error) {
       console.error("Error posting request:", error);
       const errorMessage =
