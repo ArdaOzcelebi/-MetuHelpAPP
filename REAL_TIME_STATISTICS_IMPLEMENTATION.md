@@ -1,5 +1,22 @@
 # Real-Time Statistics Implementation Summary
 
+## ⚠️ IMPORTANT: Firestore Index Requirement
+
+**Before using this feature, you must create composite indexes in Firestore.**
+
+See [FIRESTORE_INDEX_SETUP.md](./FIRESTORE_INDEX_SETUP.md) for detailed instructions.
+
+**Required Indexes:**
+1. Collection `helpRequests`: fields `status` + `updatedAt` (for "Helped Today")
+2. Collection `helpRequests`: fields `acceptedBy` + `status` (for "Help Given")
+
+**Without these indexes:**
+- Affected statistics will show `0`
+- Warning messages will appear in console
+- Other statistics will continue to work normally
+
+---
+
 ## Overview
 This implementation adds real-time statistics fetching from Firestore to the METU Help app. Statistics are displayed on both the Home Screen and Profile Screen, replacing previously hardcoded values with live data from the database.
 
@@ -12,11 +29,12 @@ A custom React hook that fetches campus and personal statistics from Firestore u
 
 **Features:**
 - ✅ Uses `getCountFromServer()` for optimal performance (count-only queries)
-- ✅ Fetches statistics in parallel using `Promise.all()`
+- ✅ Individual error handling for each query (graceful degradation)
 - ✅ Handles null/undefined user states safely
 - ✅ Returns loading states for UI feedback
 - ✅ Includes error handling with descriptive messages
 - ✅ Automatically refetches when user authentication changes
+- ✅ Shows 0 for statistics requiring missing indexes (with console warnings)
 
 **Statistics Tracked:**
 

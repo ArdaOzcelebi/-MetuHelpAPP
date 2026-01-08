@@ -53,51 +53,70 @@ export function useCampusStats(): CampusStats {
         startOfToday.setHours(0, 0, 0, 0);
         const startOfTodayTimestamp = Timestamp.fromDate(startOfToday);
 
-        // Fetch all stats in parallel
-        const [
-          activeRequestsSnapshot,
-          helpedTodaySnapshot,
-          requestsPostedSnapshot,
-          helpGivenSnapshot,
-        ] = await Promise.all([
-          // Global: Active Requests
-          getCountFromServer(
-            query(
-              collection(db, "helpRequests"),
-              where("status", "==", "active"),
-            ),
+        // Fetch stats with individual error handling for each query
+        const activeRequestsSnapshot = await getCountFromServer(
+          query(collection(db, "helpRequests"), where("status", "==", "active")),
+        ).catch((err) => {
+          console.error("[useCampusStats] Error fetching active requests:", err);
+          return { data: () => ({ count: 0 }) };
+        });
+
+        // Helped Today query - requires composite index
+        // If index is missing, this will fail gracefully and return 0
+        const helpedTodaySnapshot = await getCountFromServer(
+          query(
+            collection(db, "helpRequests"),
+            where("status", "==", "fulfilled"),
+            where("updatedAt", ">=", startOfTodayTimestamp),
           ),
+        ).catch((err) => {
+          // Check if it's a missing index error
+          if (err.code === "failed-precondition" && err.message.includes("index")) {
+            console.warn(
+              "[useCampusStats] Firestore composite index required for 'Helped Today' query.",
+              "Please create the index using the link in the error message.",
+            );
+          } else {
+            console.error("[useCampusStats] Error fetching helped today:", err);
+          }
+          return { data: () => ({ count: 0 }) };
+        });
 
-          // Global: Helped Today
-          getCountFromServer(
-            query(
-              collection(db, "helpRequests"),
-              where("status", "==", "fulfilled"),
-              where("updatedAt", ">=", startOfTodayTimestamp),
-            ),
-          ),
+        // Personal: Requests Posted (only if user is authenticated)
+        const requestsPostedSnapshot = user
+          ? await getCountFromServer(
+              query(
+                collection(db, "helpRequests"),
+                where("userId", "==", user.uid),
+              ),
+            ).catch((err) => {
+              console.error("[useCampusStats] Error fetching requests posted:", err);
+              return { data: () => ({ count: 0 }) };
+            })
+          : { data: () => ({ count: 0 }) };
 
-          // Personal: Requests Posted (only if user is authenticated)
-          user
-            ? getCountFromServer(
-                query(
-                  collection(db, "helpRequests"),
-                  where("userId", "==", user.uid),
-                ),
-              )
-            : Promise.resolve({ data: () => ({ count: 0 }) }),
-
-          // Personal: Help Given (only if user is authenticated)
-          user
-            ? getCountFromServer(
-                query(
-                  collection(db, "helpRequests"),
-                  where("acceptedBy", "==", user.uid),
-                  where("status", "==", "fulfilled"),
-                ),
-              )
-            : Promise.resolve({ data: () => ({ count: 0 }) }),
-        ]);
+        // Personal: Help Given (only if user is authenticated)
+        // This query also requires a composite index
+        const helpGivenSnapshot = user
+          ? await getCountFromServer(
+              query(
+                collection(db, "helpRequests"),
+                where("acceptedBy", "==", user.uid),
+                where("status", "==", "fulfilled"),
+              ),
+            ).catch((err) => {
+              // Check if it's a missing index error
+              if (err.code === "failed-precondition" && err.message.includes("index")) {
+                console.warn(
+                  "[useCampusStats] Firestore composite index required for 'Help Given' query.",
+                  "Please create the index using the link in the error message.",
+                );
+              } else {
+                console.error("[useCampusStats] Error fetching help given:", err);
+              }
+              return { data: () => ({ count: 0 }) };
+            })
+          : { data: () => ({ count: 0 }) };
 
         if (isMounted) {
           setStats({
