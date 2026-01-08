@@ -317,9 +317,7 @@ export default function RequestDetailScreen({
             console.error("[RequestDetail] Error deleting request:", error);
             Alert.alert(
               t.error,
-              error instanceof Error
-                ? error.message
-                : t.failedToDeleteRequest,
+              error instanceof Error ? error.message : t.failedToDeleteRequest,
             );
           } finally {
             setDeleting(false);
