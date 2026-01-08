@@ -311,8 +311,16 @@ export default function RequestDetailScreen({
 
       setHasOfferedHelp(true);
       
-      // Update local request state with fresh data to reflect acceptance
-      setRequest(freshRequest);
+      // Update local request state to reflect acceptance
+      // Note: We update the fresh data with the new accepted status
+      setRequest({
+        ...freshRequest,
+        status: "accepted",
+        acceptedBy: user.uid,
+        acceptedByName: user.displayName || user.email || "Helper",
+        acceptedByEmail: user.email || "",
+        chatId,
+      });
 
       // Open chat in the global overlay instead of navigating
       console.log("[RequestDetailScreen] Opening chat via overlay:", chatId);
