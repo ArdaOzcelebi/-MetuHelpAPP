@@ -92,7 +92,7 @@ export function useCampusStats(): CampusStats {
             ? getCountFromServer(
                 query(
                   collection(db, "helpRequests"),
-                  where("helperId", "==", user.uid),
+                  where("acceptedBy", "==", user.uid),
                   where("status", "==", "fulfilled"),
                 ),
               )
