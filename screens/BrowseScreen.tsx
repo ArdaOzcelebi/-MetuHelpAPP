@@ -224,7 +224,9 @@ function AnimatedQuestionCard({
 export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   const { theme, isDark } = useTheme();
   const { t, language } = useLanguage();
-  const [selectedTab, setSelectedTab] = useState<"needs" | "questions">("needs");
+  const [selectedTab, setSelectedTab] = useState<"needs" | "questions">(
+    "needs",
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [questions, setQuestions] = useState<QAQuestion[]>([]);
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
@@ -403,7 +405,8 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
               <ThemedText style={styles.emptyText}>
                 {searchQuery
                   ? t.noRequestsFound || "No requests found"
-                  : t.noActiveRequests || "No active requests. Be the first to post!"}
+                  : t.noActiveRequests ||
+                    "No active requests. Be the first to post!"}
               </ThemedText>
             </View>
           ) : (

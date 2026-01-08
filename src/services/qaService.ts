@@ -308,11 +308,11 @@ export async function deleteQuestion(questionId: string): Promise<void> {
   if (!questionId || questionId.trim() === "") {
     throw new Error("Question ID is required");
   }
-  
+
   console.log("[deleteQuestion] Starting deletion for question:", questionId);
   const db = getFirestoreInstance();
   const questionRef = doc(db, "questions", questionId);
-  
+
   try {
     // Note: Firestore does not automatically delete subcollections when deleting a document
     // The answers subcollection will become orphaned but won't be accessible without the parent
@@ -326,18 +326,26 @@ export async function deleteQuestion(questionId: string): Promise<void> {
     console.error("[deleteQuestion] Failed to delete question:", error);
     // If the error is "Missing or insufficient permissions", it might be because
     // the document was already deleted. Check if this is a permission error on a non-existent document.
-    if (error instanceof Error && error.message.includes("Missing or insufficient permissions")) {
+    if (
+      error instanceof Error &&
+      error.message.includes("Missing or insufficient permissions")
+    ) {
       // Check if document still exists
       try {
         const docSnap = await getDoc(questionRef);
         if (!docSnap.exists()) {
           // Document doesn't exist, so it was already deleted - this is success, not an error
-          console.log("[deleteQuestion] Document already deleted, treating as success");
+          console.log(
+            "[deleteQuestion] Document already deleted, treating as success",
+          );
           return;
         }
       } catch (checkError) {
         // If we can't check, just throw the original error
-        console.error("[deleteQuestion] Failed to verify document existence:", checkError);
+        console.error(
+          "[deleteQuestion] Failed to verify document existence:",
+          checkError,
+        );
       }
     }
     throw error;

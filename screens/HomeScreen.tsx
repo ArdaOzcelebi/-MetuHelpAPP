@@ -233,7 +233,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       return user.displayName.split(" ")[0];
     }
     if (user?.email) {
-      return user.email.split("@")[0];
+      const username = user.email.split("@")[0];
+      // Get first part before dot and capitalize
+      return (
+        username.split(".")[0].charAt(0).toUpperCase() +
+        username.split(".")[0].slice(1)
+      );
     }
     return "Student";
   };

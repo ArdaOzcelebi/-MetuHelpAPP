@@ -133,7 +133,7 @@ export default function QuestionDetailScreen({
 
     setIsDeleting(true);
     setShowDeleteModal(false); // Close modal immediately to prevent double-clicks
-    
+
     try {
       await deleteQuestion(questionId);
       // Navigate back immediately on success

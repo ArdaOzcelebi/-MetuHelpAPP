@@ -110,6 +110,14 @@ interface Translations {
   loggedOutMessage: string;
   requestsPosted: string;
   helpGiven: string;
+  questionsAsked: string;
+  myActivity: string;
+  recentActivity: string;
+  noRecentActivity: string;
+  viewAll: string;
+  accountInfo: string;
+  memberSince: string;
+  settings: string;
 
   // Auth
   welcomeBack: string;
@@ -333,6 +341,14 @@ const translations: Record<Language, Translations> = {
     loggedOutMessage: "You have been logged out successfully.",
     requestsPosted: "Requests Posted",
     helpGiven: "Help Given",
+    questionsAsked: "Questions Asked",
+    myActivity: "My Activity",
+    recentActivity: "Recent Activity",
+    noRecentActivity: "No recent activity",
+    viewAll: "View All",
+    accountInfo: "Account Information",
+    memberSince: "Member since",
+    settings: "Settings",
 
     // Auth
     welcomeBack: "Welcome Back",
@@ -564,6 +580,14 @@ const translations: Record<Language, Translations> = {
     loggedOutMessage: "Başarıyla çıkış yaptınız.",
     requestsPosted: "Gönderilen İstekler",
     helpGiven: "Verilen Yardım",
+    questionsAsked: "Sorulan Sorular",
+    myActivity: "Aktivitelerim",
+    recentActivity: "Son Aktiviteler",
+    noRecentActivity: "Son aktivite yok",
+    viewAll: "Tümünü Gör",
+    accountInfo: "Hesap Bilgileri",
+    memberSince: "Üyelik tarihi",
+    settings: "Ayarlar",
 
     // Auth
     welcomeBack: "Tekrar Hoş Geldiniz",
