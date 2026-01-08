@@ -85,7 +85,9 @@ import type {
   CreateHelpRequestData,
   HelpRequestCategory,
 } from "@/src/types/helpRequest";
+import { createLogger } from "../utils/logger";
 
+const logger = createLogger("HelpRequestService");
 const COLLECTION_NAME = "helpRequests";
 
 /**
@@ -114,7 +116,7 @@ function documentToHelpRequest(
   try {
     // Validate required fields
     if (!data.title || !data.category || !data.location || !data.userId) {
-      console.warn(`Missing required fields in document ${id}`);
+      logger.warn(`Missing required fields in document ${id}`);
       return null;
     }
 
@@ -139,7 +141,7 @@ function documentToHelpRequest(
       chatId: data.chatId,
     };
   } catch (error) {
-    console.error("Error converting document to HelpRequest:", error);
+    logger.error("Error converting document to HelpRequest:", error);
     return null;
   }
 }
@@ -176,7 +178,7 @@ export async function createHelpRequest(
   userName: string,
 ): Promise<string> {
   try {
-    console.log("[createHelpRequest] Starting with input:", {
+    logger.log("Starting with input:", {
       requestData,
       userId,
       userEmail,
@@ -197,7 +199,7 @@ export async function createHelpRequest(
       updatedAt: now,
     };
 
-    console.log("[createHelpRequest] Data to be written:", {
+    logger.log("Data to be written:", {
       ...data,
       createdAt: "Timestamp",
       updatedAt: "Timestamp",
@@ -214,19 +216,19 @@ export async function createHelpRequest(
             hasUserId: !!data.userId,
           }),
       );
-      console.error("[createHelpRequest] Validation failed:", error.message);
+      logger.error("Validation failed:", error.message);
       throw error;
     }
 
     const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
-    console.log("[createHelpRequest] Successfully created with ID:", docRef.id);
-    console.log("[createHelpRequest] Collection:", COLLECTION_NAME);
+    logger.log("Successfully created with ID:", docRef.id);
+    logger.log("Collection:", COLLECTION_NAME);
     return docRef.id;
   } catch (error) {
-    console.error("[createHelpRequest] Error occurred:", error);
+    logger.error("Error occurred:", error);
     if (error instanceof Error) {
-      console.error("[createHelpRequest] Error message:", error.message);
-      console.error("[createHelpRequest] Error stack:", error.stack);
+      logger.error("Error message:", error.message);
+      logger.error("Error stack:", error.stack);
     }
     throw error;
   }
@@ -271,10 +273,7 @@ export function subscribeToHelpRequests(
   try {
     const db = getFirestoreInstance();
 
-    console.log(
-      "[subscribeToHelpRequests] Setting up subscription, category:",
-      category || "all",
-    );
+    logger.log("Setting up subscription, category:", category || "all");
 
     // Simplified query without orderBy to avoid requiring composite index
     // We'll sort on the client side instead
@@ -296,64 +295,44 @@ export function subscribeToHelpRequests(
     return onSnapshot(
       q,
       (snapshot: QuerySnapshot) => {
-        console.log(
-          "[subscribeToHelpRequests] Snapshot received, document count:",
-          snapshot.size,
-        );
+        logger.log("Snapshot received, document count:", snapshot.size);
 
         if (snapshot.metadata.fromCache) {
-          console.warn(
-            "[subscribeToHelpRequests] Data is from cache, not server",
-          );
+          logger.warn("Data is from cache, not server");
         }
 
         const requests: HelpRequest[] = [];
         snapshot.forEach((doc) => {
-          console.log(
-            "[subscribeToHelpRequests] Processing document:",
-            doc.id,
-            doc.data(),
-          );
+          logger.log("Processing document:", doc.id, doc.data());
           const request = documentToHelpRequest(doc.id, doc.data());
           if (request) {
             requests.push(request);
           } else {
-            console.warn(
-              "[subscribeToHelpRequests] Failed to convert document:",
-              doc.id,
-              "Data:",
-              doc.data(),
-            );
+            logger.warn("Failed to convert document:", doc.id, "Data:", doc.data());
           }
         });
 
         // Sort by createdAt descending on client side (most recent first)
         requests.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-        console.log(
-          "[subscribeToHelpRequests] Processed and sorted requests:",
-          requests.length,
-        );
+        logger.log("Processed and sorted requests:", requests.length);
         callback(requests);
       },
       (error) => {
-        console.error("[subscribeToHelpRequests] Subscription error:", error);
-        console.error("[subscribeToHelpRequests] Error code:", error.code);
-        console.error(
-          "[subscribeToHelpRequests] Error message:",
-          error.message,
-        );
+        logger.error("Subscription error:", error);
+        logger.error("Error code:", error.code);
+        logger.error("Error message:", error.message);
 
         // Check if it's an index error
         if (
           error.code === "failed-precondition" &&
           error.message.includes("index")
         ) {
-          console.error("[subscribeToHelpRequests] FIRESTORE INDEX REQUIRED:");
-          console.error(
+          logger.error("FIRESTORE INDEX REQUIRED:");
+          logger.error(
             "The query requires a composite index. This has been fixed by simplifying the query.",
           );
-          console.error(
+          logger.error(
             "If you see this error, the simplified query should work now.",
           );
         }
@@ -362,10 +341,10 @@ export function subscribeToHelpRequests(
       },
     );
   } catch (error) {
-    console.error("[subscribeToHelpRequests] Setup error:", error);
+    logger.error("Setup error:", error);
     // Return a no-op unsubscribe function
     return () => {
-      console.log("[subscribeToHelpRequests] No-op unsubscribe called");
+      logger.log("No-op unsubscribe called");
     };
   }
 }
@@ -475,7 +454,7 @@ export async function acceptHelpRequest(
     const db = getFirestoreInstance();
     const docRef = doc(db, COLLECTION_NAME, requestId);
 
-    console.log("[helpRequestService] Accepting request:", requestId);
+    logger.log("Accepting request:", requestId);
 
     await updateDoc(docRef, {
       status: "accepted",
@@ -486,9 +465,9 @@ export async function acceptHelpRequest(
       updatedAt: Timestamp.now(),
     });
 
-    console.log("[helpRequestService] Request accepted successfully");
+    logger.log("Request accepted successfully");
   } catch (error) {
-    console.error("[helpRequestService] Failed to accept request:", error);
+    logger.error("Failed to accept request:", error);
     throw error;
   }
 }
@@ -498,10 +477,7 @@ export async function acceptHelpRequest(
  */
 export async function finalizeHelpRequest(requestId: string): Promise<void> {
   try {
-    console.log(
-      "[finalizeHelpRequest] Attempting to finalize request:",
-      requestId,
-    );
+    logger.log("Attempting to finalize request:", requestId);
     const db = getFirestoreInstance();
     const docRef = doc(db, COLLECTION_NAME, requestId);
 
@@ -510,9 +486,9 @@ export async function finalizeHelpRequest(requestId: string): Promise<void> {
       updatedAt: Timestamp.now(),
     });
 
-    console.log("[finalizeHelpRequest] Request finalized successfully");
+    logger.log("Request finalized successfully");
   } catch (error) {
-    console.error("[finalizeHelpRequest] Error occurred:", error);
+    logger.error("Error occurred:", error);
     throw error;
   }
 }

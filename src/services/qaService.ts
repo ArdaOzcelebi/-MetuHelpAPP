@@ -19,6 +19,9 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { getFirestoreInstance } from "@/src/firebase/firebaseConfig";
+import { createLogger } from "../utils/logger";
+
+const logger = createLogger("QAService");
 
 export interface QAQuestion {
   id: string;
@@ -48,7 +51,7 @@ export async function createQuestion(
   userId: string,
   userName: string,
 ): Promise<string> {
-  console.log("[createQuestion] Starting...", {
+  logger.log("Starting...", {
     title: title.substring(0, 30),
     bodyLength: body.length,
     userId: userId.substring(0, 10),
@@ -57,10 +60,10 @@ export async function createQuestion(
 
   try {
     const db = getFirestoreInstance();
-    console.log("[createQuestion] Got Firestore instance");
+    logger.log("Got Firestore instance");
 
     const questionsRef = collection(db, "questions");
-    console.log("[createQuestion] Got questions collection reference");
+    logger.log("Got questions collection reference");
 
     const questionData = {
       title,
@@ -72,18 +75,15 @@ export async function createQuestion(
       answerCount: 0,
     };
 
-    console.log("[createQuestion] Adding document to Firestore...");
+    logger.log("Adding document to Firestore...");
     const docRef = await addDoc(questionsRef, questionData);
 
-    console.log(
-      "[createQuestion] SUCCESS! Question created with ID:",
-      docRef.id,
-    );
+    logger.log("SUCCESS! Question created with ID:", docRef.id);
     return docRef.id;
   } catch (error) {
-    console.error("[createQuestion] FAILED:", error);
+    logger.error("FAILED:", error);
     if (error instanceof Error) {
-      console.error("[createQuestion] Error details:", {
+      logger.error("Error details:", {
         name: error.name,
         message: error.message,
       });
@@ -102,17 +102,14 @@ export function subscribeToQuestions(
   callback: (questions: QAQuestion[]) => void,
   options?: { searchQuery?: string },
 ): () => void {
-  console.log("[subscribeToQuestions] Setting up real-time listener", options);
+  logger.log("Setting up real-time listener", options);
   const db = getFirestoreInstance();
   const questionsRef = collection(db, "questions");
 
   let q;
   if (options?.searchQuery) {
     // When searching, query all posts (no time filter)
-    console.log(
-      "[subscribeToQuestions] Using search mode for query:",
-      options.searchQuery,
-    );
+    logger.log("Using search mode for query:", options.searchQuery);
     q = query(questionsRef, orderBy("createdAt", "desc"));
   } else {
     // Default: Only show posts from last 48 hours
@@ -120,10 +117,7 @@ export function subscribeToQuestions(
     // TODO: Switch to lastActiveAt once composite index is created in Firestore
     const fortyEightHoursAgo = new Date();
     fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
-    console.log(
-      "[subscribeToQuestions] Using 48-hour filter, cutoff:",
-      fortyEightHoursAgo,
-    );
+    logger.log("Using 48-hour filter, cutoff:", fortyEightHoursAgo);
 
     // Use createdAt instead of lastActiveAt to avoid composite index error
     q = query(
@@ -136,13 +130,11 @@ export function subscribeToQuestions(
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      console.log(
-        `[subscribeToQuestions] Received ${snapshot.docs.length} documents`,
-      );
+      logger.log(`Received ${snapshot.docs.length} documents`);
       let questions: QAQuestion[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        console.log(`[subscribeToQuestions] Document ${doc.id}:`, {
+        logger.log(`Document ${doc.id}:`, {
           title: data.title,
           createdAt: data.createdAt,
           lastActiveAt: data.lastActiveAt,
@@ -167,18 +159,14 @@ export function subscribeToQuestions(
         questions = questions.filter((q) =>
           q.title.toLowerCase().includes(searchLower),
         );
-        console.log(
-          `[subscribeToQuestions] After search filter: ${questions.length} questions`,
-        );
+        logger.log(`After search filter: ${questions.length} questions`);
       }
 
-      console.log(
-        `[subscribeToQuestions] Calling callback with ${questions.length} questions`,
-      );
+      logger.log(`Calling callback with ${questions.length} questions`);
       callback(questions);
     },
     (error) => {
-      console.error("[subscribeToQuestions] ERROR:", {
+      logger.error("ERROR:", {
         name: error.name,
         message: error.message,
         code: error.code,
@@ -247,7 +235,7 @@ export function subscribeToAnswers(
       callback(answers);
     },
     (error) => {
-      console.error("Error fetching answers:", error);
+      logger.error("Error fetching answers:", error);
       callback([]);
     },
   );
@@ -309,7 +297,7 @@ export async function deleteQuestion(questionId: string): Promise<void> {
     throw new Error("Question ID is required");
   }
 
-  console.log("[deleteQuestion] Starting deletion for question:", questionId);
+  logger.log("Starting deletion for question:", questionId);
   const db = getFirestoreInstance();
   const questionRef = doc(db, "questions", questionId);
 
@@ -321,9 +309,9 @@ export async function deleteQuestion(questionId: string): Promise<void> {
     // 2. Implementing a cleanup job to remove orphaned data
     // 3. Using a "soft delete" pattern by marking documents as deleted instead
     await deleteDoc(questionRef);
-    console.log("[deleteQuestion] Successfully deleted question:", questionId);
+    logger.log("Successfully deleted question:", questionId);
   } catch (error) {
-    console.error("[deleteQuestion] Failed to delete question:", error);
+    logger.error("Failed to delete question:", error);
     // If the error is "Missing or insufficient permissions", it might be because
     // the document was already deleted. Check if this is a permission error on a non-existent document.
     if (
@@ -335,17 +323,12 @@ export async function deleteQuestion(questionId: string): Promise<void> {
         const docSnap = await getDoc(questionRef);
         if (!docSnap.exists()) {
           // Document doesn't exist, so it was already deleted - this is success, not an error
-          console.log(
-            "[deleteQuestion] Document already deleted, treating as success",
-          );
+          logger.log("Document already deleted, treating as success");
           return;
         }
       } catch (checkError) {
         // If we can't check, just throw the original error
-        console.error(
-          "[deleteQuestion] Failed to verify document existence:",
-          checkError,
-        );
+        logger.error("Failed to verify document existence:", checkError);
       }
     }
     throw error;

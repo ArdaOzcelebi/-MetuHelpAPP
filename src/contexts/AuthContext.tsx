@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+} from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -10,6 +16,9 @@ import {
   User,
 } from "firebase/auth";
 import { getAuthInstance } from "../firebase/firebaseConfig";
+import { createLogger } from "../utils/logger";
+
+const logger = createLogger("AuthContext");
 
 type AuthContextValue = {
   user: User | null;
@@ -102,10 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (err) {
       // Firebase not configured or other error — do not throw during module import
 
-      console.warn(
-        "[AuthProvider] Firebase not configured or failed to initialize:",
-        err,
-      );
+      logger.warn("Firebase not configured or failed to initialize:", err);
       setLoading(false);
     }
 
@@ -129,10 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } catch (verificationError) {
         // Log but don't fail the registration if email sending fails
 
-        console.warn(
-          "[signUp] sendEmailVerification failed:",
-          verificationError,
-        );
+        logger.warn("sendEmailVerification failed:", verificationError);
         // Still throw an error to inform the user
         throw new Error(
           "Account created but failed to send verification email. Please try resending it from the login screen.",
@@ -182,20 +185,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }
 
   async function signOut() {
-    console.log("[AuthContext] signOut called");
+    logger.log("signOut called");
     try {
       const auth = getAuthInstance();
-      console.log("[AuthContext] Calling firebaseSignOut");
+      logger.log("Calling firebaseSignOut");
       await firebaseSignOut(auth);
-      console.log(
-        "[AuthContext] firebaseSignOut completed, setting user to null",
-      );
+      logger.log("firebaseSignOut completed, setting user to null");
       setUser(null);
-      console.log("[AuthContext] User set to null");
+      logger.log("User set to null");
     } catch (err) {
       const errorMessage = parseFirebaseError(err);
 
-      console.warn("[signOut] failed:", errorMessage);
+      logger.warn("signOut failed:", errorMessage);
       throw new Error(errorMessage);
     }
   }
@@ -267,22 +268,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      user,
+      loading,
+      signUp,
+      signIn,
+      signOut,
+      sendEmailVerification,
+      resendVerificationEmail,
+      updateProfileDisplayName,
+      resetPassword,
+    }),
+    [user, loading],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        signUp,
-        signIn,
-        signOut,
-        sendEmailVerification,
-        resendVerificationEmail,
-        updateProfileDisplayName,
-        resetPassword,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };
 
