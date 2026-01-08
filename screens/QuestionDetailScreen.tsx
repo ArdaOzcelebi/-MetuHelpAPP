@@ -19,10 +19,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { ConfirmationModal } from "@/src/components/ConfirmationModal";
 import {
   getQuestion,
   subscribeToAnswers,
   addAnswer,
+  deleteQuestion,
   type QAQuestion,
   type QAAnswer,
 } from "@/src/services/qaService";
@@ -45,6 +48,7 @@ export default function QuestionDetailScreen({
 }: QuestionDetailScreenProps) {
   const { isDark } = useTheme();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { questionId } = route.params;
   const insets = useSafeAreaInsets();
 
@@ -53,6 +57,8 @@ export default function QuestionDetailScreen({
   const [loading, setLoading] = useState(true);
   const [answerText, setAnswerText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     let unsubscribeAnswers: (() => void) | undefined;
@@ -122,6 +128,32 @@ export default function QuestionDetailScreen({
     }
   };
 
+  const handleDeleteQuestion = async () => {
+    if (isDeleting) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteQuestion(questionId);
+      Alert.alert(t.questionDeleted, t.questionDeletedMessage, [
+        {
+          text: t.ok,
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
+      ]);
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      Alert.alert(
+        t.error,
+        error instanceof Error ? error.message : t.failedToDeleteQuestion,
+      );
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   const getTimeAgo = (date: Date): string => {
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
@@ -166,7 +198,16 @@ export default function QuestionDetailScreen({
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Question Details</ThemedText>
-        <View style={styles.headerRight} />
+        <View style={styles.headerRight}>
+          {question && user && question.authorId === user.uid && (
+            <TouchableOpacity
+              onPress={() => setShowDeleteModal(true)}
+              style={styles.deleteButton}
+            >
+              <Feather name="trash-2" size={20} color="#FF6B6B" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Main Content Area */}
@@ -321,6 +362,19 @@ export default function QuestionDetailScreen({
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showDeleteModal}
+        title={t.deleteQuestionConfirm}
+        message={t.deleteQuestionConfirmMessage}
+        confirmText={t.delete}
+        cancelText={t.cancel}
+        onConfirm={handleDeleteQuestion}
+        onCancel={() => setShowDeleteModal(false)}
+        confirmColor={METUColors.alertRed}
+        icon="trash-2"
+      />
     </View>
   );
 }
@@ -353,6 +407,12 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     width: 40,
+  },
+  deleteButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   keyboardView: {
     flex: 1,

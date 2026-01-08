@@ -16,6 +16,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useChatOverlay } from "@/src/contexts/ChatOverlayContext";
+import { ConfirmationModal } from "@/src/components/ConfirmationModal";
 import {
   Spacing,
   BorderRadius,
@@ -26,6 +27,7 @@ import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
   getHelpRequest,
   acceptHelpRequest,
+  deleteHelpRequest,
 } from "@/src/services/helpRequestService";
 import {
   createChat,
@@ -82,6 +84,8 @@ export default function RequestDetailScreen({
   const [loading, setLoading] = useState(true);
   const [offeringHelp, setOfferingHelp] = useState(false);
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -286,6 +290,32 @@ export default function RequestDetailScreen({
     openChat(request.chatId);
   };
 
+  const handleDeleteRequest = async () => {
+    if (isDeleting) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteHelpRequest(requestId);
+      Alert.alert(t.requestDeleted, t.requestDeletedMessage, [
+        {
+          text: t.ok,
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
+      ]);
+    } catch (error) {
+      console.error("Error deleting request:", error);
+      Alert.alert(
+        t.error,
+        error instanceof Error ? error.message : t.failedToDeleteRequest,
+      );
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   const posterInitials = getUserInitials(request.userName, request.userEmail);
   const displayName = request.isAnonymous ? "Anonymous" : request.userName;
   const displayInitials = request.isAnonymous ? "AN" : posterInitials;
@@ -481,6 +511,39 @@ export default function RequestDetailScreen({
           </ThemedText>
         </View>
       ) : null}
+
+      {/* Show delete button if user is the requester and request is not accepted */}
+      {isOwnRequest && !isAccepted && !isFinalized && (
+        <Pressable
+          onPress={() => setShowDeleteModal(true)}
+          style={({ pressed }) => [
+            styles.deleteButton,
+            {
+              opacity: pressed ? 0.9 : 1,
+            },
+          ]}
+        >
+          <Feather name="trash-2" size={20} color={METUColors.alertRed} />
+          <ThemedText
+            style={[styles.deleteButtonText, { color: METUColors.alertRed }]}
+          >
+            {t.deleteQuestion}
+          </ThemedText>
+        </Pressable>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showDeleteModal}
+        title={t.deleteRequestConfirm}
+        message={t.deleteRequestConfirmMessage}
+        confirmText={t.delete}
+        cancelText={t.cancel}
+        onConfirm={handleDeleteRequest}
+        onCancel={() => setShowDeleteModal(false)}
+        confirmColor={METUColors.alertRed}
+        icon="trash-2"
+      />
     </ScreenScrollView>
   );
 }
@@ -646,5 +709,21 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.small.fontSize,
     lineHeight: 20,
+  },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: METUColors.alertRed,
+  },
+  deleteButtonText: {
+    fontSize: Typography.button.fontSize,
+    fontWeight: "600",
   },
 });
