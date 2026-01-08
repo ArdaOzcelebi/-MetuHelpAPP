@@ -2,7 +2,9 @@
 
 ## Required Firestore Security Rules
 
-To enable the chat feature to work correctly, you need to update your Firebase security rules to include permissions for the messages subcollection.
+To enable the chat feature and post deletion feature to work correctly, you need to update your Firebase security rules.
+
+**IMPORTANT**: After implementing the post deletion feature, you must update your Firestore security rules to allow users to delete their own posts. Without these rules, you will see "Missing or insufficient permissions" errors when trying to delete.
 
 ### Complete Security Rules
 
@@ -22,7 +24,26 @@ service cloud.firestore {
         request.auth.uid == request.resource.data.acceptedBy ||
         resource.data.status == "active"
       );
+      // Allow delete only by the request owner
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Questions Collection (Q&A Forum)
+    match /questions/{questionId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.authorId;
+      allow update: if request.auth != null && request.auth.uid == resource.data.authorId;
+      // Allow delete only by the question author
+      allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+      
+      // Answers Subcollection
+      match /answers/{answerId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.auth.uid == request.resource.data.authorId;
+        allow update: if request.auth != null && request.auth.uid == resource.data.authorId;
+        // Allow delete only by the answer author
+        allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+      }
     }
     
     // Chats Collection
@@ -55,6 +76,24 @@ service cloud.firestore {
 
 ## What Changed?
 
+### Added Questions Collection Rules (Q&A Forum)
+
+New rules have been added for the `questions` collection to support the Q&A Forum feature:
+
+1. **Question Documents**: Users can create, read, update, and delete their own questions
+   - `allow delete: if request.auth != null && request.auth.uid == resource.data.authorId`
+   - This ensures only the question author can delete their questions
+
+2. **Answers Subcollection**: Users can create, read, update, and delete their own answers
+   - `allow delete: if request.auth != null && request.auth.uid == resource.data.authorId`
+   - This ensures only the answer author can delete their answers
+
+### Updated Help Requests Collection
+
+The `helpRequests` collection already had delete rules, which allow:
+- **Delete requests**: Only the request owner can delete their help requests
+  - `allow delete: if request.auth != null && request.auth.uid == resource.data.userId`
+
 ### Added Messages Subcollection Rules
 
 The key addition is the `match /messages/{messageId}` block inside the chats collection. This allows:
@@ -82,6 +121,7 @@ The original rules only covered the top-level `chats` collection but didn't have
 
 After updating, test the following scenarios:
 
+### Chat Feature
 1. ✅ User A creates a help request
 2. ✅ User B offers help (creates chat)
 3. ✅ User B sends a message (should work now)
@@ -89,16 +129,36 @@ After updating, test the following scenarios:
 5. ✅ User A sends a reply (should work now)
 6. ✅ Both users can see messages in real-time
 
+### Deletion Feature
+1. ✅ User A creates a question
+2. ✅ User A can delete their own question
+3. ❌ User B cannot delete User A's question (should fail)
+4. ✅ User A creates a help request
+5. ✅ User A can delete their own help request (if not accepted)
+6. ❌ User B cannot delete User A's help request (should fail)
+
 ## Security Considerations
 
 The rules ensure:
 
+### Chat Security
 - Only authenticated users can access chats
 - Only chat members can read messages
 - Only chat members can send messages
 - Users can only send messages as themselves (via `senderId` check)
 - Messages are immutable once created
 - No one can delete messages
+
+### Q&A Forum Security
+- Only authenticated users can access questions and answers
+- Users can only delete their own questions
+- Users can only delete their own answers
+- Question authors control their content lifecycle
+
+### Help Requests Security
+- Only authenticated users can access help requests
+- Users can only delete their own help requests
+- Request owners control their content lifecycle
 
 ## Troubleshooting
 

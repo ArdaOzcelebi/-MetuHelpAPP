@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import {
   StyleSheet,
   View,
   Pressable,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -86,6 +87,36 @@ export default function RequestDetailScreen({
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Set up header right button for delete action
+  useLayoutEffect(() => {
+    // Determine if delete button should be shown
+    const isOwnRequest = user?.uid === request?.userId;
+    const isAccepted = request?.status === "accepted";
+    const isFinalized = request?.status === "finalized";
+    const showDelete = isOwnRequest && !isAccepted && !isFinalized;
+
+    if (showDelete) {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() => setShowDeleteModal(true)}
+            style={{
+              marginRight: 8,
+              padding: 8,
+            }}
+          >
+            <Feather name="trash-2" size={22} color={METUColors.alertRed} />
+          </TouchableOpacity>
+        ),
+      });
+    } else {
+      // Clear the header button if conditions not met
+      navigation.setOptions({
+        headerRight: undefined,
+      });
+    }
+  }, [navigation, request, user]);
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -512,26 +543,6 @@ export default function RequestDetailScreen({
         </View>
       ) : null}
 
-      {/* Show delete button if user is the requester and request is not accepted */}
-      {isOwnRequest && !isAccepted && !isFinalized && (
-        <Pressable
-          onPress={() => setShowDeleteModal(true)}
-          style={({ pressed }) => [
-            styles.deleteButton,
-            {
-              opacity: pressed ? 0.9 : 1,
-            },
-          ]}
-        >
-          <Feather name="trash-2" size={20} color={METUColors.alertRed} />
-          <ThemedText
-            style={[styles.deleteButtonText, { color: METUColors.alertRed }]}
-          >
-            {t.delete}
-          </ThemedText>
-        </Pressable>
-      )}
-
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
         visible={showDeleteModal}
@@ -709,21 +720,5 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.small.fontSize,
     lineHeight: 20,
-  },
-  deleteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: METUColors.alertRed,
-  },
-  deleteButtonText: {
-    fontSize: Typography.button.fontSize,
-    fontWeight: "600",
   },
 });
