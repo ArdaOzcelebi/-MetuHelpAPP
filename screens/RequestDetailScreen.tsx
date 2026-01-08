@@ -329,22 +329,15 @@ export default function RequestDetailScreen({
     
     try {
       await deleteHelpRequest(requestId);
-      Alert.alert(t.requestDeleted, t.requestDeletedMessage, [
-        {
-          text: t.ok,
-          onPress: () => {
-            navigation.goBack();
-          },
-        },
-      ]);
+      // Navigate back immediately on success
+      navigation.goBack();
     } catch (error) {
       console.error("Error deleting request:", error);
       Alert.alert(
         t.error,
         error instanceof Error ? error.message : t.failedToDeleteRequest,
       );
-    } finally {
-      setIsDeleting(false); // Always reset to allow retries
+      setIsDeleting(false); // Reset on error to allow retries
     }
   };
 

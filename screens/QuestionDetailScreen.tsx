@@ -136,22 +136,15 @@ export default function QuestionDetailScreen({
     
     try {
       await deleteQuestion(questionId);
-      Alert.alert(t.questionDeleted, t.questionDeletedMessage, [
-        {
-          text: t.ok,
-          onPress: () => {
-            navigation.goBack();
-          },
-        },
-      ]);
+      // Navigate back immediately on success
+      navigation.goBack();
     } catch (error) {
       console.error("Error deleting question:", error);
       Alert.alert(
         t.error,
         error instanceof Error ? error.message : t.failedToDeleteQuestion,
       );
-    } finally {
-      setIsDeleting(false); // Always reset to allow retries
+      setIsDeleting(false); // Reset on error to allow retries
     }
   };
 
