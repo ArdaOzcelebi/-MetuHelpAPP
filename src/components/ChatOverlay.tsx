@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
   // Minimized bubble styles
   bubble: {
     position: "absolute",
-    bottom: IS_WEB ? Spacing["3xl"] : Spacing["6xl"] + Spacing["5xl"],
+    bottom: IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["6xl"],
     right: Spacing.xl,
     width: 56,
     height: 56,
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
   // Expanded window styles
   expandedWrapper: {
     position: "absolute",
-    bottom: IS_WEB ? Spacing["3xl"] : Spacing["6xl"] + Spacing["5xl"],
+    bottom: IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["6xl"],
     right: Spacing.xl,
     width: OVERLAY_WIDTH,
     height: OVERLAY_HEIGHT,
