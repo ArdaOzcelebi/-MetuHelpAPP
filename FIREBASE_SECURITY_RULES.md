@@ -110,12 +110,35 @@ The original rules only covered the top-level `chats` collection but didn't have
 
 ## How to Update Rules
 
+**CRITICAL**: These rules must be added to **Firebase Console** (the website), NOT just this file!
+
+### Visual Guide:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. Open Browser → https://console.firebase.google.com/    │
+│  2. Click your project                                      │
+│  3. Left Menu → Click "Firestore Database"                 │
+│  4. Top Tabs → Click "Rules" (NOT "Data")                  │
+│  5. Copy rules from lines 13-75 of this file               │
+│  6. Paste into the editor on Firebase Console              │
+│  7. Click "Publish" button                                  │
+│  8. Wait for "Rules published successfully" ✓              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Detailed Steps:
+
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Select your project
-3. Navigate to **Firestore Database**
-4. Click on the **Rules** tab
-5. Replace the existing rules with the rules above
-6. Click **Publish**
+3. Navigate to **Firestore Database** (in left sidebar)
+4. Click on the **Rules** tab (at the top, next to "Data", "Indexes", etc.)
+5. **COPY** all the rules from lines 13-75 above (starting with `rules_version = '2';`)
+6. **PASTE** into the Firebase Console rules editor (replace everything)
+7. Click **Publish** button (bottom right)
+8. Wait for confirmation message: "Rules published successfully"
+
+⚠️ **IMPORTANT**: Editing this markdown file does NOT update Firebase! You MUST use the Firebase Console website.
 
 ## Testing the Rules
 
@@ -162,13 +185,56 @@ The rules ensure:
 
 ## Troubleshooting
 
-If you still see permission errors:
+### "Missing or insufficient permissions" Error
 
-1. Verify the rules are published in Firebase Console
-2. Check that the `members` array in chat documents contains both user IDs
-3. Verify that `senderId` in messages matches the authenticated user's UID
-4. Check browser console for detailed error messages
-5. Use Firebase Emulator for local testing with rules
+If you still see this error when trying to delete:
+
+**IMPORTANT**: You must update the rules in **Firebase Console** (the website), not just this markdown file!
+
+#### Step-by-Step Verification:
+
+1. **Verify Rules Are Published in Firebase Console**
+   - Go to https://console.firebase.google.com/
+   - Select your project
+   - Click "Firestore Database" in the left menu
+   - Click the "Rules" tab (NOT "Data" tab)
+   - Check if your rules include the delete permissions shown above
+   - If not, copy ALL the rules from lines 13-75 above
+   - Paste them into the Firebase Console Rules editor
+   - Click "Publish" button
+   - Wait for "Rules published successfully" message
+
+2. **Verify the Document Structure**
+   - In Firebase Console → Firestore Database → Data tab
+   - Open a help request document
+   - Verify it has a `userId` field with your user's UID
+   - The `userId` must exactly match the authenticated user's UID
+
+3. **Check Authentication**
+   - Verify you are logged in (check browser console for `user.uid`)
+   - Your user must be authenticated via Firebase Auth
+   - The `request.auth.uid` must match the document's `userId`
+
+4. **Common Mistakes**
+   - ❌ Editing this markdown file only (doesn't affect Firebase)
+   - ❌ Not clicking "Publish" after updating rules
+   - ❌ Having typos in the rules (check console for syntax errors)
+   - ❌ Being logged in with a different account than the one who created the post
+
+5. **Test Your Rules**
+   - In Firebase Console → Firestore Database → Rules tab
+   - Click "Rules Playground" button
+   - Set operation type to "delete"
+   - Set path to: `/helpRequests/{requestId}`
+   - Add `request.auth.uid` to match your user ID
+   - The simulator should show if the rule passes or fails
+
+### Other Troubleshooting Steps
+
+1. Check that the `members` array in chat documents contains both user IDs
+2. Verify that `senderId` in messages matches the authenticated user's UID
+3. Check browser console for detailed error messages
+4. Use Firebase Emulator for local testing with rules
 
 ## Data Structure Reference
 
