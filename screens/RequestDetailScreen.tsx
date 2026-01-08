@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import {
   StyleSheet,
   View,
   Pressable,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -16,6 +17,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useChatOverlay } from "@/src/contexts/ChatOverlayContext";
+import { ConfirmationModal } from "@/src/components/ConfirmationModal";
 import {
   Spacing,
   BorderRadius,
@@ -26,6 +28,7 @@ import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
   getHelpRequest,
   acceptHelpRequest,
+  deleteHelpRequest,
 } from "@/src/services/helpRequestService";
 import {
   createChat,
@@ -82,6 +85,38 @@ export default function RequestDetailScreen({
   const [loading, setLoading] = useState(true);
   const [offeringHelp, setOfferingHelp] = useState(false);
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Set up header right button for delete action
+  useLayoutEffect(() => {
+    // Determine if delete button should be shown
+    const isOwnRequest = user?.uid === request?.userId;
+    const isAccepted = request?.status === "accepted";
+    const isFinalized = request?.status === "finalized";
+    const showDelete = isOwnRequest && !isAccepted && !isFinalized;
+
+    if (showDelete) {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() => setShowDeleteModal(true)}
+            style={{
+              marginRight: 8,
+              padding: 8,
+            }}
+          >
+            <Feather name="trash-2" size={22} color={METUColors.alertRed} />
+          </TouchableOpacity>
+        ),
+      });
+    } else {
+      // Clear the header button if conditions not met
+      navigation.setOptions({
+        headerRight: undefined,
+      });
+    }
+  }, [navigation, request, user]);
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -286,6 +321,26 @@ export default function RequestDetailScreen({
     openChat(request.chatId);
   };
 
+  const handleDeleteRequest = async () => {
+    if (isDeleting) return;
+
+    setIsDeleting(true);
+    setShowDeleteModal(false); // Close modal immediately to prevent double-clicks
+    
+    try {
+      await deleteHelpRequest(requestId);
+      // Navigate back immediately on success
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error deleting request:", error);
+      Alert.alert(
+        t.error,
+        error instanceof Error ? error.message : t.failedToDeleteRequest,
+      );
+      setIsDeleting(false); // Reset on error to allow retries
+    }
+  };
+
   const posterInitials = getUserInitials(request.userName, request.userEmail);
   const displayName = request.isAnonymous ? "Anonymous" : request.userName;
   const displayInitials = request.isAnonymous ? "AN" : posterInitials;
@@ -481,6 +536,19 @@ export default function RequestDetailScreen({
           </ThemedText>
         </View>
       ) : null}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showDeleteModal}
+        title={t.deleteRequestConfirm}
+        message={t.deleteRequestConfirmMessage}
+        confirmText={t.delete}
+        cancelText={t.cancel}
+        onConfirm={handleDeleteRequest}
+        onCancel={() => setShowDeleteModal(false)}
+        confirmColor={METUColors.alertRed}
+        icon="trash-2"
+      />
     </ScreenScrollView>
   );
 }

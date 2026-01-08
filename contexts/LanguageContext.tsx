@@ -71,6 +71,17 @@ interface Translations {
   checkIfAskedBefore: string;
   loadingQuestions: string;
   loadingQuestion: string;
+  deleteQuestionConfirm: string;
+  deleteQuestionConfirmMessage: string;
+  questionDeleted: string;
+  questionDeletedMessage: string;
+  failedToDeleteQuestion: string;
+  deleteRequestConfirm: string;
+  deleteRequestConfirmMessage: string;
+  requestDeleted: string;
+  requestDeletedMessage: string;
+  failedToDeleteRequest: string;
+  delete: string;
 
   // Categories for Q&A
   classes: string;
@@ -281,6 +292,19 @@ const translations: Record<Language, Translations> = {
     checkIfAskedBefore: "Check if someone already asked",
     loadingQuestions: "Loading questions...",
     loadingQuestion: "Loading question...",
+    deleteQuestionConfirm: "Delete Question?",
+    deleteQuestionConfirmMessage:
+      "Are you sure you want to delete this question? This action cannot be undone.",
+    questionDeleted: "Question Deleted",
+    questionDeletedMessage: "Your question has been deleted successfully.",
+    failedToDeleteQuestion: "Failed to delete question",
+    deleteRequestConfirm: "Delete Request?",
+    deleteRequestConfirmMessage:
+      "Are you sure you want to delete this request? This action cannot be undone.",
+    requestDeleted: "Request Deleted",
+    requestDeletedMessage: "Your request has been deleted successfully.",
+    failedToDeleteRequest: "Failed to delete request",
+    delete: "Delete",
 
     // Categories for Q&A
     classes: "Classes",
@@ -499,6 +523,19 @@ const translations: Record<Language, Translations> = {
     checkIfAskedBefore: "Daha önce sorulup sorulmadığını kontrol edin",
     loadingQuestions: "Sorular yükleniyor...",
     loadingQuestion: "Soru yükleniyor...",
+    deleteQuestionConfirm: "Soru Silinsin mi?",
+    deleteQuestionConfirmMessage:
+      "Bu soruyu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    questionDeleted: "Soru Silindi",
+    questionDeletedMessage: "Sorunuz başarıyla silindi.",
+    failedToDeleteQuestion: "Soru silinemedi",
+    deleteRequestConfirm: "İstek Silinsin mi?",
+    deleteRequestConfirmMessage:
+      "Bu isteği silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    requestDeleted: "İstek Silindi",
+    requestDeletedMessage: "İsteğiniz başarıyla silindi.",
+    failedToDeleteRequest: "İstek silinemedi",
+    delete: "Sil",
 
     // Categories for Q&A
     classes: "Dersler",

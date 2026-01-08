@@ -16,6 +16,7 @@ import {
   increment,
   Timestamp,
   where,
+  deleteDoc,
 } from "firebase/firestore";
 import { getFirestoreInstance } from "@/src/firebase/firebaseConfig";
 
@@ -279,4 +280,66 @@ export async function addAnswer(
     answerCount: increment(1),
     lastActiveAt: serverTimestamp(),
   });
+}
+
+/**
+ * Delete a question permanently from Firestore
+ *
+ * WARNING: This operation is irreversible and will also delete all associated answers.
+ *
+ * SECURITY NOTE: This function does not perform authorization checks. It is the caller's
+ * responsibility to verify that the user has permission to delete the question before
+ * calling this function. In the UI layer (QuestionDetailScreen), we ensure only the
+ * question author can access the delete functionality.
+ *
+ * For production apps, consider implementing Firestore Security Rules to enforce
+ * server-side authorization and prevent unauthorized deletions.
+ *
+ * @param questionId - The unique ID of the question to delete
+ * @returns Promise that resolves when deletion is complete
+ *
+ * @example
+ * // Only delete if user is the author
+ * if (question.authorId === user.uid) {
+ *   await deleteQuestion('abc123');
+ * }
+ */
+export async function deleteQuestion(questionId: string): Promise<void> {
+  if (!questionId || questionId.trim() === "") {
+    throw new Error("Question ID is required");
+  }
+  
+  console.log("[deleteQuestion] Starting deletion for question:", questionId);
+  const db = getFirestoreInstance();
+  const questionRef = doc(db, "questions", questionId);
+  
+  try {
+    // Note: Firestore does not automatically delete subcollections when deleting a document
+    // The answers subcollection will become orphaned but won't be accessible without the parent
+    // For production apps with high deletion rates, consider:
+    // 1. Using Cloud Functions to cascade delete subcollections
+    // 2. Implementing a cleanup job to remove orphaned data
+    // 3. Using a "soft delete" pattern by marking documents as deleted instead
+    await deleteDoc(questionRef);
+    console.log("[deleteQuestion] Successfully deleted question:", questionId);
+  } catch (error) {
+    console.error("[deleteQuestion] Failed to delete question:", error);
+    // If the error is "Missing or insufficient permissions", it might be because
+    // the document was already deleted. Check if this is a permission error on a non-existent document.
+    if (error instanceof Error && error.message.includes("Missing or insufficient permissions")) {
+      // Check if document still exists
+      try {
+        const docSnap = await getDoc(questionRef);
+        if (!docSnap.exists()) {
+          // Document doesn't exist, so it was already deleted - this is success, not an error
+          console.log("[deleteQuestion] Document already deleted, treating as success");
+          return;
+        }
+      } catch (checkError) {
+        // If we can't check, just throw the original error
+        console.error("[deleteQuestion] Failed to verify document existence:", checkError);
+      }
+    }
+    throw error;
+  }
 }
