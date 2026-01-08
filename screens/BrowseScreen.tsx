@@ -34,7 +34,8 @@ import {
   subscribeToHelpRequests,
   type HelpRequest,
 } from "@/src/services/helpRequestService";
-import { RouteProp } from "@react-navigation/native";
+import { RouteProp, useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 type BrowseScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
@@ -241,6 +242,17 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
       navigation.setParams({ initialTab: undefined });
     }
   }, [route.params?.initialTab, navigation]);
+
+  // Reset to "needs" tab when Browse tab is focused (unless coming with initialTab param)
+  useFocusEffect(
+    useCallback(() => {
+      // Only reset if there's no initialTab parameter
+      // This allows AskQuestionScreen to navigate to questions tab
+      if (!route.params?.initialTab) {
+        setSelectedTab("needs");
+      }
+    }, [route.params?.initialTab]),
+  );
 
   // Subscribe to questions from Firebase
   useEffect(() => {
