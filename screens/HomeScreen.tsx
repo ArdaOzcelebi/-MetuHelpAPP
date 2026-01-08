@@ -360,7 +360,6 @@ const styles = StyleSheet.create({
   statsText: {
     fontSize: 13,
     fontWeight: "600",
-    color: METUColors.darkGray,
   },
   header: {
     marginBottom: Spacing["2xl"],
