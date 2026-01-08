@@ -305,6 +305,10 @@ export async function addAnswer(
  * }
  */
 export async function deleteQuestion(questionId: string): Promise<void> {
+  if (!questionId || questionId.trim() === "") {
+    throw new Error("Question ID is required");
+  }
+  
   console.log("[deleteQuestion] Starting deletion for question:", questionId);
   const db = getFirestoreInstance();
   const questionRef = doc(db, "questions", questionId);

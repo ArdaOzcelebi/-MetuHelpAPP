@@ -450,6 +450,10 @@ export async function updateHelpRequestStatus(
  * }
  */
 export async function deleteHelpRequest(requestId: string): Promise<void> {
+  if (!requestId || requestId.trim() === "") {
+    throw new Error("Request ID is required");
+  }
+  
   const db = getFirestoreInstance();
   const docRef = doc(db, COLLECTION_NAME, requestId);
   await deleteDoc(docRef);
