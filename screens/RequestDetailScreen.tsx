@@ -43,6 +43,12 @@ type RequestDetailScreenProps = {
 };
 
 /**
+ * Delay (in ms) before navigating back after opening chat overlay.
+ * Ensures chat overlay state updates are fully processed before navigation.
+ */
+const CHAT_OVERLAY_DELAY = 100;
+
+/**
  * Calculate time difference from now
  */
 function getTimeAgo(date: Date): string {
@@ -221,6 +227,14 @@ export default function RequestDetailScreen({
     setOfferingHelp(true);
 
     try {
+      // Fetch fresh request data to ensure we have the latest status
+      const freshRequest = await getHelpRequest(requestId);
+      if (!freshRequest) {
+        Alert.alert("Error", "Request not found.");
+        setOfferingHelp(false);
+        return;
+      }
+
       // Check if a chat already exists
       const existingChat = await getChatByRequestId(requestId, user.uid);
 
@@ -247,8 +261,8 @@ export default function RequestDetailScreen({
           return;
         }
 
-        // User is the helper, check if request needs to be accepted (status might still be "active")
-        if (request.status === "active") {
+        // User is the helper, check if request needs to be accepted using FRESH data
+        if (freshRequest.status === "active") {
           console.log("[RequestDetailScreen] Accepting existing request");
           await acceptHelpRequest(
             requestId,
@@ -296,10 +310,27 @@ export default function RequestDetailScreen({
       }
 
       setHasOfferedHelp(true);
+      
+      // Update local request state to reflect acceptance
+      // Note: We update the fresh data with the new accepted status
+      setRequest({
+        ...freshRequest,
+        status: "accepted",
+        acceptedBy: user.uid,
+        acceptedByName: user.displayName || user.email || "Helper",
+        acceptedByEmail: user.email || "",
+        chatId,
+      });
 
       // Open chat in the global overlay instead of navigating
       console.log("[RequestDetailScreen] Opening chat via overlay:", chatId);
       openChat(chatId);
+
+      // Navigate back to previous screen after successfully accepting help
+      // Use setTimeout to ensure chat overlay state updates are processed first
+      setTimeout(() => {
+        navigation.goBack();
+      }, CHAT_OVERLAY_DELAY);
     } catch (error) {
       console.error("[RequestDetailScreen] Error offering help:", error);
       Alert.alert("Error", "Failed to create chat. Please try again.", [
@@ -326,7 +357,7 @@ export default function RequestDetailScreen({
 
     setIsDeleting(true);
     setShowDeleteModal(false); // Close modal immediately to prevent double-clicks
-    
+
     try {
       await deleteHelpRequest(requestId);
       // Navigate back immediately on success
