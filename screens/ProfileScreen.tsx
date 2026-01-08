@@ -144,7 +144,11 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
     if (user?.displayName) return user.displayName;
     if (user?.email) {
       const username = user.email.split("@")[0];
-      return username.charAt(0).toUpperCase() + username.slice(1);
+      // Replace dots with spaces and capitalize each word
+      return username
+        .split(".")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
     }
     return "METU Student";
   };

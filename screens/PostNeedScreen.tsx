@@ -93,7 +93,14 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
 
     try {
       const userName =
-        user.displayName || user.email?.split("@")[0] || "Anonymous";
+        user.displayName ||
+        (user.email
+          ? user.email
+              .split("@")[0]
+              .split(".")
+              .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+              .join(" ")
+          : "Anonymous");
 
       await createHelpRequest(
         {
