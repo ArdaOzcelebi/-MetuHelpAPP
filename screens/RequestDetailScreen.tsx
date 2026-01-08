@@ -315,10 +315,7 @@ export default function RequestDetailScreen({
             ]);
           } catch (error) {
             console.error("[RequestDetail] Error deleting request:", error);
-            Alert.alert(
-              t.error,
-              error instanceof Error ? error.message : t.failedToDeleteRequest,
-            );
+            Alert.alert(t.error, t.failedToDeleteRequest);
           } finally {
             setDeleting(false);
           }

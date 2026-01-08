@@ -285,7 +285,9 @@ export async function addAnswer(
 /**
  * Delete a question permanently from Firestore
  *
- * WARNING: This operation is irreversible and will also delete all answers.
+ * WARNING: This operation is irreversible. Note that Firestore does NOT
+ * automatically delete subcollections. The answers subcollection will become
+ * orphaned and should be cleaned up separately if needed.
  *
  * @param questionId - The unique ID of the question to delete
  * @returns Promise that resolves when deletion is complete
@@ -297,6 +299,9 @@ export async function deleteQuestion(questionId: string): Promise<void> {
     const questionRef = doc(db, "questions", questionId);
     await deleteDoc(questionRef);
     console.log("[deleteQuestion] Question deleted successfully");
+    console.warn(
+      "[deleteQuestion] Note: Answers subcollection is not automatically deleted",
+    );
   } catch (error) {
     console.error("[deleteQuestion] Error occurred:", error);
     throw error;

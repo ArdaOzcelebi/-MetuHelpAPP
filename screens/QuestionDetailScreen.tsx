@@ -152,10 +152,7 @@ export default function QuestionDetailScreen({
             ]);
           } catch (error) {
             console.error("[QuestionDetail] Error deleting question:", error);
-            Alert.alert(
-              t.error,
-              error instanceof Error ? error.message : t.failedToDeleteQuestion,
-            );
+            Alert.alert(t.error, t.failedToDeleteQuestion);
           } finally {
             setDeleting(false);
           }
