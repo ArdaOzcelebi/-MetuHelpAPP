@@ -300,6 +300,9 @@ export default function RequestDetailScreen({
       // Open chat in the global overlay instead of navigating
       console.log("[RequestDetailScreen] Opening chat via overlay:", chatId);
       openChat(chatId);
+
+      // Navigate back to previous screen after successfully accepting help
+      navigation.goBack();
     } catch (error) {
       console.error("[RequestDetailScreen] Error offering help:", error);
       Alert.alert("Error", "Failed to create chat. Please try again.", [
@@ -326,7 +329,7 @@ export default function RequestDetailScreen({
 
     setIsDeleting(true);
     setShowDeleteModal(false); // Close modal immediately to prevent double-clicks
-    
+
     try {
       await deleteHelpRequest(requestId);
       // Navigate back immediately on success
