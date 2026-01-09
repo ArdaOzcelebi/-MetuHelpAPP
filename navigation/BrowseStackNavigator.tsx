@@ -56,11 +56,7 @@ export default function BrowseStackNavigator() {
             <HeaderBackButton
               tintColor={theme.text}
               onPress={() => {
-                // Check if we can go back in the stack
-                const state = navigation.getState();
-                const canGoBack = state.index > 0;
-                
-                if (canGoBack) {
+                if (navigation.canGoBack()) {
                   // Normal back navigation
                   navigation.goBack();
                 } else {
