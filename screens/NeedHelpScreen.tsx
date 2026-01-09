@@ -21,6 +21,7 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
+import { LOCATIONS, LOCATION_CATEGORIES, getLocationsByCategory } from "@/constants/locations";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
   subscribeToHelpRequests,
@@ -440,6 +441,8 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { user } = useAuth();
   const { openChat } = useChatOverlay();
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedLocationCategory, setSelectedLocationCategory] = useState<string | null>(null);
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatsMap, setChatsMap] = useState<Map<string, string>>(new Map());
@@ -533,10 +536,23 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
     { id: "other", label: t.other, icon: "help-circle" },
   ] as const;
 
-  const filteredRequests =
-    selectedCategory === "all"
-      ? helpRequests
-      : helpRequests.filter((req) => req.category === selectedCategory);
+  const filteredRequests = helpRequests.filter((req) => {
+    // Filter by category
+    const matchesCategory = selectedCategory === "all" || req.category === selectedCategory;
+    
+    // Filter by location
+    const matchesLocation = selectedLocation 
+      ? req.location === selectedLocation
+      : true;
+    
+    return matchesCategory && matchesLocation;
+  });
+
+  const getLocationLabel = (locationId: string): string => {
+    const location = LOCATIONS.find((loc) => loc.id === locationId);
+    if (!location) return locationId;
+    return language === "en" ? location.labelEn : location.labelTr;
+  };
 
   return (
     <ScreenScrollView>
@@ -571,6 +587,137 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
               onPress={() => setSelectedCategory(cat.id)}
             />
           ))}
+        </ScrollView>
+      </View>
+
+      {/* Location Filter */}
+      <View style={styles.filterContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersScrollContent}
+        >
+          {/* All Locations */}
+          <Pressable
+            onPress={() => {
+              setSelectedLocation(null);
+              setSelectedLocationCategory(null);
+            }}
+            style={[
+              styles.chip,
+              {
+                backgroundColor: !selectedLocation && !selectedLocationCategory
+                  ? isDark
+                    ? "#CC3333"
+                    : METUColors.maroon
+                  : theme.backgroundDefault,
+              },
+            ]}
+          >
+            <Feather
+              name="map-pin"
+              size={14}
+              color={!selectedLocation && !selectedLocationCategory ? "#FFFFFF" : theme.text}
+              style={styles.chipIcon}
+            />
+            <ThemedText
+              style={[
+                styles.chipText,
+                { 
+                  color: !selectedLocation && !selectedLocationCategory ? "#FFFFFF" : theme.text,
+                  fontWeight: !selectedLocation && !selectedLocationCategory ? "600" : "400",
+                },
+              ]}
+            >
+              {language === "en" ? "All Locations" : "Tüm Konumlar"}
+            </ThemedText>
+          </Pressable>
+
+          {/* Category chips */}
+          {!selectedLocationCategory && LOCATION_CATEGORIES.map((category) => (
+            <Pressable
+              key={category.id}
+              onPress={() => setSelectedLocationCategory(category.id)}
+              style={[
+                styles.chip,
+                { backgroundColor: theme.backgroundDefault },
+              ]}
+            >
+              <Feather
+                name={category.icon}
+                size={14}
+                color={theme.text}
+                style={styles.chipIcon}
+              />
+              <ThemedText
+                style={[
+                  styles.chipText,
+                  { color: theme.text },
+                ]}
+              >
+                {language === "en" ? category.labelEn : category.labelTr}
+              </ThemedText>
+            </Pressable>
+          ))}
+
+          {/* Location chips - show when category is selected */}
+          {selectedLocationCategory && (
+            <>
+              {/* Back button */}
+              <Pressable
+                onPress={() => setSelectedLocationCategory(null)}
+                style={[
+                  styles.chip,
+                  { backgroundColor: theme.backgroundDefault },
+                ]}
+              >
+                <Feather
+                  name="arrow-left"
+                  size={14}
+                  color={theme.text}
+                  style={styles.chipIcon}
+                />
+                <ThemedText
+                  style={[
+                    styles.chipText,
+                    { color: theme.text, fontWeight: "500" },
+                  ]}
+                >
+                  {language === "en" ? "Back" : "Geri"}
+                </ThemedText>
+              </Pressable>
+
+              {getLocationsByCategory(selectedLocationCategory as any).map((location) => (
+                <Pressable
+                  key={location.id}
+                  onPress={() => setSelectedLocation(location.id)}
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor:
+                        selectedLocation === location.id
+                          ? isDark
+                            ? "#CC3333"
+                            : METUColors.maroon
+                          : theme.backgroundDefault,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={[
+                      styles.chipText,
+                      { 
+                        color: selectedLocation === location.id ? "#FFFFFF" : theme.text,
+                        fontWeight: selectedLocation === location.id ? "600" : "400",
+                      },
+                    ]}
+                  >
+                    {language === "en" ? location.labelEn : location.labelTr}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </>
+          )}
         </ScrollView>
       </View>
 
