@@ -70,35 +70,34 @@ export default function MainTabNavigator() {
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            // Get the current navigation state of BrowseTab
+            // Check if BrowseTab is stuck on AskQuestion (no other screens in stack)
             const state = navigation.getState();
             const browseTabRoute = state.routes.find((r) => r.name === "BrowseTab");
+            const browseStackState = browseTabRoute?.state;
             
-            if (browseTabRoute && browseTabRoute.state) {
-              const browseStackState = browseTabRoute.state;
-              // Check if AskQuestion is the only screen in the stack (index 0 and only route)
-              if (
-                browseStackState.index === 0 &&
-                browseStackState.routes.length === 1 &&
-                browseStackState.routes[0].name === "AskQuestion"
-              ) {
-                // Prevent default tab press behavior
-                e.preventDefault();
-                // Reset the BrowseTab stack to show Browse screen
-                navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [
-                      {
-                        name: "BrowseTab",
-                        state: {
-                          routes: [{ name: "Browse", params: { initialTab: "questions" } }],
-                        },
+            // If AskQuestion is the only screen in the stack, reset to Browse
+            if (
+              browseStackState &&
+              browseStackState.index === 0 &&
+              browseStackState.routes.length === 1 &&
+              browseStackState.routes[0].name === "AskQuestion"
+            ) {
+              // Prevent default tab press behavior
+              e.preventDefault();
+              // Reset the BrowseTab stack to show Browse screen
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: "BrowseTab",
+                      state: {
+                        routes: [{ name: "Browse", params: { initialTab: "questions" } }],
                       },
-                    ],
-                  })
-                );
-              }
+                    },
+                  ],
+                })
+              );
             }
           },
         })}
