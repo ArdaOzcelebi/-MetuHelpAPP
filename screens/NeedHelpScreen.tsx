@@ -543,6 +543,12 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
     { id: "other", label: t.other, icon: "help-circle" },
   ] as const;
 
+  const getLocationLabel = (locationId: string): string => {
+    const location = LOCATIONS.find((loc) => loc.id === locationId);
+    if (!location) return locationId;
+    return language === "en" ? location.labelEn : location.labelTr;
+  };
+
   const filteredRequests = helpRequests.filter((req) => {
     // Filter by category
     const matchesCategory =
@@ -642,7 +648,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 title={request.title}
                 description={request.description}
                 category={request.category}
-                location={request.location}
+                location={getLocationLabel(request.location)}
                 time={getTimeAgo(request.createdAt)}
                 urgent={request.urgent}
                 status={request.status}

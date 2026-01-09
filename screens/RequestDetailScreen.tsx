@@ -24,6 +24,7 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
+import { LOCATIONS } from "@/constants/locations";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
   getHelpRequest,
@@ -83,7 +84,7 @@ export default function RequestDetailScreen({
   route,
 }: RequestDetailScreenProps) {
   const { theme, isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const { openChat } = useChatOverlay();
   const { requestId } = route.params;
@@ -93,6 +94,12 @@ export default function RequestDetailScreen({
   const [hasOfferedHelp, setHasOfferedHelp] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const getLocationLabel = (locationId: string): string => {
+    const location = LOCATIONS.find((loc) => loc.id === locationId);
+    if (!location) return locationId;
+    return language === "en" ? location.labelEn : location.labelTr;
+  };
 
   // Set up header right button for delete action
   useLayoutEffect(() => {
@@ -482,7 +489,7 @@ export default function RequestDetailScreen({
           <ThemedText
             style={[styles.locationText, { color: theme.textSecondary }]}
           >
-            {request.location}
+            {getLocationLabel(request.location)}
           </ThemedText>
         </View>
       </View>
