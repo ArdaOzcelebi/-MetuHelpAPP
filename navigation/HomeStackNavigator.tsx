@@ -68,9 +68,12 @@ export default function HomeStackNavigator() {
                 // Navigate to Browse tab, then to AskQuestion
                 const mainNavigation = navigation.getParent();
                 if (mainNavigation) {
-                  mainNavigation.navigate("BrowseTab" as never, {
-                    screen: "AskQuestion",
-                  } as never);
+                  mainNavigation.navigate(
+                    "BrowseTab" as never,
+                    {
+                      screen: "AskQuestion",
+                    } as never,
+                  );
                 }
               }}
               icon="edit-2"

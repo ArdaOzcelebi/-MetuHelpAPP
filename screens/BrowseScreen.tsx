@@ -27,7 +27,12 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
-import { LOCATIONS, LOCATION_CATEGORIES, getLocationsByCategory, type LocationCategoryId } from "@/constants/locations";
+import {
+  LOCATIONS,
+  LOCATION_CATEGORIES,
+  getLocationsByCategory,
+  type LocationCategoryId,
+} from "@/constants/locations";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
 import {
   subscribeToQuestions,
@@ -349,11 +354,11 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
       need.title.toLowerCase().includes(searchLower) ||
       need.description.toLowerCase().includes(searchLower) ||
       need.location.toLowerCase().includes(searchLower);
-    
-    const matchesLocation = selectedLocation 
+
+    const matchesLocation = selectedLocation
       ? need.location === selectedLocation
       : true;
-    
+
     return matchesSearch && matchesLocation;
   });
 
@@ -447,11 +452,12 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
               style={[
                 styles.locationChip,
                 {
-                  backgroundColor: !selectedLocation && !selectedCategory
-                    ? isDark
-                      ? "#CC3333"
-                      : METUColors.maroon
-                    : theme.backgroundDefault,
+                  backgroundColor:
+                    !selectedLocation && !selectedCategory
+                      ? isDark
+                        ? "#CC3333"
+                        : METUColors.maroon
+                      : theme.backgroundDefault,
                   borderWidth: !selectedLocation && !selectedCategory ? 0 : 1,
                   borderColor: theme.border,
                 },
@@ -461,10 +467,12 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                 style={[
                   styles.locationChipText,
                   {
-                    color: !selectedLocation && !selectedCategory
-                      ? "#FFFFFF"
-                      : theme.text,
-                    fontWeight: !selectedLocation && !selectedCategory ? "600" : "400",
+                    color:
+                      !selectedLocation && !selectedCategory
+                        ? "#FFFFFF"
+                        : theme.text,
+                    fontWeight:
+                      !selectedLocation && !selectedCategory ? "600" : "400",
                   },
                 ]}
               >
@@ -473,38 +481,39 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
             </Pressable>
 
             {/* Category filters */}
-            {!selectedCategory && LOCATION_CATEGORIES.map((category) => (
-              <Pressable
-                key={category.id}
-                onPress={() => setSelectedCategory(category.id)}
-                style={[
-                  styles.locationChip,
-                  {
-                    backgroundColor: theme.backgroundDefault,
-                    borderWidth: 1,
-                    borderColor: theme.border,
-                  },
-                ]}
-              >
-                <Feather 
-                  name={category.icon} 
-                  size={14} 
-                  color={theme.text} 
-                  style={{ marginRight: 6 }}
-                />
-                <ThemedText
+            {!selectedCategory &&
+              LOCATION_CATEGORIES.map((category) => (
+                <Pressable
+                  key={category.id}
+                  onPress={() => setSelectedCategory(category.id)}
                   style={[
-                    styles.locationChipText,
+                    styles.locationChip,
                     {
-                      color: theme.text,
-                      fontWeight: "400",
+                      backgroundColor: theme.backgroundDefault,
+                      borderWidth: 1,
+                      borderColor: theme.border,
                     },
                   ]}
                 >
-                  {language === "en" ? category.labelEn : category.labelTr}
-                </ThemedText>
-              </Pressable>
-            ))}
+                  <Feather
+                    name={category.icon}
+                    size={14}
+                    color={theme.text}
+                    style={{ marginRight: 6 }}
+                  />
+                  <ThemedText
+                    style={[
+                      styles.locationChipText,
+                      {
+                        color: theme.text,
+                        fontWeight: "400",
+                      },
+                    ]}
+                  >
+                    {language === "en" ? category.labelEn : category.labelTr}
+                  </ThemedText>
+                </Pressable>
+              ))}
 
             {/* Individual location filters - show when category is selected */}
             {selectedCategory && (
@@ -521,10 +530,10 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                     },
                   ]}
                 >
-                  <Feather 
-                    name="arrow-left" 
-                    size={14} 
-                    color={theme.text} 
+                  <Feather
+                    name="arrow-left"
+                    size={14}
+                    color={theme.text}
                     style={{ marginRight: 6 }}
                   />
                   <ThemedText
@@ -540,41 +549,46 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                   </ThemedText>
                 </Pressable>
 
-                {selectedCategory && getLocationsByCategory(selectedCategory as LocationCategoryId).map((location) => (
-                  <Pressable
-                    key={location.id}
-                    onPress={() => setSelectedLocation(location.id)}
-                    style={[
-                      styles.locationChip,
-                      {
-                        backgroundColor:
-                          selectedLocation === location.id
-                            ? isDark
-                              ? "#CC3333"
-                              : METUColors.maroon
-                            : theme.backgroundDefault,
-                        borderWidth: selectedLocation === location.id ? 0 : 1,
-                        borderColor: theme.border,
-                      },
-                    ]}
-                  >
-                    <ThemedText
+                {selectedCategory &&
+                  getLocationsByCategory(
+                    selectedCategory as LocationCategoryId,
+                  ).map((location) => (
+                    <Pressable
+                      key={location.id}
+                      onPress={() => setSelectedLocation(location.id)}
                       style={[
-                        styles.locationChipText,
+                        styles.locationChip,
                         {
-                          color:
+                          backgroundColor:
                             selectedLocation === location.id
-                              ? "#FFFFFF"
-                              : theme.text,
-                          fontWeight:
-                            selectedLocation === location.id ? "600" : "400",
+                              ? isDark
+                                ? "#CC3333"
+                                : METUColors.maroon
+                              : theme.backgroundDefault,
+                          borderWidth: selectedLocation === location.id ? 0 : 1,
+                          borderColor: theme.border,
                         },
                       ]}
                     >
-                      {language === "en" ? location.labelEn : location.labelTr}
-                    </ThemedText>
-                  </Pressable>
-                ))}
+                      <ThemedText
+                        style={[
+                          styles.locationChipText,
+                          {
+                            color:
+                              selectedLocation === location.id
+                                ? "#FFFFFF"
+                                : theme.text,
+                            fontWeight:
+                              selectedLocation === location.id ? "600" : "400",
+                          },
+                        ]}
+                      >
+                        {language === "en"
+                          ? location.labelEn
+                          : location.labelTr}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
               </>
             )}
           </ScrollView>

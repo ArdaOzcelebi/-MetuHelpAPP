@@ -21,7 +21,12 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
-import { LOCATIONS, LOCATION_CATEGORIES, getLocationsByCategory, type LocationCategoryId } from "@/constants/locations";
+import {
+  LOCATIONS,
+  LOCATION_CATEGORIES,
+  getLocationsByCategory,
+  type LocationCategoryId,
+} from "@/constants/locations";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
   subscribeToHelpRequests,
@@ -442,7 +447,9 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { openChat } = useChatOverlay();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [selectedLocationCategory, setSelectedLocationCategory] = useState<string | null>(null);
+  const [selectedLocationCategory, setSelectedLocationCategory] = useState<
+    string | null
+  >(null);
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatsMap, setChatsMap] = useState<Map<string, string>>(new Map());
@@ -538,13 +545,14 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
 
   const filteredRequests = helpRequests.filter((req) => {
     // Filter by category
-    const matchesCategory = selectedCategory === "all" || req.category === selectedCategory;
-    
+    const matchesCategory =
+      selectedCategory === "all" || req.category === selectedCategory;
+
     // Filter by location
-    const matchesLocation = selectedLocation 
+    const matchesLocation = selectedLocation
       ? req.location === selectedLocation
       : true;
-    
+
     return matchesCategory && matchesLocation;
   });
 
@@ -606,26 +614,37 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
             style={[
               styles.chip,
               {
-                backgroundColor: !selectedLocation && !selectedLocationCategory
-                  ? isDark
-                    ? "#CC3333"
-                    : METUColors.maroon
-                  : theme.backgroundDefault,
+                backgroundColor:
+                  !selectedLocation && !selectedLocationCategory
+                    ? isDark
+                      ? "#CC3333"
+                      : METUColors.maroon
+                    : theme.backgroundDefault,
               },
             ]}
           >
             <Feather
               name="map-pin"
               size={14}
-              color={!selectedLocation && !selectedLocationCategory ? "#FFFFFF" : theme.text}
+              color={
+                !selectedLocation && !selectedLocationCategory
+                  ? "#FFFFFF"
+                  : theme.text
+              }
               style={styles.chipIcon}
             />
             <ThemedText
               style={[
                 styles.chipText,
-                { 
-                  color: !selectedLocation && !selectedLocationCategory ? "#FFFFFF" : theme.text,
-                  fontWeight: !selectedLocation && !selectedLocationCategory ? "600" : "400",
+                {
+                  color:
+                    !selectedLocation && !selectedLocationCategory
+                      ? "#FFFFFF"
+                      : theme.text,
+                  fontWeight:
+                    !selectedLocation && !selectedLocationCategory
+                      ? "600"
+                      : "400",
                 },
               ]}
             >
@@ -634,31 +653,27 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
           </Pressable>
 
           {/* Category chips */}
-          {!selectedLocationCategory && LOCATION_CATEGORIES.map((category) => (
-            <Pressable
-              key={category.id}
-              onPress={() => setSelectedLocationCategory(category.id)}
-              style={[
-                styles.chip,
-                { backgroundColor: theme.backgroundDefault },
-              ]}
-            >
-              <Feather
-                name={category.icon}
-                size={14}
-                color={theme.text}
-                style={styles.chipIcon}
-              />
-              <ThemedText
+          {!selectedLocationCategory &&
+            LOCATION_CATEGORIES.map((category) => (
+              <Pressable
+                key={category.id}
+                onPress={() => setSelectedLocationCategory(category.id)}
                 style={[
-                  styles.chipText,
-                  { color: theme.text },
+                  styles.chip,
+                  { backgroundColor: theme.backgroundDefault },
                 ]}
               >
-                {language === "en" ? category.labelEn : category.labelTr}
-              </ThemedText>
-            </Pressable>
-          ))}
+                <Feather
+                  name={category.icon}
+                  size={14}
+                  color={theme.text}
+                  style={styles.chipIcon}
+                />
+                <ThemedText style={[styles.chipText, { color: theme.text }]}>
+                  {language === "en" ? category.labelEn : category.labelTr}
+                </ThemedText>
+              </Pressable>
+            ))}
 
           {/* Location chips - show when category is selected */}
           {selectedLocationCategory && (
@@ -687,35 +702,42 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 </ThemedText>
               </Pressable>
 
-              {selectedLocationCategory && getLocationsByCategory(selectedLocationCategory as LocationCategoryId).map((location) => (
-                <Pressable
-                  key={location.id}
-                  onPress={() => setSelectedLocation(location.id)}
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor:
-                        selectedLocation === location.id
-                          ? isDark
-                            ? "#CC3333"
-                            : METUColors.maroon
-                          : theme.backgroundDefault,
-                    },
-                  ]}
-                >
-                  <ThemedText
+              {selectedLocationCategory &&
+                getLocationsByCategory(
+                  selectedLocationCategory as LocationCategoryId,
+                ).map((location) => (
+                  <Pressable
+                    key={location.id}
+                    onPress={() => setSelectedLocation(location.id)}
                     style={[
-                      styles.chipText,
-                      { 
-                        color: selectedLocation === location.id ? "#FFFFFF" : theme.text,
-                        fontWeight: selectedLocation === location.id ? "600" : "400",
+                      styles.chip,
+                      {
+                        backgroundColor:
+                          selectedLocation === location.id
+                            ? isDark
+                              ? "#CC3333"
+                              : METUColors.maroon
+                            : theme.backgroundDefault,
                       },
                     ]}
                   >
-                    {language === "en" ? location.labelEn : location.labelTr}
-                  </ThemedText>
-                </Pressable>
-              ))}
+                    <ThemedText
+                      style={[
+                        styles.chipText,
+                        {
+                          color:
+                            selectedLocation === location.id
+                              ? "#FFFFFF"
+                              : theme.text,
+                          fontWeight:
+                            selectedLocation === location.id ? "600" : "400",
+                        },
+                      ]}
+                    >
+                      {language === "en" ? location.labelEn : location.labelTr}
+                    </ThemedText>
+                  </Pressable>
+                ))}
             </>
           )}
         </ScrollView>
