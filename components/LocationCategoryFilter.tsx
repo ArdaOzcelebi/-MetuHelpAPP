@@ -278,6 +278,8 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: Typography.small.fontSize,
     // Prevent text wrapping on web for proper horizontal scrolling
-    ...(Platform.OS === "web" && { whiteSpace: "nowrap" as any }),
+    ...Platform.select({
+      web: { whiteSpace: "nowrap" as const },
+    }),
   },
 });
