@@ -10,7 +10,7 @@ import Animated, {
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
-import { LocationFilterDropdown } from "@/components/LocationFilterDropdown";
+import { LocationCategoryFilter } from "@/components/LocationCategoryFilter";
 import { ConfirmationModal } from "@/src/components/ConfirmationModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -22,7 +22,11 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
-import { LOCATIONS } from "@/constants/locations";
+import {
+  LOCATIONS,
+  getLocationsByCategory,
+  type LocationCategoryId,
+} from "@/constants/locations";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
   subscribeToHelpRequests,
@@ -443,6 +447,9 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
   const { openChat } = useChatOverlay();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedLocationCategory, setSelectedLocationCategory] = useState<
+    string | null
+  >(null);
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatsMap, setChatsMap] = useState<Map<string, string>>(new Map());
@@ -541,10 +548,20 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
     const matchesCategory =
       selectedCategory === "all" || req.category === selectedCategory;
 
-    // Filter by location
-    const matchesLocation = selectedLocation
-      ? req.location === selectedLocation
-      : true;
+    // Filter by location category or individual location
+    let matchesLocation = true;
+    if (selectedLocation) {
+      // Specific location selected
+      matchesLocation = req.location === selectedLocation;
+    } else if (selectedLocationCategory) {
+      // Location category selected - match any location in that category
+      const categoryLocations = getLocationsByCategory(
+        selectedLocationCategory as LocationCategoryId,
+      );
+      matchesLocation = categoryLocations.some(
+        (loc) => loc.id === req.location,
+      );
+    }
 
     return matchesCategory && matchesLocation;
   });
@@ -586,9 +603,11 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       </View>
 
       {/* Location Filter */}
-      <LocationFilterDropdown
+      <LocationCategoryFilter
         selectedLocation={selectedLocation}
+        selectedCategory={selectedLocationCategory}
         onLocationChange={setSelectedLocation}
+        onCategoryChange={setSelectedLocationCategory}
         language={language}
       />
 

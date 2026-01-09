@@ -17,7 +17,7 @@ import Animated, {
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
-import { LocationFilterDropdown } from "@/components/LocationFilterDropdown";
+import { LocationCategoryFilter } from "@/components/LocationCategoryFilter";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -26,7 +26,11 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
-import { LOCATIONS } from "@/constants/locations";
+import {
+  LOCATIONS,
+  getLocationsByCategory,
+  type LocationCategoryId,
+} from "@/constants/locations";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
 import {
   subscribeToQuestions,
@@ -232,6 +236,7 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QAQuestion[]>([]);
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
@@ -328,9 +333,20 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
       need.description.toLowerCase().includes(searchLower) ||
       need.location.toLowerCase().includes(searchLower);
 
-    const matchesLocation = selectedLocation
-      ? need.location === selectedLocation
-      : true;
+    // Filter by category or individual location
+    let matchesLocation = true;
+    if (selectedLocation) {
+      // Specific location selected
+      matchesLocation = need.location === selectedLocation;
+    } else if (selectedCategory) {
+      // Category selected - match any location in that category
+      const categoryLocations = getLocationsByCategory(
+        selectedCategory as LocationCategoryId,
+      );
+      matchesLocation = categoryLocations.some(
+        (loc) => loc.id === need.location,
+      );
+    }
 
     return matchesSearch && matchesLocation;
   });
@@ -410,9 +426,11 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
 
       {/* Location Filter - Only show on needs tab */}
       {selectedTab === "needs" && (
-        <LocationFilterDropdown
+        <LocationCategoryFilter
           selectedLocation={selectedLocation}
+          selectedCategory={selectedCategory}
           onLocationChange={setSelectedLocation}
+          onCategoryChange={setSelectedCategory}
           language={language}
         />
       )}
