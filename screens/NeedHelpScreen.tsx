@@ -10,6 +10,7 @@ import Animated, {
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
+import { LocationCategoryFilter } from "@/components/LocationCategoryFilter";
 import { ConfirmationModal } from "@/src/components/ConfirmationModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -21,7 +22,11 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
-import { LOCATIONS, LOCATION_CATEGORIES, getLocationsByCategory, type LocationCategoryId } from "@/constants/locations";
+import {
+  LOCATIONS,
+  getLocationsByCategory,
+  type LocationCategoryId,
+} from "@/constants/locations";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
   subscribeToHelpRequests,
@@ -436,13 +441,15 @@ function RequestCard({
 }
 
 export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
-  const { isDark, theme } = useTheme();
+  const { isDark } = useTheme();
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const { openChat } = useChatOverlay();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [selectedLocationCategory, setSelectedLocationCategory] = useState<string | null>(null);
+  const [selectedLocationCategory, setSelectedLocationCategory] = useState<
+    string | null
+  >(null);
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatsMap, setChatsMap] = useState<Map<string, string>>(new Map());
@@ -538,21 +545,26 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
 
   const filteredRequests = helpRequests.filter((req) => {
     // Filter by category
-    const matchesCategory = selectedCategory === "all" || req.category === selectedCategory;
-    
-    // Filter by location
-    const matchesLocation = selectedLocation 
-      ? req.location === selectedLocation
-      : true;
-    
+    const matchesCategory =
+      selectedCategory === "all" || req.category === selectedCategory;
+
+    // Filter by location category or individual location
+    let matchesLocation = true;
+    if (selectedLocation) {
+      // Specific location selected
+      matchesLocation = req.location === selectedLocation;
+    } else if (selectedLocationCategory) {
+      // Location category selected - match any location in that category
+      const categoryLocations = getLocationsByCategory(
+        selectedLocationCategory as LocationCategoryId,
+      );
+      matchesLocation = categoryLocations.some(
+        (loc) => loc.id === req.location,
+      );
+    }
+
     return matchesCategory && matchesLocation;
   });
-
-  const getLocationLabel = (locationId: string): string => {
-    const location = LOCATIONS.find((loc) => loc.id === locationId);
-    if (!location) return locationId;
-    return language === "en" ? location.labelEn : location.labelTr;
-  };
 
   return (
     <ScreenScrollView>
@@ -591,135 +603,13 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
       </View>
 
       {/* Location Filter */}
-      <View style={styles.filterContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filtersScrollContent}
-        >
-          {/* All Locations */}
-          <Pressable
-            onPress={() => {
-              setSelectedLocation(null);
-              setSelectedLocationCategory(null);
-            }}
-            style={[
-              styles.chip,
-              {
-                backgroundColor: !selectedLocation && !selectedLocationCategory
-                  ? isDark
-                    ? "#CC3333"
-                    : METUColors.maroon
-                  : theme.backgroundDefault,
-              },
-            ]}
-          >
-            <Feather
-              name="map-pin"
-              size={14}
-              color={!selectedLocation && !selectedLocationCategory ? "#FFFFFF" : theme.text}
-              style={styles.chipIcon}
-            />
-            <ThemedText
-              style={[
-                styles.chipText,
-                { 
-                  color: !selectedLocation && !selectedLocationCategory ? "#FFFFFF" : theme.text,
-                  fontWeight: !selectedLocation && !selectedLocationCategory ? "600" : "400",
-                },
-              ]}
-            >
-              {language === "en" ? "All Locations" : "Tüm Konumlar"}
-            </ThemedText>
-          </Pressable>
-
-          {/* Category chips */}
-          {!selectedLocationCategory && LOCATION_CATEGORIES.map((category) => (
-            <Pressable
-              key={category.id}
-              onPress={() => setSelectedLocationCategory(category.id)}
-              style={[
-                styles.chip,
-                { backgroundColor: theme.backgroundDefault },
-              ]}
-            >
-              <Feather
-                name={category.icon}
-                size={14}
-                color={theme.text}
-                style={styles.chipIcon}
-              />
-              <ThemedText
-                style={[
-                  styles.chipText,
-                  { color: theme.text },
-                ]}
-              >
-                {language === "en" ? category.labelEn : category.labelTr}
-              </ThemedText>
-            </Pressable>
-          ))}
-
-          {/* Location chips - show when category is selected */}
-          {selectedLocationCategory && (
-            <>
-              {/* Back button */}
-              <Pressable
-                onPress={() => setSelectedLocationCategory(null)}
-                style={[
-                  styles.chip,
-                  { backgroundColor: theme.backgroundDefault },
-                ]}
-              >
-                <Feather
-                  name="arrow-left"
-                  size={14}
-                  color={theme.text}
-                  style={styles.chipIcon}
-                />
-                <ThemedText
-                  style={[
-                    styles.chipText,
-                    { color: theme.text, fontWeight: "500" },
-                  ]}
-                >
-                  {language === "en" ? "Back" : "Geri"}
-                </ThemedText>
-              </Pressable>
-
-              {selectedLocationCategory && getLocationsByCategory(selectedLocationCategory as LocationCategoryId).map((location) => (
-                <Pressable
-                  key={location.id}
-                  onPress={() => setSelectedLocation(location.id)}
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor:
-                        selectedLocation === location.id
-                          ? isDark
-                            ? "#CC3333"
-                            : METUColors.maroon
-                          : theme.backgroundDefault,
-                    },
-                  ]}
-                >
-                  <ThemedText
-                    style={[
-                      styles.chipText,
-                      { 
-                        color: selectedLocation === location.id ? "#FFFFFF" : theme.text,
-                        fontWeight: selectedLocation === location.id ? "600" : "400",
-                      },
-                    ]}
-                  >
-                    {language === "en" ? location.labelEn : location.labelTr}
-                  </ThemedText>
-                </Pressable>
-              ))}
-            </>
-          )}
-        </ScrollView>
-      </View>
+      <LocationCategoryFilter
+        selectedLocation={selectedLocation}
+        selectedCategory={selectedLocationCategory}
+        onLocationChange={setSelectedLocation}
+        onCategoryChange={setSelectedLocationCategory}
+        language={language}
+      />
 
       <View style={styles.requestsList}>
         {loading ? (

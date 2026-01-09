@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
+import { LocationCategoryFilter } from "@/components/LocationCategoryFilter";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/src/contexts/AuthContext";
@@ -21,7 +22,11 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
-import { LOCATIONS } from "@/constants/locations";
+import {
+  LOCATIONS,
+  getLocationsByCategory,
+  type LocationCategoryId,
+} from "@/constants/locations";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { createHelpRequest } from "@/src/services/helpRequestService";
 import type { HelpRequestCategory } from "@/src/types/helpRequest";
@@ -50,6 +55,9 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
   const [selectedCategory, setSelectedCategory] =
     useState<HelpRequestCategory | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedLocationCategory, setSelectedLocationCategory] = useState<
+    string | null
+  >(null);
   const [details, setDetails] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
   const [isReturnNeeded, setIsReturnNeeded] = useState(false);
@@ -98,6 +106,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
       setTitle("");
       setSelectedCategory(null);
       setSelectedLocation(null);
+      setSelectedLocationCategory(null);
       setDetails("");
       setIsUrgent(false);
       setIsReturnNeeded(false);
@@ -177,43 +186,13 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
       </View>
 
       <ThemedText style={styles.sectionLabel}>{t.location}</ThemedText>
-      <View style={styles.locationsGrid}>
-        {LOCATIONS.map((loc) => (
-          <Pressable
-            key={loc.id}
-            onPress={() =>
-              setSelectedLocation(language === "en" ? loc.labelEn : loc.labelTr)
-            }
-            style={[
-              styles.locationChip,
-              {
-                backgroundColor:
-                  selectedLocation ===
-                  (language === "en" ? loc.labelEn : loc.labelTr)
-                    ? isDark
-                      ? "#CC3333"
-                      : METUColors.maroon
-                    : theme.backgroundDefault,
-              },
-            ]}
-          >
-            <ThemedText
-              style={[
-                styles.locationText,
-                {
-                  color:
-                    selectedLocation ===
-                    (language === "en" ? loc.labelEn : loc.labelTr)
-                      ? "#FFFFFF"
-                      : theme.text,
-                },
-              ]}
-            >
-              {language === "en" ? loc.labelEn : loc.labelTr}
-            </ThemedText>
-          </Pressable>
-        ))}
-      </View>
+      <LocationCategoryFilter
+        selectedLocation={selectedLocation}
+        selectedCategory={selectedLocationCategory}
+        onLocationChange={setSelectedLocation}
+        onCategoryChange={setSelectedLocationCategory}
+        language={language}
+      />
 
       <ThemedText style={styles.sectionLabel}>{t.additionalDetails}</ThemedText>
       <TextInput
@@ -449,19 +428,6 @@ const styles = StyleSheet.create({
   categoryLabel: {
     fontSize: Typography.small.fontSize,
     fontWeight: "500",
-  },
-  locationsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-  },
-  locationChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-  },
-  locationText: {
-    fontSize: Typography.small.fontSize,
   },
   detailsInput: {
     minHeight: 100,
