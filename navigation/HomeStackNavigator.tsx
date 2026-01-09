@@ -1,5 +1,8 @@
 import React, { useCallback } from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 import {
   useNavigation,
   CompositeNavigationProp,
