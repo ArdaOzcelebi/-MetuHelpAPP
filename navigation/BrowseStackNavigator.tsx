@@ -51,6 +51,7 @@ export default function BrowseStackNavigator() {
         options={{
           headerTitle: t.askQuestion || "Ask Question",
           presentation: "modal",
+          headerBackVisible: true,
         }}
       />
       <Stack.Screen
