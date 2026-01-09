@@ -55,6 +55,7 @@ function AnimatedNeedCard({
   t,
   getCategoryIcon,
   getTimeAgo,
+  getLocationLabel,
 }: {
   need: HelpRequest;
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
@@ -63,6 +64,7 @@ function AnimatedNeedCard({
   t: any;
   getCategoryIcon: (category: string) => keyof typeof Feather.glyphMap;
   getTimeAgo: (date: Date) => string;
+  getLocationLabel: (locationId: string) => string;
 }) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -127,7 +129,7 @@ function AnimatedNeedCard({
             <ThemedText
               style={[styles.needLocation, { color: theme.textSecondary }]}
             >
-              {need.location}
+              {getLocationLabel(need.location)}
             </ThemedText>
             <ThemedText
               style={[styles.needTime, { color: theme.textSecondary }]}
@@ -312,6 +314,12 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
       default:
         return "help-circle";
     }
+  };
+
+  const getLocationLabel = (locationId: string): string => {
+    const location = LOCATIONS.find((loc) => loc.id === locationId);
+    if (!location) return locationId;
+    return language === "en" ? location.labelEn : location.labelTr;
   };
 
   const filteredNeeds = helpRequests.filter((need) => {
@@ -507,6 +515,7 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                 t={t}
                 getCategoryIcon={getCategoryIcon}
                 getTimeAgo={getTimeAgo}
+                getLocationLabel={getLocationLabel}
               />
             ))
           )}
