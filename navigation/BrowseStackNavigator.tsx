@@ -56,11 +56,20 @@ export default function BrowseStackNavigator() {
             <HeaderBackButton
               tintColor={theme.text}
               onPress={() => {
-                if (navigation.canGoBack()) {
+                // Check if we can go back in the stack
+                const state = navigation.getState();
+                const canGoBack = state.index > 0;
+                
+                if (canGoBack) {
+                  // Normal back navigation
                   navigation.goBack();
                 } else {
-                  // If no back history, navigate to Browse screen
-                  navigation.navigate("Browse", { initialTab: "questions" });
+                  // If AskQuestion is the only screen in stack (cross-tab navigation),
+                  // reset to Browse screen to prevent Browse tab from getting stuck
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: "Browse", params: { initialTab: "questions" } }],
+                  });
                 }
               }}
             />
