@@ -18,6 +18,7 @@ import Animated, {
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { LocationCategoryFilter } from "@/components/LocationCategoryFilter";
+import { CreatePostButton } from "@/components/CreatePostButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -289,6 +290,23 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
     setRefreshing(true);
     // The subscriptions will automatically update
   };
+
+  // Update header button based on selected tab
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <CreatePostButton
+          onPress={() => {
+            if (selectedTab === "needs") {
+              navigation.navigate("PostNeed");
+            } else {
+              navigation.navigate("AskQuestion");
+            }
+          }}
+        />
+      ),
+    });
+  }, [navigation, selectedTab]);
 
   const getTimeAgo = (date: Date): string => {
     const now = new Date();

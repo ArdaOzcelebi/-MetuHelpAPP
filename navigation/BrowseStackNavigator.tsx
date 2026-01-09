@@ -4,6 +4,7 @@ import BrowseScreen from "@/screens/BrowseScreen";
 import RequestDetailScreen from "@/screens/RequestDetailScreen";
 import QuestionDetailScreen from "@/screens/QuestionDetailScreen";
 import AskQuestionScreen from "@/screens/AskQuestionScreen";
+import PostNeedScreen from "@/screens/PostNeedScreen";
 import { CreatePostButton } from "@/components/CreatePostButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -14,6 +15,7 @@ export type BrowseStackParamList = {
   RequestDetail: { requestId: string };
   QuestionDetail: { questionId: string };
   AskQuestion: undefined;
+  PostNeed: undefined;
 };
 
 const Stack = createNativeStackNavigator<BrowseStackParamList>();
@@ -27,14 +29,9 @@ export default function BrowseStackNavigator() {
       <Stack.Screen
         name="Browse"
         component={BrowseScreen}
-        options={({ navigation }) => ({
+        options={{
           title: t.browse,
-          headerRight: () => (
-            <CreatePostButton
-              onPress={() => navigation.navigate("AskQuestion")}
-            />
-          ),
-        })}
+        }}
       />
       <Stack.Screen
         name="RequestDetail"
@@ -52,7 +49,15 @@ export default function BrowseStackNavigator() {
         name="AskQuestion"
         component={AskQuestionScreen}
         options={{
-          headerShown: false,
+          headerTitle: t.askQuestion || "Ask Question",
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="PostNeed"
+        component={PostNeedScreen}
+        options={{
+          headerTitle: t.postNeed || "Post Need",
           presentation: "modal",
         }}
       />
