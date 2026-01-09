@@ -159,8 +159,9 @@ export function LocationCategoryFilter({
       {/* Category Filter - Horizontal Scrollable */}
       <ScrollView
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsHorizontalScrollIndicator={Platform.OS === "web"} // Show scrollbar on web
         contentContainerStyle={styles.scrollContent}
+        style={Platform.OS === "web" ? styles.scrollViewWeb : undefined}
       >
         {/* All Locations - Only show when showAllLocations is true */}
         {showAllLocations &&
@@ -184,11 +185,12 @@ export function LocationCategoryFilter({
       {selectedCategory && (
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={false}
+          showsHorizontalScrollIndicator={Platform.OS === "web"} // Show scrollbar on web
           contentContainerStyle={[
             styles.scrollContent,
             styles.subFilterContent,
           ]}
+          style={Platform.OS === "web" ? styles.scrollViewWeb : undefined}
         >
           {/* Back/Clear button */}
           <Pressable
@@ -245,6 +247,15 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     flexShrink: 0,
   },
+  scrollViewWeb: Platform.select({
+    web: {
+      // Enable horizontal scrolling on web with visible scrollbar
+      overflow: "scroll" as any,
+      // Ensure scrollbar is visible and styled
+      scrollbarWidth: "thin" as any,
+      scrollbarColor: "rgba(0,0,0,0.3) transparent" as any,
+    },
+  }),
   subFilterContent: {
     marginTop: Spacing.sm,
   },
