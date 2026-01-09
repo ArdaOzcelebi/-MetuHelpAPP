@@ -21,6 +21,7 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
+import { LOCATIONS } from "@/constants/locations";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { createHelpRequest } from "@/src/services/helpRequestService";
 import type { HelpRequestCategory } from "@/src/types/helpRequest";
@@ -39,30 +40,6 @@ const CATEGORIES = [
     icon: "navigation",
   },
   { id: "other", labelEn: "Other", labelTr: "Diğer", icon: "help-circle" },
-] as const;
-
-const LOCATIONS = [
-  { id: "library", labelEn: "Library", labelTr: "Kütüphane" },
-  {
-    id: "student_center",
-    labelEn: "Student Center",
-    labelTr: "Öğrenci Merkezi",
-  },
-  {
-    id: "engineering",
-    labelEn: "Engineering Building",
-    labelTr: "Mühendislik Binası",
-  },
-  { id: "physics", labelEn: "Physics Building", labelTr: "Fizik Binası" },
-  { id: "main_gate", labelEn: "Main Gate", labelTr: "Ana Kapı" },
-  { id: "cafeteria", labelEn: "Cafeteria", labelTr: "Kafeterya" },
-  { id: "dormitory", labelEn: "Dormitory Area", labelTr: "Yurt Bölgesi" },
-  {
-    id: "sports_complex",
-    labelEn: "Sports Complex",
-    labelTr: "Spor Kompleksi",
-  },
-  { id: "other", labelEn: "Other", labelTr: "Diğer" },
 ] as const;
 
 export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {

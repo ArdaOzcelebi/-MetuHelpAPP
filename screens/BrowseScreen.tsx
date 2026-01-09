@@ -6,6 +6,7 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -25,6 +26,7 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
+import { LOCATIONS } from "@/constants/locations";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
 import {
   subscribeToQuestions,
@@ -228,6 +230,7 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
     "needs",
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QAQuestion[]>([]);
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
@@ -313,11 +316,16 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
 
   const filteredNeeds = helpRequests.filter((need) => {
     const searchLower = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       need.title.toLowerCase().includes(searchLower) ||
       need.description.toLowerCase().includes(searchLower) ||
-      need.location.toLowerCase().includes(searchLower)
-    );
+      need.location.toLowerCase().includes(searchLower);
+    
+    const matchesLocation = selectedLocation 
+      ? need.location === selectedLocation
+      : true;
+    
+    return matchesSearch && matchesLocation;
   });
 
   const filteredQuestions = questions.filter((q) => {
@@ -392,6 +400,85 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
           </Pressable>
         ))}
       </View>
+
+      {/* Location Filter - Only show on needs tab */}
+      {selectedTab === "needs" && (
+        <View style={styles.locationFilterContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.locationScrollContent}
+          >
+            {/* All Locations filter */}
+            <Pressable
+              onPress={() => setSelectedLocation(null)}
+              style={[
+                styles.locationChip,
+                {
+                  backgroundColor: !selectedLocation
+                    ? isDark
+                      ? "#CC3333"
+                      : METUColors.maroon
+                    : theme.backgroundDefault,
+                  borderWidth: !selectedLocation ? 0 : 1,
+                  borderColor: theme.border,
+                },
+              ]}
+            >
+              <ThemedText
+                style={[
+                  styles.locationChipText,
+                  {
+                    color: !selectedLocation
+                      ? "#FFFFFF"
+                      : theme.textSecondary,
+                    fontWeight: !selectedLocation ? "600" : "400",
+                  },
+                ]}
+              >
+                {language === "en" ? "All Locations" : "Tüm Konumlar"}
+              </ThemedText>
+            </Pressable>
+
+            {/* Individual location filters */}
+            {LOCATIONS.map((location) => (
+              <Pressable
+                key={location.id}
+                onPress={() => setSelectedLocation(location.id)}
+                style={[
+                  styles.locationChip,
+                  {
+                    backgroundColor:
+                      selectedLocation === location.id
+                        ? isDark
+                          ? "#CC3333"
+                          : METUColors.maroon
+                        : theme.backgroundDefault,
+                    borderWidth: selectedLocation === location.id ? 0 : 1,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                <ThemedText
+                  style={[
+                    styles.locationChipText,
+                    {
+                      color:
+                        selectedLocation === location.id
+                          ? "#FFFFFF"
+                          : theme.text,
+                      fontWeight:
+                        selectedLocation === location.id ? "600" : "400",
+                    },
+                  ]}
+                >
+                  {language === "en" ? location.labelEn : location.labelTr}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {selectedTab === "needs" ? (
         <View style={styles.listContainer}>
@@ -625,5 +712,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+  locationFilterContainer: {
+    marginVertical: Spacing.sm,
+  },
+  locationScrollContent: {
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+  },
+  locationChip: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.xl,
+    marginRight: Spacing.sm,
+  },
+  locationChipText: {
+    fontSize: Typography.small.fontSize,
   },
 });
