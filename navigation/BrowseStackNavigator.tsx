@@ -1,5 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { HeaderBackButton } from "@react-navigation/elements";
 import BrowseScreen from "@/screens/BrowseScreen";
 import RequestDetailScreen from "@/screens/RequestDetailScreen";
 import QuestionDetailScreen from "@/screens/QuestionDetailScreen";
@@ -48,11 +49,23 @@ export default function BrowseStackNavigator() {
       <Stack.Screen
         name="AskQuestion"
         component={AskQuestionScreen}
-        options={{
+        options={({ navigation }) => ({
           headerTitle: t.askQuestion || "Ask Question",
           presentation: "modal",
-          headerBackVisible: true,
-        }}
+          headerLeft: () => (
+            <HeaderBackButton
+              tintColor={theme.text}
+              onPress={() => {
+                if (navigation.canGoBack()) {
+                  navigation.goBack();
+                } else {
+                  // If no back history, navigate to Browse screen
+                  navigation.navigate("Browse", { initialTab: "questions" });
+                }
+              }}
+            />
+          ),
+        })}
       />
       <Stack.Screen
         name="PostNeed"
