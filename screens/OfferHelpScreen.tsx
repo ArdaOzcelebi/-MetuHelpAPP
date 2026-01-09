@@ -327,21 +327,6 @@ export default function OfferHelpScreen({ navigation }: OfferHelpScreenProps) {
           </View>
         )}
       </View>
-
-      <Pressable
-        onPress={() => {
-          browseNavigation.navigate("BrowseTab", {
-            screen: "AskQuestion",
-          } as any);
-        }}
-        style={({ pressed }) => [
-          styles.fab,
-          { backgroundColor: isDark ? "#CC3333" : METUColors.maroon },
-          { opacity: pressed ? 0.9 : 1 },
-        ]}
-      >
-        <Feather name="edit-2" size={22} color="#FFFFFF" />
-      </Pressable>
     </ScreenScrollView>
   );
 }
@@ -441,20 +426,5 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: Typography.body.fontSize,
-  },
-  fab: {
-    position: "absolute",
-    bottom: Spacing["6xl"],
-    right: 0,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
 });

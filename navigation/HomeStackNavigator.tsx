@@ -9,9 +9,14 @@ import PostNeedScreen from "@/screens/PostNeedScreen";
 import ChatScreen from "@/screens/ChatScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { CreatePostButton } from "@/components/CreatePostButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
+import { useNavigation, CompositeNavigationProp } from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import type { MainTabParamList } from "@/navigation/MainTabNavigator";
+import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -46,12 +51,33 @@ export default function HomeStackNavigator() {
       <Stack.Screen
         name="NeedHelp"
         component={NeedHelpScreen}
-        options={{ headerTitle: t.findHelp }}
+        options={({ navigation }) => ({
+          headerTitle: t.findHelp,
+          headerRight: () => (
+            <CreatePostButton onPress={() => navigation.navigate("PostNeed")} />
+          ),
+        })}
       />
       <Stack.Screen
         name="OfferHelp"
         component={OfferHelpScreen}
-        options={{ headerTitle: t.campusQA }}
+        options={({ navigation }) => ({
+          headerTitle: t.campusQA,
+          headerRight: () => (
+            <CreatePostButton
+              icon="edit-2"
+              onPress={() => {
+                // Navigate to BrowseTab's AskQuestion screen
+                const parentNav = navigation.getParent() as any;
+                if (parentNav) {
+                  parentNav.navigate("BrowseTab", {
+                    screen: "AskQuestion",
+                  });
+                }
+              }}
+            />
+          ),
+        })}
       />
       <Stack.Screen
         name="RequestDetail"
