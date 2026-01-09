@@ -30,12 +30,6 @@ export const LOCATION_CATEGORIES = [
     icon: "book" as const,
   },
   {
-    id: "student_life",
-    labelEn: "Student Life & Extra Academic",
-    labelTr: "Öğrenci Yaşamı & Ek Akademik",
-    icon: "users" as const,
-  },
-  {
     id: "health",
     labelEn: "Health Facilities",
     labelTr: "Sağlık Tesisleri",
@@ -46,12 +40,6 @@ export const LOCATION_CATEGORIES = [
     labelEn: "Academic & Student Services",
     labelTr: "Akademik & Öğrenci Hizmetleri",
     icon: "book-open" as const,
-  },
-  {
-    id: "daily_life",
-    labelEn: "Daily Life & Central Services",
-    labelTr: "Günlük Yaşam & Merkezi Hizmetler",
-    icon: "shopping-cart" as const,
   },
   {
     id: "sports",
@@ -123,6 +111,18 @@ export const LOCATIONS = [
     id: "cati_cafe",
     labelEn: "Çatı Cafe",
     labelTr: "Çatı Cafe",
+    category: "administration",
+  },
+  {
+    id: "teknokent",
+    labelEn: "Research Park / ODTÜ Teknokent",
+    labelTr: "Araştırma Parkı / ODTÜ Teknokent",
+    category: "administration",
+  },
+  {
+    id: "knowledge_transfer",
+    labelEn: "Knowledge Transfer Office",
+    labelTr: "Bilgi Transfer Ofisi",
     category: "administration",
   },
 
@@ -376,26 +376,6 @@ export const LOCATIONS = [
     category: "faculties",
   },
 
-  // Student Life & Extra Academic
-  {
-    id: "student_clubs",
-    labelEn: "Student Clubs / Topluluk Binaları",
-    labelTr: "Topluluk Binaları",
-    category: "student_life",
-  },
-  {
-    id: "prep_school",
-    labelEn: "Prep School / Basic English",
-    labelTr: "Hazırlık Okulu / Temel İngilizce",
-    category: "student_life",
-  },
-  {
-    id: "language_lab",
-    labelEn: "Language Lab",
-    labelTr: "Dil Laboratuvarı",
-    category: "student_life",
-  },
-
   // Health Facilities
   {
     id: "mediko",
@@ -422,20 +402,6 @@ export const LOCATIONS = [
     labelEn: "European Documentation Center",
     labelTr: "Avrupa Dokümantasyon Merkezi",
     category: "services",
-  },
-
-  // Daily Life & Central Services
-  {
-    id: "teknokent",
-    labelEn: "Research Park / ODTÜ Teknokent",
-    labelTr: "Araştırma Parkı / ODTÜ Teknokent",
-    category: "daily_life",
-  },
-  {
-    id: "knowledge_transfer",
-    labelEn: "Knowledge Transfer Office",
-    labelTr: "Bilgi Transfer Ofisi",
-    category: "daily_life",
   },
 
   // Sports & Recreation
