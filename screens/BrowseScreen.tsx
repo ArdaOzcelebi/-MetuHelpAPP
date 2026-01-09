@@ -439,7 +439,7 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                   {
                     color: !selectedLocation
                       ? "#FFFFFF"
-                      : theme.textSecondary,
+                      : theme.text,
                     fontWeight: !selectedLocation ? "600" : "400",
                   },
                 ]}
