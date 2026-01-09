@@ -195,6 +195,8 @@ interface Translations {
   mustBeLoggedIn: string;
   failedToPostRequest: string;
   posting: string;
+  title: string;
+  pleaseCompleteRequired: string;
 
   // Chat
   chat: string;
@@ -432,6 +434,9 @@ const translations: Record<Language, Translations> = {
     mustBeLoggedIn: "You must be logged in to post a request.",
     failedToPostRequest: "Failed to post request. Please try again.",
     posting: "Posting...",
+    title: "Title",
+    pleaseCompleteRequired:
+      "Please enter a title, select a category, and select a location before posting.",
 
     // Chat
     chat: "Chat",
@@ -671,6 +676,9 @@ const translations: Record<Language, Translations> = {
     mustBeLoggedIn: "İstek göndermek için giriş yapmalısınız.",
     failedToPostRequest: "İstek gönderilemedi. Lütfen tekrar deneyin.",
     posting: "Gönderiliyor...",
+    title: "Başlık",
+    pleaseCompleteRequired:
+      "Lütfen göndermeden önce başlık girin, kategori seçin ve konum seçin.",
 
     // Chat
     chat: "Sohbet",

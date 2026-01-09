@@ -46,6 +46,7 @@ interface LocationCategoryFilterProps {
   onLocationChange: (locationId: string | null) => void;
   onCategoryChange: (categoryId: string | null) => void;
   language: "en" | "tr";
+  showAllLocations?: boolean; // Optional prop to show/hide "All Locations" option
 }
 
 export function LocationCategoryFilter({
@@ -54,6 +55,7 @@ export function LocationCategoryFilter({
   onLocationChange,
   onCategoryChange,
   language,
+  showAllLocations = true, // Default to true for backward compatibility
 }: LocationCategoryFilterProps) {
   const { theme, isDark } = useTheme();
 
@@ -160,12 +162,13 @@ export function LocationCategoryFilter({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* All Locations */}
-        {renderCategoryChip(
-          null,
-          language === "en" ? "All Locations" : "Tüm Konumlar",
-          "map-pin",
-        )}
+        {/* All Locations - Only show when showAllLocations is true */}
+        {showAllLocations &&
+          renderCategoryChip(
+            null,
+            language === "en" ? "All Locations" : "Tüm Konumlar",
+            "map-pin",
+          )}
 
         {/* Category Chips */}
         {LOCATION_CATEGORIES.map((category) =>
@@ -237,6 +240,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
+    // Ensure proper scrolling on web
+    flexGrow: 0,
+    flexShrink: 0,
   },
   subFilterContent: {
     marginTop: Spacing.sm,
@@ -270,5 +276,6 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: Typography.small.fontSize,
+    whiteSpace: "nowrap" as any, // Prevent text wrapping on web
   },
 });
