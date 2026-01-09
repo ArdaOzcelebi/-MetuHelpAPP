@@ -6,7 +6,7 @@
  * individual location selection within categories.
  */
 
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Pressable,
@@ -17,11 +17,6 @@ import {
   UIManager,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -32,7 +27,6 @@ import {
   Typography,
 } from "@/constants/theme";
 import {
-  LOCATIONS,
   LOCATION_CATEGORIES,
   getLocationsByCategory,
   type LocationCategoryId,
@@ -45,8 +39,6 @@ if (
 ) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface LocationCategoryFilterProps {
   selectedLocation: string | null;
@@ -84,23 +76,12 @@ export function LocationCategoryFilter({
     icon: keyof typeof Feather.glyphMap,
   ) => {
     const isSelected = selectedCategory === categoryId;
-    const scale = useSharedValue(1);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: scale.value }],
-    }));
 
     return (
-      <AnimatedPressable
+      <Pressable
         key={categoryId || "all"}
         onPress={() => handleCategoryPress(categoryId)}
-        onPressIn={() => {
-          scale.value = withSpring(0.95, { damping: 15, stiffness: 150 });
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1, { damping: 15, stiffness: 150 });
-        }}
-        style={[
+        style={({ pressed }) => [
           styles.categoryChip,
           {
             backgroundColor: isSelected
@@ -110,8 +91,8 @@ export function LocationCategoryFilter({
               : theme.backgroundDefault,
             borderWidth: isSelected ? 0 : 1,
             borderColor: theme.border,
+            opacity: pressed ? 0.8 : 1,
           },
-          animatedStyle,
         ]}
       >
         <Feather
@@ -131,29 +112,18 @@ export function LocationCategoryFilter({
         >
           {label}
         </ThemedText>
-      </AnimatedPressable>
+      </Pressable>
     );
   };
 
   const renderLocationChip = (locationId: string, label: string) => {
     const isSelected = selectedLocation === locationId;
-    const scale = useSharedValue(1);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: scale.value }],
-    }));
 
     return (
-      <AnimatedPressable
+      <Pressable
         key={locationId}
         onPress={() => handleLocationPress(locationId)}
-        onPressIn={() => {
-          scale.value = withSpring(0.95, { damping: 15, stiffness: 150 });
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1, { damping: 15, stiffness: 150 });
-        }}
-        style={[
+        style={({ pressed }) => [
           styles.locationChip,
           {
             backgroundColor: isSelected
@@ -163,8 +133,8 @@ export function LocationCategoryFilter({
               : theme.backgroundDefault,
             borderWidth: isSelected ? 0 : 1,
             borderColor: theme.border,
+            opacity: pressed ? 0.8 : 1,
           },
-          animatedStyle,
         ]}
       >
         <ThemedText
@@ -178,7 +148,7 @@ export function LocationCategoryFilter({
         >
           {label}
         </ThemedText>
-      </AnimatedPressable>
+      </Pressable>
     );
   };
 
@@ -220,12 +190,13 @@ export function LocationCategoryFilter({
           {/* Back/Clear button */}
           <Pressable
             onPress={() => handleCategoryPress(null)}
-            style={[
+            style={({ pressed }) => [
               styles.backChip,
               {
                 backgroundColor: theme.backgroundDefault,
                 borderWidth: 1,
                 borderColor: theme.border,
+                opacity: pressed ? 0.8 : 1,
               },
             ]}
           >
