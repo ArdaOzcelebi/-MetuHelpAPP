@@ -1,5 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { HeaderBackButton } from "@react-navigation/elements";
 import BrowseScreen from "@/screens/BrowseScreen";
 import RequestDetailScreen from "@/screens/RequestDetailScreen";
 import QuestionDetailScreen from "@/screens/QuestionDetailScreen";
@@ -48,10 +49,28 @@ export default function BrowseStackNavigator() {
       <Stack.Screen
         name="AskQuestion"
         component={AskQuestionScreen}
-        options={{
+        options={({ navigation }) => ({
           headerTitle: t.askQuestion || "Ask Question",
           presentation: "modal",
-        }}
+          headerLeft: () => (
+            <HeaderBackButton
+              tintColor={theme.text}
+              onPress={() => {
+                if (navigation.canGoBack()) {
+                  // Normal back navigation
+                  navigation.goBack();
+                } else {
+                  // If AskQuestion is the only screen in stack (cross-tab navigation),
+                  // reset to Browse screen to prevent Browse tab from getting stuck
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: "Browse", params: { initialTab: "questions" } }],
+                  });
+                }
+              }}
+            />
+          ),
+        })}
       />
       <Stack.Screen
         name="PostNeed"
