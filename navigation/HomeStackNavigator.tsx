@@ -13,7 +13,10 @@ import { CreatePostButton } from "@/components/CreatePostButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
-import { useNavigation, CompositeNavigationProp } from "@react-navigation/native";
+import {
+  useNavigation,
+  CompositeNavigationProp,
+} from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type { MainTabParamList } from "@/navigation/MainTabNavigator";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
