@@ -30,12 +30,6 @@ export const LOCATION_CATEGORIES = [
     icon: "book" as const,
   },
   {
-    id: "health",
-    labelEn: "Health Facilities",
-    labelTr: "Sağlık Tesisleri",
-    icon: "activity" as const,
-  },
-  {
     id: "services",
     labelEn: "Academic & Student Services",
     labelTr: "Akademik & Öğrenci Hizmetleri",
@@ -376,14 +370,6 @@ export const LOCATIONS = [
     category: "faculties",
   },
 
-  // Health Facilities
-  {
-    id: "mediko",
-    labelEn: "Student Health Center (Mediko)",
-    labelTr: "Öğrenci Sağlık Merkezi (Mediko)",
-    category: "health",
-  },
-
   // Academic & Student Services
   {
     id: "library",
@@ -401,6 +387,12 @@ export const LOCATIONS = [
     id: "european_doc",
     labelEn: "European Documentation Center",
     labelTr: "Avrupa Dokümantasyon Merkezi",
+    category: "services",
+  },
+  {
+    id: "mediko",
+    labelEn: "Student Health Center (Mediko)",
+    labelTr: "Öğrenci Sağlık Merkezi (Mediko)",
     category: "services",
   },
 
