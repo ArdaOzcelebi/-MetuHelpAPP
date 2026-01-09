@@ -46,6 +46,7 @@ interface LocationCategoryFilterProps {
   onLocationChange: (locationId: string | null) => void;
   onCategoryChange: (categoryId: string | null) => void;
   language: "en" | "tr";
+  showAllLocations?: boolean; // Optional prop to show/hide "All Locations" option
 }
 
 export function LocationCategoryFilter({
@@ -54,6 +55,7 @@ export function LocationCategoryFilter({
   onLocationChange,
   onCategoryChange,
   language,
+  showAllLocations = true, // Default to true for backward compatibility
 }: LocationCategoryFilterProps) {
   const { theme, isDark } = useTheme();
 
@@ -157,15 +159,17 @@ export function LocationCategoryFilter({
       {/* Category Filter - Horizontal Scrollable */}
       <ScrollView
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsHorizontalScrollIndicator={Platform.OS === "web"} // Show scrollbar on web
         contentContainerStyle={styles.scrollContent}
+        style={Platform.OS === "web" ? styles.scrollViewWeb : undefined}
       >
-        {/* All Locations */}
-        {renderCategoryChip(
-          null,
-          language === "en" ? "All Locations" : "Tüm Konumlar",
-          "map-pin",
-        )}
+        {/* All Locations - Only show when showAllLocations is true */}
+        {showAllLocations &&
+          renderCategoryChip(
+            null,
+            language === "en" ? "All Locations" : "Tüm Konumlar",
+            "map-pin",
+          )}
 
         {/* Category Chips */}
         {LOCATION_CATEGORIES.map((category) =>
@@ -181,11 +185,12 @@ export function LocationCategoryFilter({
       {selectedCategory && (
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={false}
+          showsHorizontalScrollIndicator={Platform.OS === "web"} // Show scrollbar on web
           contentContainerStyle={[
             styles.scrollContent,
             styles.subFilterContent,
           ]}
+          style={Platform.OS === "web" ? styles.scrollViewWeb : undefined}
         >
           {/* Back/Clear button */}
           <Pressable
@@ -237,7 +242,20 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
+    // Fix web scrolling: prevent content from growing/shrinking
+    // This ensures horizontal ScrollView works correctly on web browsers
+    flexGrow: 0,
+    flexShrink: 0,
   },
+  scrollViewWeb: Platform.select({
+    web: {
+      // Enable horizontal scrolling on web with visible scrollbar
+      overflow: "scroll" as any,
+      // Ensure scrollbar is visible and styled
+      scrollbarWidth: "thin" as any,
+      scrollbarColor: "rgba(0,0,0,0.3) transparent" as any,
+    },
+  }),
   subFilterContent: {
     marginTop: Spacing.sm,
   },
@@ -270,5 +288,9 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: Typography.small.fontSize,
+    // Prevent text wrapping on web for proper horizontal scrolling
+    ...Platform.select({
+      web: { whiteSpace: "nowrap" },
+    }),
   },
 });

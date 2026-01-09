@@ -192,6 +192,7 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
         onLocationChange={setSelectedLocation}
         onCategoryChange={setSelectedLocationCategory}
         language={language}
+        showAllLocations={false}
       />
 
       <ThemedText style={styles.sectionLabel}>{t.additionalDetails}</ThemedText>
@@ -391,6 +392,17 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
           {submitting ? t.posting : t.postRequest}
         </ThemedText>
       </Pressable>
+
+      {/* Validation helper text */}
+      {!isValid && (
+        <ThemedText
+          style={[styles.validationHint, { color: theme.textSecondary }]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite"
+        >
+          {t.pleaseCompleteRequired}
+        </ThemedText>
+      )}
     </ScreenKeyboardAwareScrollView>
   );
 }
@@ -478,5 +490,11 @@ const styles = StyleSheet.create({
   postButtonText: {
     fontSize: Typography.button.fontSize,
     fontWeight: "600",
+  },
+  validationHint: {
+    fontSize: Typography.small.fontSize,
+    textAlign: "center",
+    marginTop: Spacing.sm,
+    fontStyle: "italic",
   },
 });
