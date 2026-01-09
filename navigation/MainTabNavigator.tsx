@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet } from "react-native";
+import { CommonActions } from "@react-navigation/native";
 import HomeStackNavigator from "@/navigation/HomeStackNavigator";
 import BrowseStackNavigator from "@/navigation/BrowseStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
@@ -67,6 +68,40 @@ export default function MainTabNavigator() {
             <Feather name="search" size={size} color={color} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Get the current navigation state of BrowseTab
+            const state = navigation.getState();
+            const browseTabRoute = state.routes.find((r) => r.name === "BrowseTab");
+            
+            if (browseTabRoute && browseTabRoute.state) {
+              const browseStackState = browseTabRoute.state;
+              // Check if AskQuestion is the only screen in the stack (index 0 and only route)
+              if (
+                browseStackState.index === 0 &&
+                browseStackState.routes.length === 1 &&
+                browseStackState.routes[0].name === "AskQuestion"
+              ) {
+                // Prevent default tab press behavior
+                e.preventDefault();
+                // Reset the BrowseTab stack to show Browse screen
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [
+                      {
+                        name: "BrowseTab",
+                        state: {
+                          routes: [{ name: "Browse", params: { initialTab: "questions" } }],
+                        },
+                      },
+                    ],
+                  })
+                );
+              }
+            }
+          },
+        })}
       />
       <Tab.Screen
         name="ProfileTab"
