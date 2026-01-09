@@ -276,6 +276,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: Typography.small.fontSize,
-    whiteSpace: "nowrap" as any, // Prevent text wrapping on web
+    // @ts-ignore - whiteSpace is valid on web but not in React Native types
+    whiteSpace: "nowrap",
   },
 });
