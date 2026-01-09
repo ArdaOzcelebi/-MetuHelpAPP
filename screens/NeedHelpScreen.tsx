@@ -436,8 +436,8 @@ function RequestCard({
 }
 
 export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
-  const { isDark } = useTheme();
-  const { t } = useLanguage();
+  const { isDark, theme } = useTheme();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const { openChat } = useChatOverlay();
   const [selectedCategory, setSelectedCategory] = useState("all");
