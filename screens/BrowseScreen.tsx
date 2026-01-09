@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -6,7 +6,6 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -18,6 +17,7 @@ import Animated, {
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
+import { LocationFilterDropdown } from "@/components/LocationFilterDropdown";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -26,7 +26,7 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
-import { LOCATIONS, LOCATION_CATEGORIES, getLocationsByCategory, type LocationCategoryId } from "@/constants/locations";
+import { LOCATIONS } from "@/constants/locations";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
 import {
   subscribeToQuestions,
@@ -37,7 +37,6 @@ import {
   type HelpRequest,
 } from "@/src/services/helpRequestService";
 import { RouteProp, useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
 
 type BrowseScreenProps = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Browse">;
@@ -233,7 +232,6 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QAQuestion[]>([]);
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
@@ -329,11 +327,11 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
       need.title.toLowerCase().includes(searchLower) ||
       need.description.toLowerCase().includes(searchLower) ||
       need.location.toLowerCase().includes(searchLower);
-    
-    const matchesLocation = selectedLocation 
+
+    const matchesLocation = selectedLocation
       ? need.location === selectedLocation
       : true;
-    
+
     return matchesSearch && matchesLocation;
   });
 
@@ -412,153 +410,11 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
 
       {/* Location Filter - Only show on needs tab */}
       {selectedTab === "needs" && (
-        <View style={styles.locationFilterContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.locationScrollContent}
-          >
-            {/* All Locations filter */}
-            <Pressable
-              onPress={() => {
-                setSelectedLocation(null);
-                setSelectedCategory(null);
-              }}
-              style={[
-                styles.locationChip,
-                {
-                  backgroundColor: !selectedLocation && !selectedCategory
-                    ? isDark
-                      ? "#CC3333"
-                      : METUColors.maroon
-                    : theme.backgroundDefault,
-                  borderWidth: !selectedLocation && !selectedCategory ? 0 : 1,
-                  borderColor: theme.border,
-                },
-              ]}
-            >
-              <ThemedText
-                style={[
-                  styles.locationChipText,
-                  {
-                    color: !selectedLocation && !selectedCategory
-                      ? "#FFFFFF"
-                      : theme.text,
-                    fontWeight: !selectedLocation && !selectedCategory ? "600" : "400",
-                  },
-                ]}
-              >
-                {language === "en" ? "All Locations" : "Tüm Konumlar"}
-              </ThemedText>
-            </Pressable>
-
-            {/* Category filters */}
-            {!selectedCategory && LOCATION_CATEGORIES.map((category) => (
-              <Pressable
-                key={category.id}
-                onPress={() => setSelectedCategory(category.id)}
-                style={[
-                  styles.locationChip,
-                  {
-                    backgroundColor: theme.backgroundDefault,
-                    borderWidth: 1,
-                    borderColor: theme.border,
-                  },
-                ]}
-              >
-                <Feather 
-                  name={category.icon} 
-                  size={14} 
-                  color={theme.text} 
-                  style={{ marginRight: 6 }}
-                />
-                <ThemedText
-                  style={[
-                    styles.locationChipText,
-                    {
-                      color: theme.text,
-                      fontWeight: "400",
-                    },
-                  ]}
-                >
-                  {language === "en" ? category.labelEn : category.labelTr}
-                </ThemedText>
-              </Pressable>
-            ))}
-
-            {/* Individual location filters - show when category is selected */}
-            {selectedCategory && (
-              <>
-                {/* Back button */}
-                <Pressable
-                  onPress={() => setSelectedCategory(null)}
-                  style={[
-                    styles.locationChip,
-                    {
-                      backgroundColor: theme.backgroundDefault,
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                    },
-                  ]}
-                >
-                  <Feather 
-                    name="arrow-left" 
-                    size={14} 
-                    color={theme.text} 
-                    style={{ marginRight: 6 }}
-                  />
-                  <ThemedText
-                    style={[
-                      styles.locationChipText,
-                      {
-                        color: theme.text,
-                        fontWeight: "500",
-                      },
-                    ]}
-                  >
-                    {language === "en" ? "Back" : "Geri"}
-                  </ThemedText>
-                </Pressable>
-
-                {selectedCategory && getLocationsByCategory(selectedCategory as LocationCategoryId).map((location) => (
-                  <Pressable
-                    key={location.id}
-                    onPress={() => setSelectedLocation(location.id)}
-                    style={[
-                      styles.locationChip,
-                      {
-                        backgroundColor:
-                          selectedLocation === location.id
-                            ? isDark
-                              ? "#CC3333"
-                              : METUColors.maroon
-                            : theme.backgroundDefault,
-                        borderWidth: selectedLocation === location.id ? 0 : 1,
-                        borderColor: theme.border,
-                      },
-                    ]}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.locationChipText,
-                        {
-                          color:
-                            selectedLocation === location.id
-                              ? "#FFFFFF"
-                              : theme.text,
-                          fontWeight:
-                            selectedLocation === location.id ? "600" : "400",
-                        },
-                      ]}
-                    >
-                      {language === "en" ? location.labelEn : location.labelTr}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </>
-            )}
-          </ScrollView>
-        </View>
+        <LocationFilterDropdown
+          selectedLocation={selectedLocation}
+          onLocationChange={setSelectedLocation}
+          language={language}
+        />
       )}
 
       {selectedTab === "needs" ? (
@@ -797,21 +653,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-  },
-  locationFilterContainer: {
-    marginVertical: Spacing.sm,
-  },
-  locationScrollContent: {
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.sm,
-  },
-  locationChip: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.xl,
-    marginRight: Spacing.sm,
-  },
-  locationChipText: {
-    fontSize: Typography.small.fontSize,
   },
 });

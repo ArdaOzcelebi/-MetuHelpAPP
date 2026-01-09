@@ -11,7 +11,10 @@ import AuthStackNavigator from "@/navigation/AuthStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
-import { ChatOverlayProvider, useChatOverlay } from "@/src/contexts/ChatOverlayContext";
+import {
+  ChatOverlayProvider,
+  useChatOverlay,
+} from "@/src/contexts/ChatOverlayContext";
 import { ChatOverlay } from "@/src/components/ChatOverlay";
 import { RegistrationModalProvider } from "@/src/contexts/RegistrationModalContext";
 

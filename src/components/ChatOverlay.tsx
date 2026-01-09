@@ -73,7 +73,7 @@ function MinimizedBubble() {
   const { isDark } = useTheme();
   const { toggleMinimize, unreadCount, currentRouteName } = useChatOverlay();
   const scale = useSharedValue(1);
-  
+
   // Animated bottom position based on current route
   const bottomPosition = useSharedValue(getBottomPosition(false));
 
@@ -81,7 +81,7 @@ function MinimizedBubble() {
   useEffect(() => {
     const isOnQuestionDetail = currentRouteName === "QuestionDetail";
     const newBottom = getBottomPosition(isOnQuestionDetail);
-    
+
     bottomPosition.value = withSpring(newBottom, {
       damping: 20,
       stiffness: 90,
@@ -575,8 +575,9 @@ function ConversationView() {
  */
 function ExpandedWindow() {
   const { theme, isDark } = useTheme();
-  const { toggleMinimize, closeChat, activeView, currentRouteName } = useChatOverlay();
-  
+  const { toggleMinimize, closeChat, activeView, currentRouteName } =
+    useChatOverlay();
+
   // Animated bottom position based on current route
   const bottomPosition = useSharedValue(getBottomPosition(false));
 
@@ -584,7 +585,7 @@ function ExpandedWindow() {
   useEffect(() => {
     const isOnQuestionDetail = currentRouteName === "QuestionDetail";
     const newBottom = getBottomPosition(isOnQuestionDetail);
-    
+
     bottomPosition.value = withSpring(newBottom, {
       damping: 20,
       stiffness: 90,
@@ -649,11 +650,12 @@ function ExpandedWindow() {
   }
 
   // On web, use absolute positioning with animation
-  const AnimatedKeyboardAvoidingView = Animated.createAnimatedComponent(KeyboardAvoidingView);
-  
+  const AnimatedKeyboardAvoidingView =
+    Animated.createAnimatedComponent(KeyboardAvoidingView);
+
   return (
-    <AnimatedKeyboardAvoidingView 
-      style={[styles.expandedWrapper, animatedStyle]} 
+    <AnimatedKeyboardAvoidingView
+      style={[styles.expandedWrapper, animatedStyle]}
       behavior="height"
     >
       {content}
