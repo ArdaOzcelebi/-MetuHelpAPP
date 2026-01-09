@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.small.fontSize,
     // Prevent text wrapping on web for proper horizontal scrolling
     ...Platform.select({
-      web: { whiteSpace: "nowrap" as const },
+      web: { whiteSpace: "nowrap" },
     }),
   },
 });
