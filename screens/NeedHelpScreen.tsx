@@ -21,7 +21,7 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
-import { LOCATIONS, LOCATION_CATEGORIES, getLocationsByCategory } from "@/constants/locations";
+import { LOCATIONS, LOCATION_CATEGORIES, getLocationsByCategory, type LocationCategoryId } from "@/constants/locations";
 import type { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import {
   subscribeToHelpRequests,
@@ -687,7 +687,7 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
                 </ThemedText>
               </Pressable>
 
-              {getLocationsByCategory(selectedLocationCategory as any).map((location) => (
+              {selectedLocationCategory && getLocationsByCategory(selectedLocationCategory as LocationCategoryId).map((location) => (
                 <Pressable
                   key={location.id}
                   onPress={() => setSelectedLocation(location.id)}

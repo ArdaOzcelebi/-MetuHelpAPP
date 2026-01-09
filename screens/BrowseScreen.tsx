@@ -26,7 +26,7 @@ import {
   METUColors,
   Typography,
 } from "@/constants/theme";
-import { LOCATIONS, LOCATION_CATEGORIES, getLocationsByCategory } from "@/constants/locations";
+import { LOCATIONS, LOCATION_CATEGORIES, getLocationsByCategory, type LocationCategoryId } from "@/constants/locations";
 import type { BrowseStackParamList } from "@/navigation/BrowseStackNavigator";
 import {
   subscribeToQuestions,
@@ -520,7 +520,7 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
                   </ThemedText>
                 </Pressable>
 
-                {getLocationsByCategory(selectedCategory as any).map((location) => (
+                {selectedCategory && getLocationsByCategory(selectedCategory as LocationCategoryId).map((location) => (
                   <Pressable
                     key={location.id}
                     onPress={() => setSelectedLocation(location.id)}
