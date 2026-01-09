@@ -11,7 +11,7 @@ import AuthStackNavigator from "@/navigation/AuthStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
-import { ChatOverlayProvider } from "@/src/contexts/ChatOverlayContext";
+import { ChatOverlayProvider, useChatOverlay } from "@/src/contexts/ChatOverlayContext";
 import { ChatOverlay } from "@/src/components/ChatOverlay";
 import { RegistrationModalProvider } from "@/src/contexts/RegistrationModalContext";
 
@@ -22,6 +22,7 @@ const NAVIGATION_KEYS = {
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const { setCurrentRouteName } = useChatOverlay();
 
   console.log(
     "[AppContent] Rendering - user:",
@@ -45,7 +46,24 @@ function AppContent() {
 
   return (
     <>
-      <NavigationContainer key={navigationKey}>
+      <NavigationContainer
+        key={navigationKey}
+        onStateChange={(state) => {
+          // Get the current route name from navigation state
+          if (state) {
+            const getCurrentRouteName = (state: any): string | null => {
+              if (!state || !state.routes) return null;
+              const route = state.routes[state.index];
+              if (route.state) {
+                return getCurrentRouteName(route.state);
+              }
+              return route.name;
+            };
+            const routeName = getCurrentRouteName(state);
+            setCurrentRouteName(routeName);
+          }
+        }}
+      >
         {user ? <MainTabNavigator /> : <AuthStackNavigator />}
       </NavigationContainer>
       {/* Global chat overlay - always rendered but only visible when authenticated */}

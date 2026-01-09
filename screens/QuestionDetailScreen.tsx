@@ -15,6 +15,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -51,6 +52,7 @@ export default function QuestionDetailScreen({
   const { t } = useLanguage();
   const { questionId } = route.params;
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
 
   const [question, setQuestion] = useState<QAQuestion | null>(null);
   const [answers, setAnswers] = useState<QAAnswer[]>([]);
@@ -316,7 +318,14 @@ export default function QuestionDetailScreen({
         </ScrollView>
 
         {/* Answer Input */}
-        <View style={styles.inputContainer}>
+        <View
+          style={[
+            styles.inputContainer,
+            {
+              paddingBottom: tabBarHeight + Spacing.md,
+            },
+          ]}
+        >
           <TextInput
             style={[
               styles.answerInput,

@@ -54,19 +54,43 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const IS_WEB = Platform.OS === "web";
 const OVERLAY_WIDTH = IS_WEB ? 300 : SCREEN_WIDTH * 0.9;
 const OVERLAY_HEIGHT = IS_WEB ? 400 : SCREEN_HEIGHT * 0.7;
+const QUESTION_DETAIL_OFFSET = Spacing.largeButtonHeight; // Move up when on QuestionDetailScreen
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+/**
+ * Calculate bottom position based on current route
+ */
+function getBottomPosition(isOnQuestionDetail: boolean): number {
+  const baseBottom = IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"];
+  return isOnQuestionDetail ? baseBottom + QUESTION_DETAIL_OFFSET : baseBottom;
+}
 
 /**
  * Minimized FAB bubble with unread badge
  */
 function MinimizedBubble() {
   const { isDark } = useTheme();
-  const { toggleMinimize, unreadCount } = useChatOverlay();
+  const { toggleMinimize, unreadCount, currentRouteName } = useChatOverlay();
   const scale = useSharedValue(1);
+  
+  // Animated bottom position based on current route
+  const bottomPosition = useSharedValue(getBottomPosition(false));
+
+  // Update position when route changes
+  useEffect(() => {
+    const isOnQuestionDetail = currentRouteName === "QuestionDetail";
+    const newBottom = getBottomPosition(isOnQuestionDetail);
+    
+    bottomPosition.value = withSpring(newBottom, {
+      damping: 20,
+      stiffness: 90,
+    });
+  }, [currentRouteName]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    bottom: bottomPosition.value,
   }));
 
   return (
@@ -551,7 +575,25 @@ function ConversationView() {
  */
 function ExpandedWindow() {
   const { theme, isDark } = useTheme();
-  const { toggleMinimize, closeChat, activeView } = useChatOverlay();
+  const { toggleMinimize, closeChat, activeView, currentRouteName } = useChatOverlay();
+  
+  // Animated bottom position based on current route
+  const bottomPosition = useSharedValue(getBottomPosition(false));
+
+  // Update position when route changes
+  useEffect(() => {
+    const isOnQuestionDetail = currentRouteName === "QuestionDetail";
+    const newBottom = getBottomPosition(isOnQuestionDetail);
+    
+    bottomPosition.value = withSpring(newBottom, {
+      damping: 20,
+      stiffness: 90,
+    });
+  }, [currentRouteName]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    bottom: bottomPosition.value,
+  }));
 
   const content = (
     <View
@@ -606,11 +648,16 @@ function ExpandedWindow() {
     );
   }
 
-  // On web, use absolute positioning
+  // On web, use absolute positioning with animation
+  const AnimatedKeyboardAvoidingView = Animated.createAnimatedComponent(KeyboardAvoidingView);
+  
   return (
-    <KeyboardAvoidingView style={styles.expandedWrapper} behavior="height">
+    <AnimatedKeyboardAvoidingView 
+      style={[styles.expandedWrapper, animatedStyle]} 
+      behavior="height"
+    >
       {content}
-    </KeyboardAvoidingView>
+    </AnimatedKeyboardAvoidingView>
   );
 }
 
@@ -679,7 +726,7 @@ const styles = StyleSheet.create({
   // Minimized bubble styles
   bubble: {
     position: "absolute",
-    bottom: IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"],
+    // bottom is now animated, removed from static styles
     right: Spacing.xl,
     width: 56,
     height: 56,
@@ -713,7 +760,7 @@ const styles = StyleSheet.create({
   // Expanded window styles
   expandedWrapper: {
     position: "absolute",
-    bottom: IS_WEB ? Spacing["4xl"] : Spacing["6xl"] + Spacing["5xl"],
+    // bottom is now animated, removed from static styles
     right: Spacing.xl,
     width: OVERLAY_WIDTH,
     height: OVERLAY_HEIGHT,
