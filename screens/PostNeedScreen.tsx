@@ -397,6 +397,8 @@ export default function PostNeedScreen({ navigation }: PostNeedScreenProps) {
       {!isValid && (
         <ThemedText
           style={[styles.validationHint, { color: theme.textSecondary }]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite"
         >
           {t.pleaseCompleteRequired}
         </ThemedText>
