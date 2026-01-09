@@ -13,14 +13,26 @@ import { Spacing, BorderRadius, METUColors, Shadows } from "@/constants/theme";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+// Touch slop for better accessibility - expands touch target by 8px in all directions
+const TOUCH_SLOP = {
+  top: Spacing.sm,
+  bottom: Spacing.sm,
+  left: Spacing.sm,
+  right: Spacing.sm,
+};
+
 interface CreatePostButtonProps {
   onPress: () => void;
   icon?: keyof typeof Feather.glyphMap;
 }
 
 /**
- * Consistent header button for creating posts/questions
- * Positioned in top right corner of screens via headerRight
+ * Consistent header button for creating posts/questions.
+ * Designed for React Navigation header integration via headerRight prop.
+ *
+ * Visual size: 40x40px
+ * Touch target: 48x48px (enhanced with hitSlop for better accessibility)
+ * Positioned in top right corner with 12px margin (Spacing.md)
  */
 export function CreatePostButton({
   onPress,
@@ -63,7 +75,7 @@ export function CreatePostButton({
         },
         animatedStyle,
       ]}
-      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      hitSlop={TOUCH_SLOP}
     >
       <Feather name={icon} size={20} color="#FFFFFF" />
     </AnimatedPressable>

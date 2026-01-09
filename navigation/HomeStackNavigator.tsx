@@ -71,7 +71,7 @@ export default function HomeStackNavigator() {
               icon="edit-2"
               onPress={() => {
                 // Navigate to BrowseTab's AskQuestion screen
-                const parentNav = navigation.getParent() as any;
+                const parentNav = navigation.getParent();
                 if (parentNav) {
                   parentNav.navigate("BrowseTab", {
                     screen: "AskQuestion",
