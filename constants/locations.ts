@@ -404,14 +404,6 @@ export const LOCATIONS = [
     category: "health",
   },
 
-  // Health Facilities
-  {
-    id: "mediko",
-    labelEn: "Student Health Center (Mediko)",
-    labelTr: "Öğrenci Sağlık Merkezi (Mediko)",
-    category: "health",
-  },
-
   // Academic & Student Services
   {
     id: "library",
