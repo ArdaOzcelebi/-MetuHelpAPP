@@ -262,16 +262,22 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
     }, [route.params?.initialTab, navigation]),
   );
 
+  // Memoize the header button component
+  const QuestionHeaderButton = useCallback(
+    () => (
+      <HeaderAddButton
+        onPress={() => navigation.navigate("AskQuestion")}
+        accessibilityLabel="Ask a question"
+      />
+    ),
+    [navigation],
+  );
+
   // Update header button based on selected tab
   useEffect(() => {
     if (selectedTab === "questions") {
       navigation.setOptions({
-        headerRight: () => (
-          <HeaderAddButton
-            onPress={() => navigation.navigate("AskQuestion")}
-            accessibilityLabel="Ask a question"
-          />
-        ),
+        headerRight: QuestionHeaderButton,
       });
     } else {
       // No button for needs tab
@@ -279,7 +285,7 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
         headerRight: undefined,
       });
     }
-  }, [selectedTab, navigation]);
+  }, [selectedTab, navigation, QuestionHeaderButton]);
 
   // Subscribe to questions from Firebase
   useEffect(() => {
