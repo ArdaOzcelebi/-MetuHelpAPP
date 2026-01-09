@@ -240,7 +240,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
-    // Ensure proper scrolling on web
+    // Fix web scrolling: prevent content from growing/shrinking
+    // This ensures horizontal ScrollView works correctly on web browsers
     flexGrow: 0,
     flexShrink: 0,
   },
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: Typography.small.fontSize,
-    // @ts-ignore - whiteSpace is valid on web but not in React Native types
-    whiteSpace: "nowrap",
+    // Prevent text wrapping on web for proper horizontal scrolling
+    ...(Platform.OS === "web" && { whiteSpace: "nowrap" as any }),
   },
 });
