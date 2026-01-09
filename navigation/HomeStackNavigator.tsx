@@ -9,6 +9,7 @@ import PostNeedScreen from "@/screens/PostNeedScreen";
 import ChatScreen from "@/screens/ChatScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { HeaderAddButton } from "@/components/HeaderAddButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
@@ -46,12 +47,37 @@ export default function HomeStackNavigator() {
       <Stack.Screen
         name="NeedHelp"
         component={NeedHelpScreen}
-        options={{ headerTitle: t.findHelp }}
+        options={({ navigation }) => ({
+          headerTitle: t.findHelp,
+          headerRight: () => (
+            <HeaderAddButton
+              onPress={() => navigation.navigate("PostNeed")}
+              accessibilityLabel="Post a need"
+            />
+          ),
+        })}
       />
       <Stack.Screen
         name="OfferHelp"
         component={OfferHelpScreen}
-        options={{ headerTitle: t.campusQA }}
+        options={({ navigation }) => ({
+          headerTitle: t.campusQA,
+          headerRight: () => (
+            <HeaderAddButton
+              onPress={() => {
+                // Navigate to Browse tab, then to AskQuestion
+                const mainNavigation = navigation.getParent();
+                if (mainNavigation) {
+                  mainNavigation.navigate("BrowseTab" as never, {
+                    screen: "AskQuestion",
+                  } as never);
+                }
+              }}
+              icon="edit-2"
+              accessibilityLabel="Ask a question"
+            />
+          ),
+        })}
       />
       <Stack.Screen
         name="RequestDetail"

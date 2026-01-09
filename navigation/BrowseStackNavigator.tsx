@@ -4,6 +4,7 @@ import BrowseScreen from "@/screens/BrowseScreen";
 import RequestDetailScreen from "@/screens/RequestDetailScreen";
 import QuestionDetailScreen from "@/screens/QuestionDetailScreen";
 import AskQuestionScreen from "@/screens/AskQuestionScreen";
+import { HeaderAddButton } from "@/components/HeaderAddButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";

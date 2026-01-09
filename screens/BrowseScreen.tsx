@@ -18,6 +18,7 @@ import Animated, {
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
+import { HeaderAddButton } from "@/components/HeaderAddButton";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -255,6 +256,25 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
       }
     }, [route.params?.initialTab, navigation]),
   );
+
+  // Update header button based on selected tab
+  useEffect(() => {
+    if (selectedTab === "questions") {
+      navigation.setOptions({
+        headerRight: () => (
+          <HeaderAddButton
+            onPress={() => navigation.navigate("AskQuestion")}
+            accessibilityLabel="Ask a question"
+          />
+        ),
+      });
+    } else {
+      // No button for needs tab
+      navigation.setOptions({
+        headerRight: undefined,
+      });
+    }
+  }, [selectedTab, navigation]);
 
   // Subscribe to questions from Firebase
   useEffect(() => {
@@ -625,20 +645,6 @@ export default function BrowseScreen({ navigation, route }: BrowseScreenProps) {
           )}
         </View>
       )}
-
-      {/* FAB button - Only show on questions tab */}
-      {selectedTab === "questions" && (
-        <Pressable
-          onPress={() => navigation.navigate("AskQuestion")}
-          style={({ pressed }) => [
-            styles.fab,
-            { backgroundColor: isDark ? "#CC3333" : METUColors.maroon },
-            { opacity: pressed ? 0.9 : 1 },
-          ]}
-        >
-          <Feather name="plus" size={24} color="#FFFFFF" />
-        </Pressable>
-      )}
     </ScreenScrollView>
   );
 }
@@ -782,21 +788,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     fontSize: Typography.body.fontSize,
     textAlign: "center",
-  },
-  fab: {
-    position: "absolute",
-    bottom: Spacing["6xl"],
-    right: 0,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
   locationFilterContainer: {
     marginVertical: Spacing.sm,

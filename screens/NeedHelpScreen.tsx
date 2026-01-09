@@ -792,17 +792,6 @@ export default function NeedHelpScreen({ navigation }: NeedHelpScreenProps) {
           })
         )}
       </View>
-
-      <Pressable
-        onPress={() => navigation.navigate("PostNeed")}
-        style={({ pressed }) => [
-          styles.fab,
-          { backgroundColor: isDark ? "#CC3333" : METUColors.maroon },
-          { opacity: pressed ? 0.9 : 1 },
-        ]}
-      >
-        <Feather name="plus" size={24} color="#FFFFFF" />
-      </Pressable>
     </ScreenScrollView>
   );
 }
@@ -944,20 +933,5 @@ const styles = StyleSheet.create({
   waitingText: {
     fontSize: 14,
     fontWeight: "500",
-  },
-  fab: {
-    position: "absolute",
-    bottom: Spacing["6xl"],
-    right: Spacing.xl,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
 });
